@@ -266,6 +266,10 @@ The letter preview uses the same typography tokens as the product itself — Fra
 | `LetterPreview`         | C     | Inline HTML letter preview + download buttons                                   |
 | `TimebarBadge`          | C     | Three-color status chip                                                         |
 | `apiClient` (lib)       | C     | Typed fetch wrapper mirroring [04-schemas.md](04-schemas.md)                    |
+| `RevisableSurface`      | C     | **Tier 1 stretch.** Wraps the letter or narrative, segment-IDed, selection-aware. See [13-inline-revision.md](13-inline-revision.md). |
+| `RevisionToolbar`       | C     | Tier 1 stretch. Floating tooltip with **Refine** button on selection.            |
+| `RevisionPanel`         | C     | Tier 1 stretch. Quick chips + instruction textarea + Refine/Edit actions.        |
+| `EditedBadge`           | C     | Tier 1 stretch. The `✎` mark in the margin of revised segments.                  |
 
 All UI = Track C. Tracks A and B do not touch frontend code.
 

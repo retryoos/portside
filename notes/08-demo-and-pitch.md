@@ -69,9 +69,25 @@ The inline expansion shows:
 
 Click **Generate Claim Letter** in the right panel. The BIMCO-style letter streams in.
 
-> "And this is the output. A formal demurrage claim letter, BIMCO-style language, time-bar statement, supporting documents list, demand for payment, reservation of rights. Exportable as PDF or Word. Ready to send."
+> "And this is the output. A formal demurrage claim letter, BIMCO-style language, time-bar statement, supporting documents list, demand for payment, reservation of rights. Exportable as PDF or Word."
 
-Hand over a printed copy of the PDF to the nearest judge if appropriate.
+### Beat 5.5 — The professional in the loop (60s, **stretch — only if landed**)
+
+> *(Land this beat only if [13-inline-revision.md](13-inline-revision.md) shipped. Otherwise skip to Beat 6 and hand the printed letter to the nearest judge.)*
+
+Highlight the second paragraph of the letter — the one describing the weather dispute. The **Refine** toolbar appears anchored to the selection.
+
+> "Portside drafts the letter. The claims executive owns it. Suppose they want the clause citation up front, not buried."
+
+Click **Refine**. The inline panel opens. Type into the textarea: *"Lead with the citation to CP clause 17 and mention the 25-knot threshold explicitly."* Click **Refine with AI**. A loading pulse runs for ~1.5 seconds.
+
+> "The agent rewrites only this paragraph. The dollar amount is locked — it cannot be changed by a re-prompt. The clause citations are preserved. The time-bar statement is locked. Everything else is editable in place, by AI or by hand. Every revision is logged. Every export carries the audit trail."
+
+Paragraph replaces with the revised version. An `✎ edited` mark appears in the margin.
+
+> "The claims executive isn't replaced. They are multiplied."
+
+Hand the printed PDF to the nearest judge.
 
 ### Beat 6 — Close (35s)
 

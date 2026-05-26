@@ -13,6 +13,7 @@
 | 2b| Calculator      | **Plain Python.** Walks the classified events, sums hours, applies the demurrage rate, produces the table and the dollar quantum  | (no LLM)     |
 | 3 | Dispute Analyst | Reads the calculation, picks the contested rows, writes the legal argument with CP-clause + SoF-event citations and a confidence score | Sonnet 4.6   |
 | 4 | Claims Drafter  | Slot-fills the BIMCO claim letter template, writes the dispute narrative, outputs PDF/Word-ready markdown                          | Sonnet 4.6   |
+| 5 | Revision micro-agent (**Tier 1 stretch** — see [13-inline-revision.md](13-inline-revision.md)) | Re-writes a specific selected segment of the letter or narrative per a user instruction, with hard safety constraints (no changing dollar amounts, clause numbers, event IDs) | Sonnet 4.6   |
 
 **One model, four agents, no Opus 4.7 by default.** Sonnet 4.6 handles all of this with ~5× cheaper input tokens than Opus and meaningfully lower latency, because:
 

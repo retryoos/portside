@@ -239,9 +239,10 @@ Each item is a self-contained 30–90 minute landing. Tier order is by **judge-p
 ### Tier 1 — if we finish the MVP by 15:30
 Land all of these. They turn a strong demo into a remarkable one.
 
-1. **Charterer-side rebuttal toggle.** The same pipeline, opposite perspective. Agent 3 prompt already accepts a `perspective` parameter. Worth doing because the most common follow-up question from a maritime judge is "great, but what if I'm the charterer being claimed against?" — having the answer pre-built is decisive.
-2. **Time-bar countdown badge that goes red.** Already designed for the top bar. Compute days from `today` to `time_bar_date`. Three colors: green, amber, red. This is the single most credible-feeling moment in the UI.
-3. **Excel export of the laytime table.** Claims executives live in Excel. `openpyxl`, one endpoint, 40 lines. A maritime judge will absolutely click "Download .xlsx" and respect it.
+1. **Inline highlight-and-revise on the letter and the narrative.** The highest-leverage stretch in this list. Selecting any line in the BIMCO claim letter or dispute narrative reveals a **Refine** toolbar — quick-action chips (More formal / Less aggressive / Add citation / Shorten) plus a freeform instruction box plus a manual-edit fallback. Adds a full demo beat ("the professional in the loop"). Full spec in [13-inline-revision.md](13-inline-revision.md). **Build this first.**
+2. **Charterer-side rebuttal toggle.** The same pipeline, opposite perspective. Agent 3 prompt already accepts a `perspective` parameter. Worth doing because the most common follow-up question from a maritime judge is "great, but what if I'm the charterer being claimed against?" — having the answer pre-built is decisive.
+3. **Time-bar countdown badge that goes red.** Already designed for the top bar. Compute days from `today` to `time_bar_date`. Three colors: green, amber, red. This is the single most credible-feeling moment in the UI.
+4. **Excel export of the laytime table.** Claims executives live in Excel. `openpyxl`, one endpoint, 40 lines. A maritime judge will absolutely click "Download .xlsx" and respect it.
 
 ### Tier 2 — if we finish the MVP by 16:30
 Pick two.
