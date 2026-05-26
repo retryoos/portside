@@ -32,11 +32,12 @@ This prefix is cache-eligible. Put it at the start of every system message.
 ## Agent 1 — Document Classifier & Extractor
 
 ### Model
-`claude-opus-4-7` (primary). Sonnet 4.6 fallback only if Opus is rate-limited.
+`claude-sonnet-4-6` (primary for every agent in the pipeline). Opus 4.7 is held in reserve per-agent and only used if a specific agent fails the quality bar at the 16:00 polish round.
 
 ### Inputs (one user message)
-- The three PDFs as `document` content blocks (Claude's native PDF input)
-- A short text block: `"Three voyage documents are attached. Classify each and extract structured fields using the record_voyage_extraction tool."`
+- Three text blocks, one per document, produced upstream by `pdfplumber` (see [03-agents.md PDF text extraction](03-agents.md#pdf-text-extraction-upstream-of-agent-1)). Each block is wrapped with a `<document index="1|2|3">…</document>` tag so the agent can reference them; **no filename hint** is passed so the agent must classify from content.
+- A short text block: `"Three voyage documents are provided as extracted text. Classify each and extract structured fields using the record_voyage_extraction tool."`
+- **Fallback path:** if pdfplumber returned an empty string for a given document (scanned input), that document is attached as a Claude `document` (native PDF) content block in place of its text block.
 
 ### System prompt (after the cross-cutting prefix)
 
@@ -93,7 +94,7 @@ Cache the system prompt (cross-cutting prefix + Agent 1 prompt) and the tool def
 ## Agent 2a — Laytime Event Classifier
 
 ### Model
-`claude-opus-4-7`.
+`claude-sonnet-4-6`.
 
 ### Inputs (one user message)
 - The full `ExtractionResult` from Agent 1, JSON-serialised
@@ -155,7 +156,7 @@ Not a prompt. The Python function `calculate_laytime(extraction, classifications
 ## Agent 3 — Dispute Analyst
 
 ### Model
-`claude-opus-4-7`.
+`claude-sonnet-4-6`. Opus 4.7 is the per-agent escape hatch if writing quality fails the smell test at 16:00 — change only this agent's `model=` parameter.
 
 ### Inputs (one user message)
 - The `ExtractionResult`
@@ -215,7 +216,7 @@ Cache the system prompt AND the `ExtractionResult` (which contains the CP clause
 ## Agent 4 — Claims Drafter
 
 ### Model
-`claude-opus-4-7` (Sonnet 4.6 if behind on latency). Use streaming.
+`claude-sonnet-4-6`. Use streaming. Opus 4.7 escape hatch only if the rendered BIMCO letter feels mediocre at the 16:00 review — change only this agent's `model=`.
 
 ### Inputs (one user message)
 - The `ExtractionResult`

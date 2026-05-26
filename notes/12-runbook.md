@@ -46,8 +46,8 @@ ls notes/                 # confirm the 10+ planning docs are present
 Create `apps/api/.env` (do NOT commit):
 ```
 ANTHROPIC_API_KEY=sk-ant-...
-ANTHROPIC_MODEL_PRIMARY=claude-opus-4-7
-ANTHROPIC_MODEL_FAST=claude-sonnet-4-6
+ANTHROPIC_MODEL_PRIMARY=claude-sonnet-4-6
+ANTHROPIC_MODEL_ESCAPE=claude-opus-4-7   # per-agent escape hatch only — flipped in code for a specific agent if writing quality fails at the 16:00 polish round
 ```
 
 Create `apps/web/.env.local` (do NOT commit):
@@ -62,7 +62,7 @@ curl https://api.anthropic.com/v1/messages \
   -H "x-api-key: $ANTHROPIC_API_KEY" \
   -H "anthropic-version: 2023-06-01" \
   -H "content-type: application/json" \
-  -d '{"model":"claude-opus-4-7","max_tokens":50,"messages":[{"role":"user","content":"say hi"}]}'
+  -d '{"model":"claude-sonnet-4-6","max_tokens":50,"messages":[{"role":"user","content":"say hi"}]}'
 ```
 
 If you don't get back a 200 with a response, fix it tonight. Not tomorrow.

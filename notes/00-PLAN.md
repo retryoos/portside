@@ -75,7 +75,9 @@ See [03-agents.md](03-agents.md) for the full specs.
 
 ## 8. Tech stack (one paragraph)
 
-Next.js 15 + Tailwind + shadcn/ui frontend rendering the three-panel UI; FastAPI + async Python backend; Claude Opus 4.7 for extraction/reasoning/drafting (Sonnet 4.6 as a faster fallback); deterministic Python for the laytime arithmetic; native Claude PDF reading (no separate OCR for the demo); `weasyprint` for HTML→PDF claim letter export; `python-docx` for Word export. No database — in-memory + temp files for the hackathon. Deployed locally to a laptop for the demo; ngrok if remote demo is needed.
+Next.js 15 + Tailwind + shadcn/ui frontend rendering the three-panel UI; FastAPI + async Python backend; **`pdfplumber` (MIT) for local PDF text + table extraction** so Claude only ever sees clean text; **Claude Sonnet 4.6 for extraction, classification, dispute reasoning, and drafting** (Opus 4.7 held in reserve as a per-agent quality escape hatch via env var); deterministic Python for the laytime arithmetic; native Claude PDF reading kept only as a fallback when pdfplumber can't parse a document; `weasyprint` for HTML→PDF claim letter export; `python-docx` for Word export. No database — in-memory + temp files for the hackathon. Deployed locally to a laptop for the demo; ngrok if remote demo is needed.
+
+> **Cost note:** pdfplumber + Sonnet 4.6 puts per-voyage spend at ~$0.05–0.10 vs. ~$1.50 for native PDF + Opus 4.7 — a 15–30× reduction at no demo-quality cost on our text-native synthetic data.
 
 See [02-architecture.md](02-architecture.md) for the full stack and data flow.
 
@@ -141,7 +143,7 @@ Day-one revenue is a SaaS seat for ship operators, charterers, and maritime lawy
 
 ## 14. Open questions to resolve before 09:45
 
-- [ ] Confirm we have Claude Opus 4.7 API access on at least one laptop (not just the IDE agent)
+- [ ] Confirm we have Claude Sonnet 4.6 API access on every fleet laptop (and Opus 4.7 reachable as the per-agent quality escape hatch)
 - [ ] Decide ASBATANKVOY vs GENCON as the demo charter form (recommendation: **ASBATANKVOY** — tanker, more dramatic dollar figures)
 - [ ] Confirm we are demoing from a local laptop, not a deployed URL
 - [ ] Decide the demo voyage's vessel name and route (recommendation: a VLCC, Ras Tanura → Piraeus, the Piraeus reference will land in the room)

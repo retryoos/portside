@@ -29,7 +29,7 @@ Browser (desktop primary, mobile-responsive)
    ▼  HTTPS + JSON
 FastAPI app (Python 3.12, async)
    │
-   ├──► Anthropic API (Claude Opus 4.7 / Sonnet 4.6)
+   ├──► Anthropic API (Claude Sonnet 4.6 primary; Opus 4.7 per-agent escape hatch)
    ├──► Persistence layer (Phase A: in-memory · Phase B: SQLite file · Phase C: RDS Postgres)
    ├──► Object storage (Phase A: /tmp · Phase B/C: S3)
    └──► Auth (Phase A: none · Phase C: Clerk JWT verification)
@@ -63,14 +63,14 @@ The pipeline never knows which store it's talking to.
 | ---------------- | -------------------------------------- | --------------------------------------------------- |
 | Frontend         | Next.js 15 + Tailwind + shadcn/ui      | **Same.** Deploy to Vercel free tier.               |
 | Backend          | FastAPI + uvicorn (Python 3.12)        | **Same.** Deploy to AWS App Runner.                 |
-| LLM              | Anthropic SDK · Opus 4.7 / Sonnet 4.6  | **Same.** Add Bedrock fallback if margin matters.   |
+| LLM              | Anthropic SDK · **Sonnet 4.6** for every agent | **Same.** Opus 4.7 is a per-agent escape hatch only. Add Bedrock fallback if margin matters at scale.|
 | State            | In-memory dict keyed by `voyage_id`    | RDS Postgres (db.t4g.micro) via SQLAlchemy + Alembic|
 | Files            | Local `/tmp` for PDFs                  | S3 bucket, versioned, KMS-encrypted                 |
 | Auth             | None                                   | Clerk (Next.js plugin + FastAPI JWT verification)   |
 | Polling          | `setInterval` + fetch                  | **Same.** Maybe SSE later.                          |
 | PDF letter       | `weasyprint` (HTML → PDF)              | **Same.**                                           |
 | Word letter      | `python-docx`                          | **Same.**                                           |
-| PDF parsing      | Claude native PDF input                | **Same.** Add `pdfplumber` fallback for weird PDFs. |
+| PDF parsing      | **`pdfplumber`** (MIT) for text + tables locally; Claude native PDF input only as fallback for scanned docs | **Same.** For scale-up consider `marker` / `docling` / `olmocr` (all OSS) for higher-quality extraction on noisy real-customer PDFs. |
 | Email send       | Not built                              | SES (we have AWS credits)                           |
 | Observability    | `print()` to stdout                    | Sentry (free tier) + CloudWatch                     |
 | CI/CD            | None                                   | GitHub Actions: deploy on push to `main`            |
@@ -311,7 +311,7 @@ Pick one.
 | Vercel            | $0 (free tier)                                     |
 | Clerk             | $0 (free tier)                                     |
 | Sentry            | $0 (free tier)                                     |
-| Anthropic API     | usage-dependent. ~$0.10–0.30 per voyage on Opus 4.7. Budget $30/mo for early demos. |
+| Anthropic API     | usage-dependent. ~$0.05–0.10 per voyage on Sonnet 4.6 + pdfplumber. Budget $10/mo for early demos. |
 | **Total infra**   | **~$45/mo** — comfortably inside the $200 credit for the first quarter |
 
 ---
@@ -347,7 +347,7 @@ What we do not build for mobile:
 
 Before the hackathon morning:
 
-- [ ] Confirm `ANTHROPIC_API_KEY` works on at least two laptops with Opus 4.7.
+- [ ] Confirm `ANTHROPIC_API_KEY` works on at least two laptops with Sonnet 4.6 (and Opus 4.7 reachable as escape hatch).
 - [ ] Decide who is Engineer A, B, C. Print or screenshot section 4 of this doc.
 - [ ] Each engineer installs: `uv`, Python 3.12, Node 22, `pnpm`. Clone the repo.
 - [ ] Read [00-PLAN.md](00-PLAN.md), [01-domain-primer.md](01-domain-primer.md), and the relevant track's spec.
@@ -362,7 +362,7 @@ The first 10 minutes of the build window (09:45 – 09:55) are not for typing. T
 
 | Date  | Decision                                      | Owner | Rationale                                            |
 | ----- | --------------------------------------------- | ----- | ---------------------------------------------------- |
-| 05-26 | Stack: FastAPI + Next.js + Anthropic Opus 4.7 | team  | Best agent ergonomics + fastest UI build             |
+| 05-26 | Stack: FastAPI + Next.js + Anthropic Sonnet 4.6 + pdfplumber | team  | Best agent ergonomics + ~15–30× cheaper per voyage than Opus + native PDF, with no demo-quality loss on our text-native synthetic data |
 | 05-26 | Demo scenario: Piraeus weather dispute        | team  | Lands in Athens; clean "aha" with $22k incremental   |
 | 05-26 | No auth on May 28; Clerk in Phase C           | team  | Cuts an hour of integration risk from the hackathon  |
 | 05-26 | Storage: in-memory → SQLite → RDS Postgres    | team  | Same `VoyageStore` Protocol; one-line swap each step |
