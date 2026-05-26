@@ -29,7 +29,7 @@ Three types of workstream:
 ### Type 1 — Foreground (human-in-loop, engineer typing)
 - **F1 · Track A · API + Agents 1+2** — primary Claude session, used heavily for code generation, debugging, refactoring.
 - **F2 · Track B · Agents 3+4 + drafting** — primary Claude session.
-- **F3 · Track C · Frontend** — primary Claude session.
+- **F3 · Track C · Frontend** — primary Claude session. **Must invoke `/impeccable` at every UI surface and read [`apps/web/DESIGN.md`](../apps/web/DESIGN.md) before writing any component.** See [06-frontend.md §0](06-frontend.md#0-required-tooling--read-this-first-every-frontend-agent). This applies to F3, to any background polish workstream, to mentor-driven UI changes, and to the demo-polish window after 17:30.
 
 ### Type 2 — Background (autonomous, periodic check-in)
 These run with minimal human supervision. The engineer pings their progress every 30-45 min, gives a course-correction prompt, lets it keep running.

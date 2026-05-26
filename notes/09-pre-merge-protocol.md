@@ -27,8 +27,11 @@ Run these in order. Do not skip a step because you "know" it works. The cost of 
 | A     | `curl localhost:8000/voyages/{id}` (poll until done)                                         | Returns `VoyageState` with `stage: "done"` and all four sub-objects populated |
 | B     | Same as A — your agents are exercised by the same flow                                       | All four agents produce the schema-compliant outputs                  |
 | C     | `cd apps/web && pnpm dev` then open `http://localhost:3000`, drag the demo PDFs              | All three panels populate, quantum shows correctly, letter generates  |
+| C     | `npx @google/design.md lint apps/web/DESIGN.md` and `npx impeccable detect apps/web/src/`    | Both exit 0; warnings explained in the PR description                 |
 
 If you change a schema, run **both** A and C smoke tests.
+
+**Track C extra requirement:** every frontend PR follows the workflow in [06-frontend.md §0](06-frontend.md#0-required-tooling--read-this-first-every-frontend-agent). `/impeccable shape` before, `/impeccable audit` during, `/impeccable polish` before opening the PR. Paste the audit summary into the PR description. This is non-negotiable — skipping the impeccable pass is the single most reliable way to produce a UI that telegraphs "AI built this."
 
 ### Check 2 — The math test passes
 
