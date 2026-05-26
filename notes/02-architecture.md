@@ -1,0 +1,219 @@
+# Architecture
+
+> System design, stack choices, and deployment for the 12-hour MVP. Every choice here is biased toward "what gets a clean five-minute demo at 19:00 with three engineers."
+
+---
+
+## 1. System diagram (in words)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          Browser (demo laptop)                       │
+│  Next.js 15 + Tailwind + shadcn/ui                                   │
+│  Three-panel UI: documents | timeline+table | claim packet           │
+└──────────────┬───────────────────────────────────────────────────────┘
+               │ HTTP (single JSON contract)
+               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                       FastAPI backend (async)                        │
+│                                                                      │
+│   POST /voyages         → upload PDFs, kicks off pipeline            │
+│   GET  /voyages/{id}    → poll pipeline state + final result         │
+│   GET  /voyages/{id}/letter.pdf  → BIMCO letter export               │
+│   GET  /voyages/{id}/letter.docx → Word export                       │
+│                                                                      │
+│   Pipeline orchestrator (async, in-process):                         │
+│      Agent 1 → Agent 2 → Agent 3 → Agent 4                           │
+│      (with Agent 3 starting as soon as Agent 1 finishes,             │
+│       Agent 2 running in parallel; Agent 4 awaits both)              │
+└──────────────┬───────────────────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│              Anthropic API — Claude Opus 4.7 (primary)               │
+│                          Claude Sonnet 4.6 (fast fallback)           │
+│                                                                      │
+│   - Native PDF input for Agent 1 (no separate OCR)                   │
+│   - Tool-use with strict JSON schema for extraction                  │
+│   - Reasoning for dispute analysis                                   │
+│   - Generation for claim letter drafting                             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+No database. No queues. No auth. No deploy. In-memory state, one process, run locally on the demo laptop.
+
+## 2. Data flow
+
+1. Browser POSTs three PDFs to `/voyages` along with a `perspective` flag (`"owner"` or `"charterer"`).
+2. Backend assigns a `voyage_id`, returns it immediately, kicks off the async pipeline.
+3. Browser polls `/voyages/{id}` every 500ms.
+4. Backend returns the current pipeline state: `{stage: "extracting" | "calculating" | "analyzing" | "drafting" | "done", partial_result: {...}}`.
+5. As each agent finishes, its output is merged into `partial_result` and visible to the polling browser. This is what powers the "live agent steps" UI animation.
+6. When `stage: "done"`, browser shows full table, narrative, and quantum.
+7. User clicks **Generate Claim Letter** — frontend calls `/voyages/{id}/letter.pdf`, backend renders the letter from the cached result, streams the PDF, browser shows it inline.
+
+## 3. Stack choices and why
+
+| Layer        | Choice                                          | Why                                                                                              |
+| ------------ | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Frontend     | Next.js 15 (App Router) + Tailwind + shadcn/ui  | Fast to build, looks professional, three engineers already know it                               |
+| Backend      | FastAPI + uvicorn, Python 3.12                  | Async-first, plays well with Anthropic SDK, fastest path to a typed HTTP API                     |
+| LLM          | Anthropic Claude Opus 4.7 + Sonnet 4.6 fallback | Best reasoning model. Use native PDF support to skip OCR. Sonnet for time-sensitive paths.       |
+| PDF parsing  | Claude native PDF input                         | One fewer moving part. Don't bring `pdfplumber` unless an agent fails on a real-looking PDF.     |
+| PDF export   | `weasyprint` (HTML → PDF)                       | We render the letter as a styled HTML template, then convert. Better typography than ReportLab.  |
+| Word export  | `python-docx`                                   | Demoable as "we also export to Word." Optional — cuttable.                                       |
+| State        | In-memory dict, keyed by `voyage_id`            | Hackathon. No persistence. Restart kills state — accept it.                                      |
+| Deployment   | Local laptop + browser. No cloud.               | Removes a whole class of failure modes (DNS, TLS, env vars).                                     |
+| Bundler/Build| Default Next.js dev server                      | Don't waste time on `next build`.                                                                |
+
+## 4. Anthropic SDK usage
+
+Use **prompt caching** on the Charter Party text in every call after Agent 1 — the CP clause language is the same across Agents 2/3/4 and will hit cache.
+
+Use **tool use with `strict: true`** for Agent 1 extraction. The JSON schema is the contract.
+
+Use **streaming** in Agent 4 so we can render letter content into the right panel as it generates (visual drama for the demo).
+
+For Agent 2's classifier step, use the **batch tool-use pattern**: one call that classifies all SoF events at once into a list, not one call per event. Latency matters.
+
+## 5. Latency budget
+
+Total target: **end-to-end under 45 seconds** on three demo documents.
+
+| Stage                      | Budget       |
+| -------------------------- | ------------ |
+| PDF upload + handoff       | 1s           |
+| Agent 1 (extraction)       | 12s          |
+| Agent 2 LLM classification | 10s          |
+| Agent 2 Python arithmetic  | <0.1s        |
+| Agent 3 (dispute analysis) | 12s (parallel with 2 when possible) |
+| Agent 4 (drafting)         | 10s          |
+| Buffer                     | 5s           |
+| **Total**                  | **~45s**     |
+
+If we exceed 60s on the demo run, downshift Agent 4 to Sonnet 4.6.
+
+## 6. Concurrency model
+
+```
+T=0    Agent 1 starts (extraction, single LLM call with all 3 PDFs)
+T=12   Agent 1 done → fan out:
+         Agent 2 starts (LLM classifier on SoF events)
+         Agent 3 starts (dispute analysis on extracted CP + SoF)
+T=22   Agent 2 LLM done → Python arithmetic
+T=22.1 Agent 2 done
+T=24   Agent 3 done
+T=24   Agent 4 starts (claim drafter)
+T=34   Agent 4 done
+```
+
+Agent 2 and Agent 3 run in parallel via `asyncio.gather`. Agent 4 awaits both.
+
+## 7. Failure handling
+
+It is a hackathon. The failure handling is: **the demo path works on the demo scenario.** Outside the demo scenario, we expose errors honestly and move on.
+
+That said:
+- Wrap every LLM call in a 30-second timeout. On timeout, retry once with Sonnet.
+- If Agent 1 extraction returns malformed JSON (rare with tool-use + strict mode but possible), retry once with a tightened prompt.
+- If Agent 2's Python arithmetic blows up on unexpected input, log the inputs and surface a "calculation error" badge in the UI. Do not crash.
+- Backend exception → frontend gets `{stage: "error", message: ...}`. Render it inline. Move on.
+
+## 8. Repo layout
+
+```
+portside/
+├── README.md
+├── notes/                       ← these planning docs
+│   ├── 00-PLAN.md
+│   ├── 01-domain-primer.md
+│   ├── 02-architecture.md       ← this file
+│   ├── 03-agents.md
+│   ├── 04-schemas.md
+│   ├── 05-synthetic-data.md
+│   ├── 06-frontend.md
+│   ├── 07-day-plan.md
+│   └── 08-demo-and-pitch.md
+├── apps/
+│   ├── api/                     ← FastAPI backend
+│   │   ├── pyproject.toml
+│   │   ├── portside_api/
+│   │   │   ├── __init__.py
+│   │   │   ├── main.py          ← FastAPI app + routes
+│   │   │   ├── pipeline.py      ← orchestrator
+│   │   │   ├── agents/
+│   │   │   │   ├── extractor.py     ← Agent 1
+│   │   │   │   ├── calculator.py    ← Agent 2 (LLM classify + Python arithmetic)
+│   │   │   │   ├── analyst.py       ← Agent 3
+│   │   │   │   └── drafter.py       ← Agent 4
+│   │   │   ├── schemas.py       ← Pydantic models (see 04-schemas.md)
+│   │   │   ├── prompts/         ← prompts stored as .md files, loaded at import
+│   │   │   └── letter_template.html
+│   │   └── tests/
+│   └── web/                     ← Next.js frontend
+│       ├── package.json
+│       ├── app/
+│       │   ├── layout.tsx
+│       │   ├── page.tsx         ← three-panel UI
+│       │   └── api/             ← if needed for proxy
+│       ├── components/
+│       │   ├── DocumentPanel.tsx
+│       │   ├── TimelinePanel.tsx
+│       │   ├── ClaimPanel.tsx
+│       │   ├── AgentSteps.tsx
+│       │   └── LaytimeTable.tsx
+│       └── lib/
+│           └── api.ts           ← typed client matching 04-schemas.md
+├── synthetic-data/              ← the demo voyage PDFs
+│   ├── generate.py              ← scenario generator
+│   └── scenarios/
+│       ├── athens-weather-dispute/  ← the primary demo scenario
+│       ├── nor-tender-dispute/
+│       ├── shinc-shex-dispute/
+│       ├── congestion-wibon-dispute/
+│       └── on-demurrage-exception/
+└── .env.example                 ← ANTHROPIC_API_KEY
+```
+
+## 9. Configuration
+
+Single `.env` file at the API root:
+```
+ANTHROPIC_API_KEY=...
+ANTHROPIC_MODEL_PRIMARY=claude-opus-4-7
+ANTHROPIC_MODEL_FAST=claude-sonnet-4-6
+```
+
+No other config. No feature flags.
+
+## 10. Running locally (for the demo)
+
+Two terminals:
+
+```bash
+# Terminal 1
+cd apps/api
+uv sync
+uv run uvicorn portside_api.main:app --reload --port 8000
+
+# Terminal 2
+cd apps/web
+pnpm install
+pnpm dev   # http://localhost:3000
+```
+
+Frontend talks to `http://localhost:8000` directly. CORS allowlist `http://localhost:3000`.
+
+## 11. What we are explicitly NOT building in the architecture
+
+- Authentication
+- Database
+- Background workers / queues
+- File storage beyond `/tmp`
+- Multi-tenant anything
+- Deployment to a cloud
+- Observability beyond `print()`
+- Any kind of webhook, integration, or third-party connector
+- Email send
+
+All of these are roadmap. None of them ship on May 28th.
