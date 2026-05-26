@@ -1,6 +1,8 @@
 # Day Plan — May 28th, 2026
 
 > Twelve effective build hours, three engineers, one demo at 19:00. This is the hour-by-hour. If we are off-plan by an hour, we cut. The cut order is at the end of this doc.
+>
+> **Pair this doc with [14-parallel-execution-plan.md](14-parallel-execution-plan.md).** This doc describes the day at engineer-grain (Track A/B/C). 14 describes the same day at subphase-grain (one branch per subphase, ~12 parallel branches in Wave 1), so the agent fleet can fan out without colliding on `main`.
 
 ---
 

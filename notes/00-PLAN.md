@@ -108,7 +108,7 @@ See [08-demo-and-pitch.md](08-demo-and-pitch.md) for the full script and anticip
 | Demo prep      | 18:30 – 19:00   | Rehearse the 5-minute flow twice. Submit.                                |
 | Pitch prep     | 19:30 – 20:30   | If finalist: rehearse pitch script.                                      |
 
-See [07-day-plan.md](07-day-plan.md) for the hour-by-hour breakdown by engineer.
+See [07-day-plan.md](07-day-plan.md) for the hour-by-hour breakdown by engineer, and [14-parallel-execution-plan.md](14-parallel-execution-plan.md) for the subphase-grained branch fan-out tuned to the agent fleet.
 
 ## 11. Team and parallel tracks
 

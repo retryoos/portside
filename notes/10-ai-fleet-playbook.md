@@ -1,6 +1,8 @@
 # AI Fleet Playbook — using 8 agents with 3 engineers
 
 > Our compute advantage is the playbook. A normal hackathon team has one Claude per engineer. We have ~2.5 Claudes per engineer plus a Gemini for cross-checking. The team that wins May 28th is the one that uses this asymmetry, not the one that ignores it.
+>
+> **Branch-level subphase orchestration lives in [14-parallel-execution-plan.md](14-parallel-execution-plan.md).** That doc is the authoritative source for which Claude/Cursor session owns which Wave-1 branch and in what order. This doc covers fleet *role design*; that doc covers fleet *daily assignment*.
 
 The trap is "one agent per engineer." That uses half the fleet. The right model: **workstreams own accounts, people supervise workstreams.** Half the fleet is human-in-loop (engineers coding). The other half is background work that runs while the engineers code.
 
@@ -8,17 +10,23 @@ The trap is "one agent per engineer." That uses half the fleet. The right model:
 
 ## 1. The fleet
 
-| Account                  | Tier         | Role                                                              |
-| ------------------------ | ------------ | ----------------------------------------------------------------- |
-| dkall (main gmail)       | Claude Max   | The anchor. Heaviest workload, highest rate limits.               |
-| Stamatis                 | Claude Pro   | Primary engineer session — Track [TBD]                            |
-| Roman                    | Claude Pro   | Primary engineer session — Track [TBD]                            |
-| Panos (invited)          | Claude Pro   | Background workstream                                             |
-| Glacdimitris             | Gemini Pro   | Cross-check, red-team, alternative model evaluation               |
-| Reserve #1               | Claude Pro   | Spin up if any of the above hits a usage limit                    |
-| Reserve #2               | Claude Pro   | Burst capacity for late-day polish                                |
+> Seat list reconciled with the May 28 state. **Roman is now Claude Max** (was Pro), **Stamatis moves to backup**. Cursor seats have been added to the fleet as background subagent runners.
 
-> **Decide on the morning of May 28:** which two engineers use Stamatis + Roman accounts vs the main gmail Max account. Recommendation: the engineer running the heaviest track (probably Track A — the FastAPI + agents 1+2) uses the Max account because of the higher token limits.
+| #  | Seat                | Tier         | Role on the day                                                        |
+| -- | ------------------- | ------------ | ---------------------------------------------------------------------- |
+| 1  | dkall (main gmail)  | Claude **Max** | Anchor — Track A driver, multi-session capable                          |
+| 2  | Roman               | Claude **Max** | Track C driver, multi-session capable                                   |
+| 3  | Panos               | Claude Pro   | Track B driver                                                          |
+| 4  | Stamatis            | Claude Pro   | **Backup** — failover for any account that hits a rate limit            |
+| 5  | Reserve #1          | Claude Pro   | Created on demand (gmail alias)                                         |
+| 6  | Reserve #2          | Claude Pro   | Created on demand (gmail alias)                                         |
+| 7  | Glacdimitris        | Gemini Pro   | Cross-check, red-team, second-opinion                                   |
+| C1 | Cursor on dkall #1  | (paid seat)  | Background subagent — synthetic data factory (B1)                       |
+| C2 | Cursor on dkall #2  | (paid seat)  | Background subagent — letter template polish (B3) / inline-revise asst.  |
+| C3 | Cursor on Roman     | (paid seat)  | Background subagent — `/impeccable` audit on every Track C PR           |
+| C4 | Cursor on Panos     | (paid seat)  | Background subagent — prompt iteration (B2)                             |
+
+The day's per-branch ownership for these seats lives in [14-parallel-execution-plan.md §5](14-parallel-execution-plan.md#5-wave-1--parallel-fan-out-1030--1300). The Track A driver remains dkall on Max.
 
 ---
 
@@ -45,16 +53,18 @@ These run with minimal human supervision. The engineer pings their progress ever
 
 ## 3. Account → workstream mapping
 
-| Workstream       | Account              | Why                                                                                |
-| ---------------- | -------------------- | ---------------------------------------------------------------------------------- |
-| F1 (Track A)     | dkall (Max)          | Heaviest workload — the agent code involves many extraction iterations              |
-| F2 (Track B)     | Stamatis             | Prompt-heavy but bounded                                                            |
-| F3 (Track C)     | Roman                | UI-heavy, lots of component generation                                              |
-| B1 (Data factory)| Panos                | Long-running, autonomous, doesn't compete with engineer needs                       |
-| B2 (Prompt iter) | dkall (Max, side session) | Max supports multiple parallel sessions; this runs alongside F1                |
-| B3 (Letter polish)| Reserve #1          | Spin up at 14:00 once F2 has a draft template to refine                             |
-| X1 (Gemini judge)| Glacdimitris         | Cross-model evaluation — high signal at low cost                                    |
-| Burst capacity   | Reserve #2          | Held back; used if any workstream stalls and needs a fresh agent                    |
+| Workstream        | Seat                      | Why                                                                                 |
+| ----------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| F1 (Track A)      | dkall (Max)               | Heaviest workload — extraction + calculator + orchestrator                            |
+| F2 (Track B)      | Panos (Pro)               | Prompt-heavy but bounded; analyst + drafter + exports                                |
+| F3 (Track C)      | Roman (Max)               | UI-heavy; Max so Roman can drive two frontend worktrees concurrently                  |
+| B1 (Data factory) | Cursor C1 on dkall laptop | Long-running, autonomous, runs in its own worktree                                   |
+| B2 (Prompt iter)  | Cursor C4 on Panos laptop | Iterates prompts against fixtures; appends to `notes/prompt-iteration-log.md`        |
+| B3 (Letter polish)| Cursor C2 on dkall laptop | Spins up at 14:00 once F2 has a draft template                                       |
+| X1 (Gemini judge) | Glacdimitris (Gemini Pro) | Cross-model evaluation; ~4–6 reactive checks/day                                     |
+| Impeccable pass   | Cursor C3 on Roman laptop | Runs `/impeccable audit` + `/impeccable polish` against every Track C PR             |
+| Failover          | Stamatis (Pro)            | Held in reserve. Spin up on the first rate-limit hit; inherits the stalled seat       |
+| Burst capacity    | Reserve #1, #2 (Pro)      | Created on demand if Stamatis is already in use                                      |
 
 ---
 
