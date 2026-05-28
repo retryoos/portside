@@ -359,7 +359,7 @@ Yours faithfully,
 [Owner company]
 ```
 
-The drafter fills the slots and produces the markdown / HTML version. PDF render is done by `weasyprint` outside the agent.
+The drafter fills the slots and produces the markdown / HTML version. **PDF rendering happens client-side in the browser** (`html2pdf.js` or a print stylesheet on the rendered letter) — no server-side PDF library, no cairo/pango, nothing to install on Windows or App Runner. The backend only ever returns the letter content; the frontend renders and exports it.
 
 ---
 

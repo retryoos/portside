@@ -67,7 +67,7 @@ Eat. Decide together: what one thing is most at risk, and what gets cut first?
 | Engineer | Task                                                                                       |
 | -------- | ------------------------------------------------------------------------------------------ |
 | **A**    | Wire async orchestrator: Agent 2 + Agent 3 in parallel. Single `pipeline.run(voyage_id)`.  |
-| **B**    | Implement Agent 4 (drafter). HTML letter template + `weasyprint` PDF export. `/letter.pdf` endpoint. |
+| **B**    | Implement Agent 4 (drafter). HTML letter template; letter content returned in `VoyageState`. (PDF export is client-side via `html2pdf.js` — Track C — no backend PDF endpoint.) |
 | **C**    | Render dispute narrative + executive summary in the right panel. Wire `Generate Letter` button to download PDF. |
 
 By 15:00 the end-to-end demo path should produce a downloadable BIMCO letter.

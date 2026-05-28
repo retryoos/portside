@@ -120,7 +120,7 @@ That's the whole template. Don't write paragraphs.
 
 ## 8. After the hackathon (Phase C)
 
-When we set up AWS + Vercel deploy on May 29, we switch on GitHub Actions for:
+When we promote the Phase C deploy (AWS Amplify + App Runner + Supabase) on May 29, we switch on GitHub Actions for:
 - `ruff check` + `ruff format --check` on push to any branch
 - `tsc --noEmit` on the web app
 - The calculator pytest

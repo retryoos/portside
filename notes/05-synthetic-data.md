@@ -96,8 +96,9 @@ One Python script: `synthetic-data/generate.py`. For each scenario:
 3. Render a Notice of Readiness as a 1-page PDF — letterhead-style header, the formal text ("Please take this as Notice that the captioned vessel arrived..."), tendered/accepted times, signature block.
 
 Generation approach options, in order of preference:
-- **(Preferred) HTML + weasyprint.** We already need `weasyprint` for the claim letter export. Reuse it. Templates live alongside the scenario JSON.
-- **(Backup) Word docs by hand.** Write three docs in Word, export to PDF, swap in the values per scenario. Faster if `weasyprint` HTML styling eats too much time.
+- **(Preferred) HTML + weasyprint.** `weasyprint` is used here as a **dev-time tool only** — to generate the synthetic input PDFs once. It runs on a Mac or under WSL on the Windows box (where its cairo/pango deps install cleanly via `brew`/`apt`). It is **not** part of the product runtime — the output claim letter is exported client-side in the browser, so `weasyprint` never ships to App Runner and never needs to run on native Windows. Templates live alongside the scenario JSON.
+- **(Backup) Word docs by hand.** Write three docs in Word, export to PDF, swap in the values per scenario. Faster if `weasyprint` HTML styling eats too much time, and avoids the dependency entirely.
+- **(Also fine) Browser print.** Open the HTML scenario template in a browser and print-to-PDF. Zero dependencies; works on any machine.
 
 The point is not perfection. The point is: a maritime person skimming for 5 seconds reads "yeah, that's a SoF."
 

@@ -318,7 +318,7 @@ Track A (backend) and Track C (frontend) work in parallel on Stretch Hour 1. The
 Inline highlight-and-revise is not just a demo trick. It's the foundation for three Phase C product surfaces:
 
 1. **Counterparty correspondence drafts.** When a charterer replies disputing the claim, Portside drafts a rebuttal — the claims executive refines it inline before sending.
-2. **Internal review.** The senior claims officer reviews the junior's revisions. Every revision has a logged actor (Phase C: Clerk `user_id`). The audit trail becomes a management tool.
+2. **Internal review.** The senior claims officer reviews the junior's revisions. Every revision has a logged actor (Phase C: Supabase `user_id`). The audit trail becomes a management tool.
 3. **The company brain.** Over months, the patterns of what claims executives revise — and how — train a fleet-specific drafting model. Portside learns the voice of each operator's claims department.
 
 So this is not stretch-for-stretch's-sake. It is the door to the AI-native service motion described in [00-PLAN.md §13](00-PLAN.md#13-beyond-the-hackathon-one-paragraph-for-the-pitch). Build the door now.

@@ -209,11 +209,12 @@ POST /voyages
 GET /voyages/{voyage_id}
   →  200  VoyageState (JSON)
 
-GET /voyages/{voyage_id}/letter.pdf
-  →  200  application/pdf
-
-GET /voyages/{voyage_id}/letter.docx
-  →  200  application/vnd.openxmlformats-officedocument.wordprocessingml.document
+(No letter.pdf / letter.docx endpoints.)
+  The letter content is already in VoyageState.packet (letter_segments / markdown).
+  The frontend renders it and exports the PDF client-side (html2pdf.js / print
+  stylesheet). Word export, if built, is also client-side from the same HTML.
+  This keeps the backend free of native PDF dependencies (no cairo/pango) so it
+  runs unchanged on macOS, WSL, and AWS App Runner.
 ```
 
 ---

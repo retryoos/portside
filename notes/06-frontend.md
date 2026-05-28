@@ -246,7 +246,9 @@ Skeleton state using `{colors.border}` placeholders. No spinner. The agent step 
 - **`Generate Claim Letter`** — full-width `button-primary` (brass). The visual anchor of this panel.
 - **Letter preview area** — empty until the button is clicked. Then renders the HTML letter inline (not as an iframe — we want streaming visible). Two `button-secondary` above: `Download PDF`, `Download Word`.
 
-The letter preview uses the same typography tokens as the product itself — Fraunces for the recipient block and "Re:" line, IBM Plex Sans for the body, JetBrains Mono for monetary amounts in the calculation summary.
+**PDF export is client-side.** The letter is already rendered as HTML in this panel; the `Download PDF` button runs `html2pdf.js` (or a dedicated print stylesheet + `window.print()`) on that DOM node. There is **no backend PDF endpoint** — this keeps the whole stack free of native PDF dependencies (no cairo/pango), so it runs identically on macOS, WSL, and AWS App Runner. `Download Word`, if built, uses the JS `docx` library on the same content (cuttable).
+
+The letter preview uses the same typography tokens as the product itself — Fraunces for the recipient block and "Re:" line, IBM Plex Sans for the body, JetBrains Mono for monetary amounts in the calculation summary. **These fonts must be embedded in the html2pdf output** — load them as base64 or ensure they're available at print time so the PDF isn't a fallback-font fallback.
 
 ---
 
@@ -263,7 +265,7 @@ The letter preview uses the same typography tokens as the product itself — Fra
 | `QuantumDisplay`        | C     | The big number block, `mono-quantum`                                            |
 | `ExecutiveSummary`      | C     | The right-panel three-line summary                                              |
 | `DisputeNarrative`      | C     | Markdown rendered paragraphs                                                    |
-| `LetterPreview`         | C     | Inline HTML letter preview + download buttons                                   |
+| `LetterPreview`         | C     | Inline HTML letter preview + **client-side** PDF export (`html2pdf.js`)          |
 | `TimebarBadge`          | C     | Three-color status chip                                                         |
 | `apiClient` (lib)       | C     | Typed fetch wrapper mirroring [04-schemas.md](04-schemas.md)                    |
 | `RevisableSurface`      | C     | **Tier 1 stretch.** Wraps the letter or narrative, segment-IDed, selection-aware. See [13-inline-revision.md](13-inline-revision.md). |

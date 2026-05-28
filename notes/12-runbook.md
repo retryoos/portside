@@ -10,7 +10,19 @@ The shape of the day: three engineers, each with two terminals open (one for `cl
 
 Every engineer's laptop must pass this before going to sleep on May 27.
 
+### Windows machine — read this first
+
+We have two devices: one macOS, one Windows. For the Windows box:
+
+- **Git only (clone / commit / push):** native Windows is fine. Install [Git for Windows](https://git-scm.com/download/win) and you're done.
+- **Frontend dev (Track C — Next.js / pnpm / Node):** native Windows is fine.
+- **Backend dev (Python / FastAPI):** **install WSL2** — `wsl --install` in an admin PowerShell, reboot, pick Ubuntu. Then run all the prerequisites below *inside* the Ubuntu shell, and clone the repo inside WSL (`~/code/...`, not `/mnt/c/...`, for speed). This makes the Windows box behave exactly like the Macs.
+
+Why WSL2 for backend: it removes the whole class of "works on Mac, breaks on Windows" issues and matches the Claude Code experience. **Note:** since PDF export is now client-side (`html2pdf.js`), we no longer have the painful cairo/pango/weasyprint dependency in the product — so if the Windows box is *only* doing frontend, you can skip WSL. If in doubt, install WSL2; it's ~10 minutes and free.
+
 ### Software prerequisites
+
+(Run inside WSL2 Ubuntu on the Windows box; run natively on macOS.)
 
 ```bash
 # Python 3.12+ via uv
@@ -167,8 +179,10 @@ curl http://localhost:8000/voyages/v_abc123 | jq .stage
 
 ### Download the letter
 ```bash
-curl http://localhost:8000/voyages/v_abc123/letter.pdf -o letter.pdf
-open letter.pdf
+# The letter PDF is generated client-side in the browser (Download PDF button),
+# not by the backend — there is no /letter.pdf endpoint to curl. To verify the
+# letter content exists, check the packet in the VoyageState:
+curl http://localhost:8000/voyages/v_abc123 | jq '.packet.letter_segments'
 ```
 
 ### Reset state (kill the in-memory store)
@@ -210,12 +224,14 @@ This is the most important class of bug. Procedure:
 4. Walk through `calculator.py` with `print(...)` statements showing each event's duration and the running total.
 5. The bug is almost always: wrong timezone handling, off-by-one on the demurrage threshold, or wrong rounding.
 
-### "weasyprint won't install (PDF letter export fails)"
-weasyprint depends on system libraries (`cairo`, `pango`). On macOS:
-```bash
-brew install cairo pango gdk-pixbuf libffi
-```
-Then re-run `uv sync`. If still broken, fall back to ReportLab (one of the team has it pre-tested as a backup). Cuttable feature anyway.
+### "The claim-letter PDF download is broken"
+PDF export is **client-side** (`html2pdf.js` on the rendered letter HTML) — there is no weasyprint, no backend PDF endpoint, no cairo/pango to install. If the download fails:
+- Check the letter actually rendered in the right panel first (the PDF is generated from that DOM node).
+- Confirm the Fraunces / IBM Plex / JetBrains Mono fonts are loaded before export, or the PDF falls back to default fonts.
+- Worst case fallback: `window.print()` with the print stylesheet → "Save as PDF" in the browser dialog. Zero dependencies.
+
+### "weasyprint won't install (only matters for generating synthetic INPUT PDFs)"
+weasyprint is used **only** by the synthetic-data background workstream to generate the demo CP/NOR/SoF PDFs — it never ships in the product. Run it on macOS (`brew install cairo pango gdk-pixbuf libffi`) or inside WSL2 Ubuntu (`sudo apt install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0`). If it's fighting you, generate the synthetic PDFs by opening the HTML templates in a browser and printing to PDF instead.
 
 ### "The Next.js dev server is slow / hot reload broken"
 ```bash
