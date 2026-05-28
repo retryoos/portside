@@ -28,7 +28,7 @@ export default function StageChip({ stage }: { stage: PipelineStage }) {
   const { label, className } = STAGE[stage];
   return (
     <span
-      className={`inline-flex items-center rounded-sm px-2 py-0.5 text-label-caps uppercase ${className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-label-caps ${className}`}
     >
       {label}
     </span>

@@ -15,14 +15,14 @@ export default function ReviseActions({
       <button
         type="button"
         onClick={onAccept}
-        className="rounded-sm bg-cta px-5 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover"
+        className="rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover"
       >
         Accept revision
       </button>
       <button
         type="button"
         onClick={onReject}
-        className="rounded-sm px-4 py-2.5 text-body-sm text-secondary transition-colors hover:text-primary"
+        className="rounded-full px-4 py-2.5 text-body-sm font-medium text-secondary transition-colors hover:text-primary"
       >
         Reject
       </button>

@@ -20,7 +20,7 @@ export default function LaytimeSummary({
   ];
 
   return (
-    <div className="rounded-md bg-surface-muted p-5">
+    <div className="rounded-lg bg-surface-muted p-5">
       <p className="text-label-caps text-secondary">Calculation summary</p>
       <dl className="mt-4 divide-y divide-border">
         {rows.map((r) => (

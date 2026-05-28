@@ -1,8 +1,8 @@
 "use client";
 
-// The SoF / laytime table (DESIGN.md §Screens 2, notes/06-frontend.md §5).
-// Columns: TIMESTAMP / DESCRIPTION / CATEGORY / CUM. HRS. Mono ONLY here.
-// Numeric column right-aligned. A contestable row is amber-tinted and clickable;
+// The SoF / laytime table (DESIGN.md "Surfaces"). Columns: TIMESTAMP / DESCRIPTION
+// / CATEGORY / CUM. HRS. Mono ONLY here, numeric column right-aligned. A
+// contestable row is amber-tinted (full tint, no side stripe) and clickable;
 // clicking reveals the matching dispute.flagged_events entry inline. Owner
 // position shown as a WORD (Strong/Arguable/Weak), never a percentage.
 import { useState } from "react";
@@ -37,7 +37,7 @@ export default function SoFTable({
     flagged.find((f) => f.event_id === eventId);
 
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div className="overflow-hidden rounded-lg border border-border">
       <table className="w-full border-collapse text-mono">
         <thead>
           <tr className="border-b border-border bg-surface-muted">
@@ -64,9 +64,7 @@ export default function SoFTable({
                 key={`${row.event_id_start}-${i}`}
                 contestable={row.contestable}
                 isOpen={isOpen}
-                onToggle={() =>
-                  setOpen(isOpen ? null : row.event_id_start)
-                }
+                onToggle={() => setOpen(isOpen ? null : row.event_id_start)}
                 timestamp={formatLocalTimestamp(row.from)}
                 description={row.reason}
                 category={CATEGORY_LABEL[row.status] ?? row.status}
@@ -104,37 +102,37 @@ function RowFragment({
     <>
       <tr
         className={`border-b border-border ${
-          contestable
-            ? "cursor-pointer border-l-2 border-l-contested bg-contested-container"
-            : ""
+          contestable ? "cursor-pointer bg-contested-container" : ""
         }`}
         onClick={contestable ? onToggle : undefined}
         aria-expanded={contestable ? isOpen : undefined}
       >
-        <td className="px-3 py-2.5 text-primary">{timestamp}</td>
-        <td className="px-3 py-2.5 text-primary">
-          {contestable && <span aria-hidden="true">⚑ </span>}
-          {description}
+        <td className="px-3 py-2.5 align-top text-primary">{timestamp}</td>
+        <td className="px-3 py-2.5 align-top text-primary">
+          <span className="flex items-start gap-2">
+            <span>{description}</span>
+            {contestable && (
+              <span className="shrink-0 rounded-full bg-contested px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-on-warning">
+                Contested
+              </span>
+            )}
+          </span>
         </td>
-        <td className="px-3 py-2.5 text-primary">{category}</td>
-        <td className="px-3 py-2.5 text-right text-primary tabular-nums">
+        <td className="px-3 py-2.5 align-top text-primary">{category}</td>
+        <td className="px-3 py-2.5 text-right align-top tabular-nums text-primary">
           {cumHrs}
         </td>
       </tr>
       {contestable && isOpen && flag && (
         <tr className="bg-contested-container">
-          <td colSpan={4} className="px-4 pb-4 pt-1">
-            <div className="rounded-sm border-l-2 border-l-contested bg-surface p-4">
+          <td colSpan={4} className="px-3 pb-4 pt-1">
+            <div className="rounded-lg border border-border bg-surface p-4">
               <p className="text-h3 text-primary">{flag.title}</p>
               <p className="mt-2 text-body-sm text-secondary">{flag.summary}</p>
-              <p className="mt-3 text-body-sm text-primary">
-                {flag.owner_argument}
-              </p>
+              <p className="mt-3 text-body-sm text-primary">{flag.owner_argument}</p>
               <dl className="mt-4 space-y-1.5">
                 <div className="flex items-baseline gap-2">
-                  <dt className="text-label-caps text-secondary">
-                    Owner position
-                  </dt>
+                  <dt className="text-label-caps text-secondary">Owner position</dt>
                   <dd className="text-body-sm text-primary">
                     {confidenceWord(flag.owner_position_strength)}
                   </dd>
@@ -143,7 +141,7 @@ function RowFragment({
                   <dt className="text-label-caps text-secondary">
                     Incremental demurrage
                   </dt>
-                  <dd className="text-body-sm text-primary">
+                  <dd className="text-body-sm tabular-nums text-primary">
                     {formatEur(flag.incremental_demurrage_eur)}
                   </dd>
                 </div>
