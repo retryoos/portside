@@ -1,0 +1,25 @@
+# AWS Amplify Hosting build spec for the Portside frontend (Next.js 15 App Router).
+# Set the App Root to `apps/web` in the Amplify Console; this file is read from there.
+# NEXT_PUBLIC_API_URL must be set in the Amplify environment variables to the
+# App Runner URL. See notes/16-aws-deploy.md.
+#
+# Package manager: npm (matches the committed apps/web/package-lock.json).
+# Do not switch to pnpm/yarn here without also updating the committed lockfile.
+
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --no-audit --no-fund
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*

@@ -1,9 +1,14 @@
 """FastAPI app + routes for the Portside backend.
 
-Three endpoints:
-    POST /voyages            upload CP/NOR/SoF PDFs, run pipeline, store state
-    GET  /voyages/{id}       fetch the stored VoyageState
-    GET  /healthz            liveness probe
+Endpoints:
+    POST /voyages                 upload CP/NOR/SoF PDFs, kick off the pipeline in
+                                  the background, return the voyage_id immediately
+                                  so the frontend can poll for staged progress
+                                  (notes/02-architecture.md §2).
+    GET  /voyages/{id}            fetch the current VoyageState (polled ~500ms).
+    POST /voyages/{id}/revise     inline-revise a letter/narrative segment
+                                  (notes/13-inline-revision.md).
+    GET  /healthz                 liveness probe.
 
 No database, no auth — in-memory state, one process, for the demo.
 """
@@ -11,6 +16,7 @@ No database, no auth — in-memory state, one process, for the demo.
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from typing import Annotated
 
@@ -20,14 +26,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import pipeline, reviser
 from .reviser import ReviseRequest, ReviseResponse
 from .schemas import Perspective, VoyageState
+from .settings import settings
 from .storage import InMemoryStore, VoyageStore
+
+logger = logging.getLogger("portside_api")
 
 app = FastAPI(title="Portside API", version="0.1.0")
 
-# CORS: the local Next.js dev server. The Amplify domain is added at deploy time.
+# CORS allowlist comes from settings.cors_origins (notes/02-architecture.md §12):
+# local dev defaults to http://localhost:3000; add the Amplify domain on deploy
+# via the CORS_ORIGINS env var.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,9 +47,10 @@ app.add_middleware(
 # In-memory store, shared for the process lifetime.
 store: VoyageStore = InMemoryStore()
 
-# Hold references to in-flight pipeline tasks so they are not garbage-collected
-# mid-run (asyncio only keeps weak references to tasks).
-_pipeline_tasks: set[asyncio.Task] = set()
+# Hold strong references to in-flight background tasks. asyncio.create_task only
+# weakly references its task, so without this the pipeline task can be GC'd /
+# cancelled mid-run.
+_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 
 @app.get("/healthz")
@@ -53,10 +65,9 @@ async def create_voyage(
     sof: UploadFile,
     perspective: Annotated[Perspective, Form()],
 ) -> dict[str, str]:
-    """Accept three voyage PDFs, kick off the pipeline, return the id immediately.
-
-    The pipeline runs in the background and writes each stage to the store, so the
-    frontend's GET poll sees progress (uploaded -> ... -> done | error).
+    """Accept three voyage PDFs, kick off the pipeline in the background, and
+    return the voyage_id immediately. The pipeline writes each stage to the store
+    so the frontend's GET poll sees progress (uploaded -> ... -> done | error).
     """
     files = {
         "cp": await cp.read(),
@@ -65,20 +76,21 @@ async def create_voyage(
     }
 
     voyage_id = f"v_{uuid.uuid4().hex[:12]}"
+    # Seed the initial state synchronously so a fast follow-up GET never 404s.
     await store.save(
         VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded")
     )
-
-    task = asyncio.create_task(pipeline.run(voyage_id, perspective, files, store))
-    _pipeline_tasks.add(task)
-    task.add_done_callback(_pipeline_tasks.discard)
+    # Fire-and-forget the pipeline; hold a strong reference until it completes.
+    task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
 
     return {"voyage_id": voyage_id}
 
 
 @app.get("/voyages/{voyage_id}")
 async def get_voyage(voyage_id: str) -> VoyageState:
-    """Return the stored VoyageState (the frontend polls this)."""
+    """Return the current VoyageState (the frontend polls this)."""
     state = await store.load(voyage_id)
     if state is None:
         raise HTTPException(status_code=404, detail="voyage not found")
@@ -101,3 +113,29 @@ async def revise_voyage(voyage_id: str, body: ReviseRequest) -> ReviseResponse:
     if blocked:
         raise HTTPException(status_code=422, detail=response.model_dump())
     return response
+
+
+async def _run_pipeline_bg(
+    voyage_id: str,
+    perspective: Perspective,
+    files: dict[str, bytes],
+) -> None:
+    """Run the pipeline in the background.
+
+    The pipeline saves each stage to the store as it advances (live polling) and
+    records stage="error" internally on failure. Passing `store` is what enables
+    the staged saves. This wrapper is a belt-and-suspenders guard for anything
+    that escapes the pipeline's own handler (notes/02-architecture.md §7).
+    """
+    try:
+        await pipeline.run(voyage_id, perspective, files, store)
+    except Exception as exc:  # noqa: BLE001 - boundary handler
+        logger.exception("pipeline failed for voyage %s", voyage_id)
+        await store.save(
+            VoyageState(
+                voyage_id=voyage_id,
+                perspective=perspective,
+                stage="error",
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        )

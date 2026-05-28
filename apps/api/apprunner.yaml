@@ -1,0 +1,33 @@
+# App Runner config for the Portside API.
+# Repo source: GitHub. Source dir: apps/api. Runtime: docker (uses the
+# Dockerfile sibling). See notes/16-aws-deploy.md for the step-by-step.
+#
+# Real env values (ANTHROPIC_API_KEY especially) are bound via the App Runner
+# console as secrets — never committed. Placeholders below exist only so the
+# App Runner parser sees declared names; override every one of them in console.
+
+version: 1.0
+runtime: docker
+build:
+  commands:
+    build:
+      # The Dockerfile in this directory is the build instruction.
+      - echo "Build step handled by Dockerfile; no extra commands."
+run:
+  command: uv run --no-dev uvicorn portside_api.main:app --host 0.0.0.0 --port 8000
+  network:
+    port: 8000
+    env: PORT
+  env:
+    # Real value set via App Runner console secret binding — never committed.
+    - name: ANTHROPIC_API_KEY
+      value: "set-via-console"
+    - name: ANTHROPIC_MODEL_PRIMARY
+      value: "claude-sonnet-4-6"
+    - name: ANTHROPIC_MODEL_ESCAPE
+      value: "claude-opus-4-7"
+    - name: REQUEST_TIMEOUT_S
+      value: "30"
+    - name: CORS_ORIGINS
+      # Updated to the real Amplify domain at deploy time.
+      value: "http://localhost:3000"
