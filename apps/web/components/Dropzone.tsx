@@ -34,7 +34,7 @@ export default function Dropzone({
   }
 
   return (
-    <section className="rounded-md border border-border bg-surface p-6">
+    <section className="rounded-xl border border-border bg-surface p-6 md:p-7">
       <p className="text-label-caps text-secondary">Run a live voyage</p>
       <p className="mt-2 text-body-sm text-secondary">
         Upload the three voyage documents (PDF) and the pipeline drafts the claim
@@ -52,7 +52,7 @@ export default function Dropzone({
               onChange={(e) =>
                 setFiles((prev) => ({ ...prev, [r.id]: e.target.files?.[0] }))
               }
-              className="mt-2 block w-full text-body-sm text-primary file:mr-3 file:rounded-sm file:border file:border-border file:bg-surface-muted file:px-3 file:py-1.5 file:text-body-sm file:text-primary"
+              className="mt-2 block w-full text-body-sm text-secondary file:mr-3 file:rounded-full file:border file:border-border file:bg-surface-muted file:px-3.5 file:py-1.5 file:text-body-sm file:font-medium file:text-primary hover:file:bg-border"
             />
             {files[r.id] && (
               <span className="mt-1 block truncate text-body-sm text-secondary">
@@ -68,7 +68,7 @@ export default function Dropzone({
           type="button"
           onClick={handleSubmit}
           disabled={!ready || busy}
-          className="rounded-sm bg-cta px-4 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50"
+          className="rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50"
         >
           {busy ? "Processing…" : "Process voyage"}
         </button>
@@ -77,7 +77,7 @@ export default function Dropzone({
           type="button"
           onClick={onDemo}
           disabled={busy}
-          className="rounded-sm px-3.5 py-2.5 text-body-sm text-secondary transition-colors hover:text-primary disabled:opacity-50"
+          className="rounded-full px-4 py-2.5 text-body-sm font-medium text-secondary transition-colors hover:text-primary disabled:opacity-50"
         >
           Try the demo voyage
         </button>
