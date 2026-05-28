@@ -30,7 +30,7 @@ One voyage, one port call, one disputed laytime calculation, one claim packet. N
 
 ## Architecture
 
-- **Models:** Claude Opus 4.7 / Sonnet 4.6 for extraction, classification, reasoning, and drafting; deterministic Python for the laytime arithmetic.
+- **Models:** Claude Sonnet 4.6 as the primary model (Opus 4.7 held as a per-agent quality escape hatch); deterministic Python for the laytime arithmetic.
 - **Backend:** FastAPI, async Python, tool-use with strict JSON schemas.
 - **Frontend:** Next.js + Tailwind. Three-panel UI — document extracts on the left, interactive laytime timeline in the center, generated claim package on the right.
 - **Target latency:** under 45 seconds end-to-end on three documents.
@@ -39,7 +39,7 @@ One voyage, one port call, one disputed laytime calculation, one claim packet. N
 
 1. Click **New Voyage Claim**, upload three PDFs.
 2. Watch the four agents run sequentially with live status messages.
-3. Center panel fills with the laytime calculation table; right panel shows the dispute narrative; bottom shows the claim quantum in large text (e.g. `Demurrage due to owners: USD 38,400.00`).
+3. Center panel fills with the laytime calculation table; right panel shows the dispute narrative; bottom shows the claim quantum in large text (e.g. `Demurrage due to owners: USD 84,375.00`).
 4. Highlight a contested row — agent explains inline why the charterer's weather exception isn't supported.
 5. Click **Generate Claim Letter** — a polished BIMCO-style PDF appears.
 

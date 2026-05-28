@@ -1,61 +1,57 @@
 # Synthetic Data — the demo voyages
 
-> One hour of work in the morning. Five scenarios. The first one (Piraeus weather dispute) is what we demo. The other four are backup.
+> One hour of work in the morning. Five scenarios. The first one (Rotterdam weather dispute) is what we demo. The other four are backup.
 
 We are not faking. The synthetic documents must look real to a maritime professional skimming them for 10 seconds. That means correct vocabulary, BIMCO-style layout, plausible vessel and port names, and timestamps that actually line up across the three documents.
 
 ---
 
-## 1. The primary demo scenario — `athens-weather-dispute`
+## 1. The primary demo scenario — `rotterdam-weather-dispute`
 
 ### Why this one
-- Lands in Athens. The judges will know Piraeus.
-- The dispute is the most visually compelling: an 11-hour weather stoppage the charterer claimed but the port weather record contradicts. The agent's flag and the dollar increment ($2,200 of incremental demurrage on top of $33k base = $35,200 total claim — final demo total of `USD 35,000` or `USD 38,400`) is a clean "aha moment."
+- Lands in Europe at Rotterdam — the biggest tonnage port on the continent and a name every judge will recognise.
+- The dispute is the most visually compelling: a contested 4-hour weather stoppage on 17 May worth USD 7,500. That contested row is the "aha moment" — the agent flags it, cites CP clause 14, and shows why the charterer's exception fails.
 - Doesn't require any exotic clauses. ASBATANKVOY-style language is sufficient.
 
 ### Voyage details
 
 | Field                   | Value                                            |
 | ----------------------- | ------------------------------------------------ |
-| Vessel                  | MV Anthem of Piraeus (fictional VLCC, 320k DWT)  |
-| Owner                   | Hellas Shipping Co.                              |
-| Charterer               | Mediterranean Crude Trading                      |
-| CP form                 | ASBATANKVOY 1977 (amended)                       |
-| CP date                 | 12 April 2026                                    |
+| Vessel                  | MT Aegean Pioneer (fictional VLCC)               |
+| Owner                   | Aegean Tankers S.A.                              |
+| Charterer               | North Sea Crude Trading B.V.                     |
+| CP form                 | ASBATANKVOY                                      |
+| CP date                 | 12 February 2026                                 |
 | Load port               | Ras Tanura, Saudi Arabia                         |
-| Discharge port          | Piraeus, Greece                                  |
+| Discharge port          | Rotterdam, Netherlands                           |
 | Laytime allowed         | 72 hours SHINC (discharge)                       |
-| Demurrage rate          | USD 48,000 per day pro rata                      |
-| Despatch rate           | USD 24,000 per day pro rata                      |
-| Exception clauses       | WIBON, WIFPON                                    |
-| Special weather clause  | Clause 17 — weather stoppages count only when sustained wind > 25 knots |
+| Demurrage rate          | USD 45,000 per day pro rata (= USD 1,875/hr)     |
+| Despatch rate           | USD 22,500 per day pro rata                      |
+| Exception clauses       | WIBON, WIFPON, SHINC                             |
+| Special weather clause  | **Clause 14** — weather stoppages count only where precipitation > 0.5 mm/hr |
 | Time bar                | 90 days from completion of discharge             |
 
-### Discharge timeline at Piraeus
+### Discharge timeline at Rotterdam
 
 | Event ID | Local time             | Description                                         |
 | -------- | ---------------------- | --------------------------------------------------- |
-| e1       | 2026-05-08 06:30       | Arrived at customary anchorage                      |
-| e2       | 2026-05-08 07:00       | NOR tendered                                        |
-| e3       | 2026-05-08 13:00       | Laytime commenced (6 hours after NOR)               |
-| e4       | 2026-05-09 02:00       | All fast at berth                                   |
-| e5       | 2026-05-09 04:00       | Commenced discharge                                 |
-| e6       | 2026-05-10 11:00       | Charterer-claimed weather stoppage begins (rain)    |
-| e7       | 2026-05-10 22:00       | Resumed discharge                                   |
-| e8       | 2026-05-11 18:30       | Laytime expires (72 hours from e3)                  |
-| e9       | 2026-05-12 12:00       | Completed discharge                                 |
+| e1       | 2026-05-14 05:00       | Arrived at Maasvlakte anchorage                     |
+| e2       | 2026-05-14 06:00       | NOR tendered                                        |
+| e3       | 2026-05-14 12:00       | Laytime commenced                                   |
+| e4       | 2026-05-14 20:00       | All fast at berth                                   |
+| e5       | 2026-05-14 22:00       | Commenced discharge                                 |
+| e6       | 2026-05-17 12:00       | Stoppage — rain claimed by charterer                |
+| e7       | 2026-05-17 16:00       | Resumed discharge                                   |
+| e8       | 2026-05-19 09:00       | Completed discharge                                 |
 
-Charterer claims event e6 → e7 (11 hours) is excepted weather time. Owner disputes because port authority record shows peak gust of 18 knots — below the 25-knot threshold in clause 17.
+Charterer claims event e6 → e7 (4 hours) is excepted weather time. Owner disputes because the Rotterdam Port Authority precipitation record shows a maximum of 0.2 mm/hr at the relevant times — below the 0.5 mm/hr threshold in CP clause 14. The position is backed by *The Mexico 1* [1990] 1 Lloyd's Rep 507.
 
 Numbers:
 - Laytime allowed: 72 hours
-- Time excepted (charterer's view): 11 hours from e6→e7
-- Time used (charterer's view): ~95 - 11 = 84 hours → 12 hours of demurrage = USD 24,000
-- Time used (owner's view, with e6→e7 disallowed): 95 hours → 23 hours of demurrage = USD 46,000
-- Delta: USD 22,000 — **this is the dollar figure we put on screen as "incremental recoverable"**
-- Final claim (owner): **USD 46,000** (or rounded to 38,400 / 35,000 for narrative simplicity — pick one and stay consistent across docs)
-
-> **Decision to make on the morning:** lock the exact dollar figures in `apps/api/portside_api/fixtures/athens_weather/` and make sure the synthetic CP, SoF, and weather record all reconcile to them.
+- Laytime used (owner's view, 4h disputed counts): 117 hours → 45 hours on demurrage = USD 84,375.00
+- Laytime used (charterer's view, 4h excepted): 113 hours → 41 hours on demurrage = USD 76,875.00
+- Delta: USD 7,500 — incremental recoverable on the contested 4-hour window
+- Final claim (owner): **USD 84,375.00**
 
 ---
 
@@ -89,6 +85,8 @@ Numbers:
 
 ## 3. How to generate the PDFs
 
+> Implementation note (May 28): the primary scenario's generator landed in `synthetic-data/generate.py` using `fpdf2` instead of `weasyprint` — pure Python, no native deps. Either approach satisfies the "looks like a contract / SoF / NOR" bar.
+
 One Python script: `synthetic-data/generate.py`. For each scenario:
 
 1. Render a Charter Party excerpt as a 2-page PDF — recitals, the laytime/demurrage clauses, and a couple of the relevant exception clauses (especially clause 17 for the weather case). Use a serif font (e.g., Crimson Text) and number the paragraphs. Look like a contract.
@@ -112,8 +110,8 @@ By 17:00 on May 28th, verify on the primary scenario:
 - [ ] All cross-references reconcile (vessel name, owner, charterer, dates, ports)
 - [ ] The Agent 1 extraction round-trips: every field in the schema gets populated
 - [ ] The Agent 2 arithmetic produces exactly the planned dollar figure
-- [ ] The Agent 3 flagged-events output mentions clause 17 by name and the 25-knot threshold
-- [ ] The Agent 4 letter cites the time bar date, the supporting documents list, and the BIMCO-style demand
+- [ ] The Agent 3 flagged-events output mentions clause 14 by name and the 0.5 mm/hr precipitation threshold
+- [ ] The Agent 4 letter cites the time bar date (17 August 2026 — 90 days from completion of discharge), the supporting documents list, and the BIMCO-style demand
 - [ ] End-to-end runtime is under 60 seconds on the demo laptop's network
 
 If any of these fail, fix them before doing anything else.
