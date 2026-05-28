@@ -78,6 +78,22 @@ class VoyageSummary(BaseModel):
         )
 
 
+class VesselSummary(BaseModel):
+    """Aggregate of all voyages that share a vessel_name (GET /vessels).
+
+    Built by grouping VoyageSummary rows. ``total_quantum_eur`` sums only the
+    voyages that have a quantum yet (None if none do). ``latest_stage`` and
+    ``last_activity`` come from the most-recent voyage by created_at.
+    """
+
+    name: str
+    voyage_count: int
+    total_quantum_eur: Optional[float] = None
+    latest_stage: PipelineStage
+    last_activity: datetime
+    perspectives: list[Perspective]
+
+
 # ---------------------------------------------------------------------------
 # 2. ExtractionResult — output of Agent 1
 # ---------------------------------------------------------------------------

@@ -26,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import pipeline, reviser
 from .fixtures import seed_voyages
 from .reviser import ReviseRequest, ReviseResponse
-from .schemas import Perspective, VoyageState, VoyageSummary
+from .schemas import Perspective, VesselSummary, VoyageState, VoyageSummary
 from .settings import settings
 from .storage import InMemoryStore, VoyageStore
 
@@ -71,6 +71,12 @@ async def healthz() -> dict[str, str]:
 async def list_voyages() -> list[VoyageSummary]:
     """Return all voyages as lightweight summaries, newest-first (dashboard)."""
     return await store.list()
+
+
+@app.get("/vessels")
+async def list_vessels() -> list[VesselSummary]:
+    """Return voyages grouped by vessel, newest-active first (vessels view)."""
+    return await store.list_vessels()
 
 
 @app.post("/voyages", status_code=201)
