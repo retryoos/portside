@@ -1,13 +1,14 @@
 """FastAPI app + routes for the Portside backend.
 
-Three endpoints:
-    POST /voyages            upload CP/NOR/SoF PDFs, kick off the pipeline in the
-                             background, return the voyage_id immediately so the
-                             frontend can begin polling for staged progress
-                             (notes/02-architecture.md §2).
-    GET  /voyages/{id}       fetch the current VoyageState (the frontend polls
-                             this every 500ms).
-    GET  /healthz            liveness probe.
+Endpoints:
+    POST /voyages                 upload CP/NOR/SoF PDFs, kick off the pipeline in
+                                  the background, return the voyage_id immediately
+                                  so the frontend can poll for staged progress
+                                  (notes/02-architecture.md §2).
+    GET  /voyages/{id}            fetch the current VoyageState (polled ~500ms).
+    POST /voyages/{id}/revise     inline-revise a letter/narrative segment
+                                  (notes/13-inline-revision.md).
+    GET  /healthz                 liveness probe.
 
 No database, no auth — in-memory state, one process, for the demo.
 """
@@ -22,7 +23,8 @@ from typing import Annotated
 from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import pipeline
+from . import pipeline, reviser
+from .reviser import ReviseRequest, ReviseResponse
 from .schemas import Perspective, VoyageState
 from .settings import settings
 from .storage import InMemoryStore, VoyageStore
@@ -32,8 +34,8 @@ logger = logging.getLogger("portside_api")
 app = FastAPI(title="Portside API", version="0.1.0")
 
 # CORS allowlist comes from settings.cors_origins (notes/02-architecture.md §12):
-# - local dev: "http://localhost:3000" is the default
-# - AWS deploy: add the Amplify domain via the CORS_ORIGINS env var
+# local dev defaults to http://localhost:3000; add the Amplify domain on deploy
+# via the CORS_ORIGINS env var.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -44,6 +46,11 @@ app.add_middleware(
 
 # In-memory store, shared for the process lifetime.
 store: VoyageStore = InMemoryStore()
+
+# Hold strong references to in-flight background tasks. asyncio.create_task only
+# weakly references its task, so without this the pipeline task can be GC'd /
+# cancelled mid-run.
+_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 
 @app.get("/healthz")
@@ -58,9 +65,9 @@ async def create_voyage(
     sof: UploadFile,
     perspective: Annotated[Perspective, Form()],
 ) -> dict[str, str]:
-    """Accept three voyage PDFs, kick off the pipeline in the background, return
-    the voyage_id immediately. The frontend polls GET /voyages/{id} to watch the
-    stage advance (notes/02-architecture.md §2).
+    """Accept three voyage PDFs, kick off the pipeline in the background, and
+    return the voyage_id immediately. The pipeline writes each stage to the store
+    so the frontend's GET poll sees progress (uploaded -> ... -> done | error).
     """
     files = {
         "cp": await cp.read(),
@@ -73,8 +80,7 @@ async def create_voyage(
     await store.save(
         VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded")
     )
-    # Fire-and-forget the pipeline. We hold a reference so the task is not GC'd
-    # mid-flight (asyncio.create_task only weakly references its task object).
+    # Fire-and-forget the pipeline; hold a strong reference until it completes.
     task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
@@ -91,10 +97,22 @@ async def get_voyage(voyage_id: str) -> VoyageState:
     return state
 
 
-# Hold strong references to in-flight background tasks. asyncio.create_task
-# returns a task that is otherwise weakly referenced by the event loop, so
-# without a strong ref the task may be cancelled mid-run.
-_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
+@app.post("/voyages/{voyage_id}/revise")
+async def revise_voyage(voyage_id: str, body: ReviseRequest) -> ReviseResponse:
+    """Inline-revise a letter/narrative segment (notes/13-inline-revision.md).
+
+    The rewrite is validated server-side: if it changed a monetary value or
+    dropped a CP clause / SoF event reference, it is rejected with HTTP 422 and
+    the safety report so the UI can surface why.
+    """
+    state = await store.load(voyage_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+
+    blocked, response = await reviser.revise(body, state)
+    if blocked:
+        raise HTTPException(status_code=422, detail=response.model_dump())
+    return response
 
 
 async def _run_pipeline_bg(
@@ -102,15 +120,15 @@ async def _run_pipeline_bg(
     perspective: Perspective,
     files: dict[str, bytes],
 ) -> None:
-    """Run the pipeline in the background and write the result to the store.
+    """Run the pipeline in the background.
 
-    On any unexpected exception we record stage="error" with the message and
-    return, so the polling frontend sees a terminal state and can render it
-    (notes/02-architecture.md §7).
+    The pipeline saves each stage to the store as it advances (live polling) and
+    records stage="error" internally on failure. Passing `store` is what enables
+    the staged saves. This wrapper is a belt-and-suspenders guard for anything
+    that escapes the pipeline's own handler (notes/02-architecture.md §7).
     """
     try:
-        state = await pipeline.run(voyage_id, perspective, files)
-        await store.save(state)
+        await pipeline.run(voyage_id, perspective, files, store)
     except Exception as exc:  # noqa: BLE001 - boundary handler
         logger.exception("pipeline failed for voyage %s", voyage_id)
         await store.save(

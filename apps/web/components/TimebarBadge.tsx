@@ -2,8 +2,11 @@
 // >30 days = success (green), 1-30 = warning (amber), <=0 = danger (red).
 import { demoVoyage } from "@/lib/demo";
 
-export default function TimebarBadge() {
-  const days = demoVoyage.packet?.days_until_time_bar ?? 0;
+export default function TimebarBadge({
+  days = demoVoyage.packet?.days_until_time_bar ?? 0,
+}: {
+  days?: number;
+}) {
 
   const tone =
     days > 30

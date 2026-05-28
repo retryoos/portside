@@ -2,9 +2,14 @@
 // notes/06-frontend.md §5 quantum). Allowed / used / on demurrage / rate / due.
 import { demoVoyage } from "@/lib/demo";
 import { formatHours, formatUsd } from "@/lib/format";
+import type { LaytimeResult } from "@/lib/types";
 
-export default function LaytimeSummary() {
-  const lt = demoVoyage.laytime;
+export default function LaytimeSummary({
+  laytime = demoVoyage.laytime,
+}: {
+  laytime?: LaytimeResult | null;
+}) {
+  const lt = laytime;
   if (!lt) return null;
 
   const rows: { label: string; value: string }[] = [

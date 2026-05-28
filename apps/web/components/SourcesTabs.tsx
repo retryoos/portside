@@ -7,6 +7,7 @@ import { useState } from "react";
 import { demoVoyage } from "@/lib/demo";
 import LaytimeSummary from "@/components/LaytimeSummary";
 import SoFTable from "@/components/SoFTable";
+import type { VoyageState } from "@/lib/types";
 
 type Tab = "sources" | "calculation" | "documents";
 
@@ -16,11 +17,15 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "documents", label: "Documents" },
 ];
 
-export default function SourcesTabs() {
+export default function SourcesTabs({
+  voyage = demoVoyage,
+}: {
+  voyage?: VoyageState;
+}) {
   const [active, setActive] = useState<Tab>("calculation");
 
-  const clauses = demoVoyage.extraction?.charter_party.clause_excerpts ?? [];
-  const documents = demoVoyage.packet?.supporting_documents ?? [];
+  const clauses = voyage.extraction?.charter_party.clause_excerpts ?? [];
+  const documents = voyage.packet?.supporting_documents ?? [];
 
   return (
     <section className="rounded-md border border-border bg-surface">
@@ -53,8 +58,11 @@ export default function SourcesTabs() {
       <div className="p-5">
         {active === "calculation" && (
           <div className="space-y-5">
-            <LaytimeSummary />
-            <SoFTable />
+            <LaytimeSummary laytime={voyage.laytime} />
+            <SoFTable
+              laytime={voyage.laytime}
+              flagged={voyage.dispute?.flagged_events ?? []}
+            />
           </div>
         )}
 

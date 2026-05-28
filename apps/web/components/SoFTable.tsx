@@ -13,7 +13,7 @@ import {
   formatLocalTimestamp,
   formatUsd,
 } from "@/lib/format";
-import type { FlaggedEvent } from "@/lib/types";
+import type { FlaggedEvent, LaytimeResult } from "@/lib/types";
 
 const CATEGORY_LABEL: Record<string, string> = {
   laytime: "Laytime",
@@ -21,9 +21,14 @@ const CATEGORY_LABEL: Record<string, string> = {
   excepted: "Excepted",
 };
 
-export default function SoFTable() {
-  const lt = demoVoyage.laytime;
-  const flagged = demoVoyage.dispute?.flagged_events ?? [];
+export default function SoFTable({
+  laytime = demoVoyage.laytime,
+  flagged = demoVoyage.dispute?.flagged_events ?? [],
+}: {
+  laytime?: LaytimeResult | null;
+  flagged?: FlaggedEvent[];
+}) {
+  const lt = laytime;
   const [open, setOpen] = useState<string | null>(null);
 
   if (!lt) return null;

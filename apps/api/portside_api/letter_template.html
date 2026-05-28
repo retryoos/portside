@@ -1,0 +1,48 @@
+<!--
+  BIMCO-style demurrage claim letter skeleton (notes/03-agents.md, notes/11-prompts.md).
+  Agent 4 (drafter) loads this and fills the {SLOTS}, returning the result as
+  markdown in ClaimPacket.claim_letter_markdown. PDF export is client-side from
+  the rendered markdown (html2pdf.js) — the backend never renders a PDF.
+  Sections are mandatory and must appear in this order.
+-->
+
+**{OWNER}**
+{OWNER_ADDRESS_LINE}
+
+{LETTER_DATE}
+
+{CHARTERER}
+Attn: Claims Department
+
+Dear Sirs,
+
+**Re: Demurrage Claim — {VESSEL} — {LOAD_PORT} / {DISCHARGE_PORT} — CP dated {CP_DATE}**
+
+{OPENING_PARAGRAPH}
+
+**1. Summary of claim**
+- Laytime allowed: {LAYTIME_ALLOWED_HOURS} hours {LAYTIME_BASIS}
+- Laytime used: {LAYTIME_USED_HOURS} hours
+- Time on demurrage: {TIME_ON_DEMURRAGE_HOURS} hours
+- Demurrage rate: USD {DEMURRAGE_RATE_PER_DAY} per day pro rata
+- Demurrage due: USD {QUANTUM}
+
+**2. Statement of facts**
+{STATEMENT_OF_FACTS_PARAGRAPHS}
+
+**3. Disputed time**
+{DISPUTED_TIME_SUBSECTIONS}
+
+**4. Time bar**
+This claim is submitted within the contractual time bar of {TIME_BAR_DAYS} days from completion of discharge, which falls on {TIME_BAR_DATE}.
+
+**5. Supporting documents**
+{SUPPORTING_DOCUMENTS_LIST}
+
+**6. Demand**
+We accordingly demand payment of USD {QUANTUM} within 30 days of the date of this letter to our nominated bank account, details of which have been previously notified to you under separate cover.
+
+All rights reserved.
+
+Yours faithfully,
+{SIGNATURE_BLOCK}
