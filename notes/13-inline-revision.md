@@ -83,7 +83,7 @@ class ClaimPacket(BaseModel):
 
 **Locked segments** (cannot be revised):
 
-- The dollar quantum line ("We accordingly demand payment of USD …")
+- The dollar quantum line ("We accordingly demand payment of EUR …")
 - The time-bar statement (paragraph 4 of the letter)
 - The supporting documents list
 - Any sentence containing a citation to a specific CP clause number, locked at the citation token level (the surrounding text is revisable, the clause-number token isn't)
@@ -132,7 +132,7 @@ Response: 200
 ```
 
 Server-side validation **after** the revision agent responds:
-- Parse all `USD <number>` patterns out of both the old and new text. If any monetary value changed → reject the revision, return 422 with the safety violation, and tell the user "the model attempted to change a monetary value; revision blocked."
+- Parse all `EUR <number>` patterns out of both the old and new text. If any monetary value changed → reject the revision, return 422 with the safety violation, and tell the user "the model attempted to change a monetary value; revision blocked."
 - Parse all "clause N" / "§N" patterns. If any were removed or renumbered → reject.
 - Parse all event-ID patterns (`e<digit>+`). If any were removed → reject.
 
@@ -164,7 +164,7 @@ You receive the full text of a demurrage claim letter or dispute narrative, with
 Your task: rewrite only the flagged segments according to the instruction. Preserve everything else.
 
 Hard constraints:
-- Do not change any monetary value. Every "USD <number>" appearing in the input must appear unchanged (in value, formatting, and position relative to the surrounding sentence) in your output. If the instruction would require changing a monetary value, return the segment unchanged and explain why in the rejection_reason field.
+- Do not change any monetary value. Every "EUR <number>" appearing in the input must appear unchanged (in value, formatting, and position relative to the surrounding sentence) in your output. If the instruction would require changing a monetary value, return the segment unchanged and explain why in the rejection_reason field.
 - Do not remove or renumber any CP clause citation. If the input cites "clause 17", your output must cite "clause 17" (in the same segment, if it was in the same segment).
 - Do not remove or change any SoF event ID (e.g., "e6", "e8").
 - Do not change the time-bar date or the supporting documents list, even if asked.

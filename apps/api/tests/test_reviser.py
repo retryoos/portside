@@ -20,14 +20,14 @@ from portside_api.reviser import (
 
 ORIGINAL = (
     "Per CP clause 14, the weather stoppage at e6 does not meet the threshold, "
-    "so demurrage of USD 84,375.00 is due."
+    "so demurrage of EUR 84,375.00 is due."
 )
 
 
 def test_clean_reword_passes():
     revised = (
         "The weather stoppage at e6 fails the CP clause 14 threshold; "
-        "accordingly USD 84,375.00 in demurrage is due."
+        "accordingly EUR 84,375.00 in demurrage is due."
     )
     ok, report = validate_revision(ORIGINAL, revised)
     assert ok is True
@@ -44,14 +44,14 @@ def test_changed_monetary_value_is_rejected():
 
 
 def test_dropped_clause_is_rejected():
-    no_clause = "The weather stoppage at e6 fails; USD 84,375.00 is due."
+    no_clause = "The weather stoppage at e6 fails; EUR 84,375.00 is due."
     ok, report = validate_revision(ORIGINAL, no_clause)
     assert ok is False
     assert any("clause" in w for w in report.warnings)
 
 
 def test_dropped_event_is_rejected():
-    no_event = "Per CP clause 14, the stoppage fails; USD 84,375.00 is due."
+    no_event = "Per CP clause 14, the stoppage fails; EUR 84,375.00 is due."
     ok, report = validate_revision(ORIGINAL, no_event)
     assert ok is False
     assert any("event" in w for w in report.warnings)
@@ -72,7 +72,7 @@ def test_manual_edit_safe_change_is_applied():
     voyage = demo_voyage_fixture()
     safe = (
         "The weather stoppage at e6 fails the CP clause 14 threshold; "
-        "USD 84,375.00 in demurrage is due."
+        "EUR 84,375.00 in demurrage is due."
     )
     blocked, response = asyncio.run(revise(_manual_request(safe), voyage))
     assert blocked is False

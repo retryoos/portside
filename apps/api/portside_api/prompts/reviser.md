@@ -9,7 +9,7 @@ Your task: rewrite ONLY the flagged segments according to the instruction.
 Preserve everything else.
 
 HARD CONSTRAINTS (these are non-negotiable):
-- Do not change any monetary value. Every "USD <number>" in a flagged segment
+- Do not change any monetary value. Every "EUR <number>" in a flagged segment
   must appear unchanged — same value, formatting, and position relative to its
   sentence — in your rewrite.
 - Do not remove or renumber any CP clause citation. If a segment cites "clause

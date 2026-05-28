@@ -4,7 +4,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { demoVoyage } from "@/lib/demo";
-import { formatUsd } from "@/lib/format";
+import { formatEur } from "@/lib/format";
 import type { ClaimPacket } from "@/lib/types";
 
 export const LETTER_DOM_ID = "claim-letter-sheet";
@@ -24,7 +24,7 @@ export default function ClaimLetter({
       <p className="text-label-caps text-secondary">To: Charterers</p>
 
       <p className="mt-6 text-hero-figure text-primary">
-        Demurrage due to owners: {formatUsd(packet.quantum_usd)}
+        Demurrage due to owners: {formatEur(packet.quantum_eur)}
       </p>
 
       <div className="mt-8 text-letter-body text-primary">

@@ -1,8 +1,8 @@
-// Shared formatters. DESIGN.md: money "USD 84,375.00"; timestamps "17 May 14:00 LT";
+// Shared formatters. DESIGN.md: money "EUR 84,375.00"; timestamps "17 May 14:00 LT";
 // confidence shown as a WORD (Strong/Arguable/Weak), never a numeric percentage.
 
-export function formatUsd(amount: number): string {
-  return `USD ${amount.toLocaleString("en-US", {
+export function formatEur(amount: number): string {
+  return `EUR ${amount.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

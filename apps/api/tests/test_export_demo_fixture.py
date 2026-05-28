@@ -25,7 +25,7 @@ def test_export_writes_wire_shape_json(tmp_path: Path) -> None:
 
     assert data["voyage_id"] == "v_aegean_pioneer"
     assert data["stage"] == "done"
-    assert data["laytime"]["demurrage_due_usd"] == 84375.0
+    assert data["laytime"]["demurrage_due_eur"] == 84375.0
     assert data["laytime"]["laytime_used_hours"] == 117.0
 
     row0 = data["laytime"]["rows"][0]
@@ -61,4 +61,4 @@ def test_committed_fixture_round_trips_to_voyage_state() -> None:
     assert state.voyage_id == "v_aegean_pioneer"
     assert state.stage == "done"
     assert state.laytime is not None
-    assert state.laytime.demurrage_due_usd == 84375.0
+    assert state.laytime.demurrage_due_eur == 84375.0

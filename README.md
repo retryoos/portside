@@ -39,7 +39,7 @@ One voyage, one port call, one disputed laytime calculation, one claim packet. N
 
 1. Click **New Voyage Claim**, upload three PDFs.
 2. Watch the four agents run sequentially with live status messages.
-3. Center panel fills with the laytime calculation table; right panel shows the dispute narrative; bottom shows the claim quantum in large text (e.g. `Demurrage due to owners: USD 84,375.00`).
+3. Center panel fills with the laytime calculation table; right panel shows the dispute narrative; bottom shows the claim quantum in large text (e.g. `Demurrage due to owners: EUR 84,375.00`).
 4. Highlight a contested row — agent explains inline why the charterer's weather exception isn't supported.
 5. Click **Generate Claim Letter** — a polished BIMCO-style PDF appears.
 

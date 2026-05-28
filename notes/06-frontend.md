@@ -155,7 +155,7 @@ Three `card-muted` blocks (these are evidence, not the active surface), stacked 
 │  CHARTER PARTY              [label-caps {colors.secondary}]
 │  ASBATANKVOY · CP dated 12 Apr 2026  [body {colors.primary}]
 │  Laytime: 72h SHINC                  [body-sm]
-│  Demurrage: USD 48,000/day           [body-sm, JetBrains Mono]
+│  Demurrage: EUR 48,000/day           [body-sm, JetBrains Mono]
 │  Clauses: WIBON, WIFPON, §17 weather [body-sm]
 │  [view excerpt]                      [body-sm link, {colors.tertiary}]
 └──────────────────────────────────────┘
@@ -211,7 +211,7 @@ Click a contested row → inline expansion below the row, in `card-muted` style:
 │ of 18 knots and no rain at the relevant times.                            │
 │                                                                            │
 │ Owner's position: 88% confidence                                           │
-│ Incremental recoverable demurrage: USD 22,000.00                           │
+│ Incremental recoverable demurrage: EUR 22,000.00                           │
 │ Citations: CP clause 17; SoF event e6                                      │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -224,7 +224,7 @@ The gravitational center of the screen. Set the number in `mono-quantum` (JetBra
 ┌────────────────────────────────────────────────────────────────────────────┐
 │                                                                            │
 │           DEMURRAGE DUE TO OWNERS                                          │
-│           USD 38,400.00                                                    │  ← mono-quantum
+│           EUR 38,400.00                                                    │  ← mono-quantum
 │                                                                            │
 │           Laytime allowed 72h · Used 89.5h · On demurrage 17.5h            │
 │                                                                            │
@@ -322,7 +322,7 @@ Before 18:30:
 - [ ] `npx impeccable detect apps/web/src/` clean
 - [ ] `/impeccable polish` run on every panel
 - [ ] Replace any placeholder copy with real data
-- [ ] Numbers formatted with thousands separators and two decimals (`USD 38,400.00`)
+- [ ] Numbers formatted with thousands separators and two decimals (`EUR 38,400.00`)
 - [ ] Timestamps uniform (`08 May 13:00 LT`)
 - [ ] No console errors, no console warnings
 - [ ] Browser zoom set to 100%

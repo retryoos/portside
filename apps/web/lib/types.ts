@@ -35,8 +35,8 @@ export interface CharterParty {
   discharge_port: string;
   laytime_allowed_hours: number;
   laytime_basis: string;
-  demurrage_rate_usd_per_day: number;
-  despatch_rate_usd_per_day: number | null;
+  demurrage_rate_eur_per_day: number;
+  despatch_rate_eur_per_day: number | null;
   exception_clauses: string[];
   nor_tender_window: string;
   laytime_commencement_rule: string;
@@ -120,9 +120,9 @@ export interface LaytimeResult {
   laytime_used_hours: number;
   time_on_demurrage_hours: number;
   time_excepted_hours: number;
-  demurrage_rate_per_hour_usd: number;
-  demurrage_due_usd: number;
-  despatch_due_usd: number | null;
+  demurrage_rate_per_hour_eur: number;
+  demurrage_due_eur: number;
+  despatch_due_eur: number | null;
   rows: LaytimeRow[];
   classifications: EventClassification[];
 }
@@ -134,7 +134,7 @@ export interface FlaggedEvent {
   owner_argument: string;
   charterer_argument: string;
   owner_position_strength: number;
-  incremental_demurrage_usd: number;
+  incremental_demurrage_eur: number;
   clauses_cited: string[];
   evidence_required: string[];
 }
@@ -147,7 +147,7 @@ export interface DisputeAnalysis {
 }
 
 export interface ClaimPacket {
-  quantum_usd: number;
+  quantum_eur: number;
   executive_summary: string;
   dispute_narrative_markdown: string;
   claim_letter_markdown: string;

@@ -10,7 +10,7 @@ We are not faking. The synthetic documents must look real to a maritime professi
 
 ### Why this one
 - Lands in Europe at Rotterdam — the biggest tonnage port on the continent and a name every judge will recognise.
-- The dispute is the most visually compelling: a contested 4-hour weather stoppage on 17 May worth USD 7,500. That contested row is the "aha moment" — the agent flags it, cites CP clause 14, and shows why the charterer's exception fails.
+- The dispute is the most visually compelling: a contested 4-hour weather stoppage on 17 May worth EUR 7,500. That contested row is the "aha moment" — the agent flags it, cites CP clause 14, and shows why the charterer's exception fails.
 - Doesn't require any exotic clauses. ASBATANKVOY-style language is sufficient.
 
 ### Voyage details
@@ -25,8 +25,8 @@ We are not faking. The synthetic documents must look real to a maritime professi
 | Load port               | Ras Tanura, Saudi Arabia                         |
 | Discharge port          | Rotterdam, Netherlands                           |
 | Laytime allowed         | 72 hours SHINC (discharge)                       |
-| Demurrage rate          | USD 45,000 per day pro rata (= USD 1,875/hr)     |
-| Despatch rate           | USD 22,500 per day pro rata                      |
+| Demurrage rate          | EUR 45,000 per day pro rata (= EUR 1,875/hr)     |
+| Despatch rate           | EUR 22,500 per day pro rata                      |
 | Exception clauses       | WIBON, WIFPON, SHINC                             |
 | Special weather clause  | **Clause 14** — weather stoppages count only where precipitation > 0.5 mm/hr |
 | Time bar                | 90 days from completion of discharge             |
@@ -48,10 +48,10 @@ Charterer claims event e6 → e7 (4 hours) is excepted weather time. Owner dispu
 
 Numbers:
 - Laytime allowed: 72 hours
-- Laytime used (owner's view, 4h disputed counts): 117 hours → 45 hours on demurrage = USD 84,375.00
-- Laytime used (charterer's view, 4h excepted): 113 hours → 41 hours on demurrage = USD 76,875.00
-- Delta: USD 7,500 — incremental recoverable on the contested 4-hour window
-- Final claim (owner): **USD 84,375.00**
+- Laytime used (owner's view, 4h disputed counts): 117 hours → 45 hours on demurrage = EUR 84,375.00
+- Laytime used (charterer's view, 4h excepted): 113 hours → 41 hours on demurrage = EUR 76,875.00
+- Delta: EUR 7,500 — incremental recoverable on the contested 4-hour window
+- Final claim (owner): **EUR 84,375.00**
 
 ---
 
