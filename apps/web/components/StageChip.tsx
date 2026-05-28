@@ -1,16 +1,18 @@
 import type { PipelineStage } from "@/lib/types";
 
-// Status chip for a voyage's pipeline stage (P4 — dashboard table + case header).
-// Maps each PipelineStage to a design-token color and a human label: in-progress
-// stages (uploaded through drafting) are amber, done reads as ink (claim ready),
-// settled is green (money in), error is red.
+// Status chip for a voyage's claim lifecycle, mapped from the pipeline stage.
+// Kept to the few statuses a claims desk actually acts on: In progress (the
+// pipeline is still extracting/calculating/drafting) -> Draft (the claim packet
+// is drafted and ready to send to the charterer; the pipeline's "done" stage)
+// -> Settled (resolved, money in). Error on failure. Colors: amber = working,
+// ink = drafted/ready to send, green = settled, red = error.
 const STAGE: Record<PipelineStage, { label: string; className: string }> = {
-  uploaded: { label: "Uploaded", className: "bg-warning-container text-warning" },
-  extracting: { label: "Extracting", className: "bg-warning-container text-warning" },
-  calculating: { label: "Calculating", className: "bg-warning-container text-warning" },
-  analyzing: { label: "Analyzing", className: "bg-warning-container text-warning" },
-  drafting: { label: "Drafting", className: "bg-warning-container text-warning" },
-  done: { label: "Done", className: "bg-surface-muted text-primary" },
+  uploaded: { label: "In progress", className: "bg-warning-container text-warning" },
+  extracting: { label: "In progress", className: "bg-warning-container text-warning" },
+  calculating: { label: "In progress", className: "bg-warning-container text-warning" },
+  analyzing: { label: "In progress", className: "bg-warning-container text-warning" },
+  drafting: { label: "In progress", className: "bg-warning-container text-warning" },
+  done: { label: "Draft", className: "bg-surface-muted text-primary" },
   settled: { label: "Settled", className: "bg-success-container text-success" },
   error: { label: "Error", className: "bg-danger-container text-danger" },
 };
