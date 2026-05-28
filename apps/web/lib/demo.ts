@@ -16,6 +16,7 @@ export const demoVoyage: VoyageState = {
   perspective: "owner",
   stage: "done",
   error: null,
+  created_at: "2026-05-19T09:00:00Z",
   extraction: {
     charter_party: {
       form: "ASBATANKVOY",

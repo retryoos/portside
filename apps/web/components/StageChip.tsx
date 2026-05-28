@@ -1,16 +1,16 @@
 import type { PipelineStage } from "@/lib/types";
 
 // Status chip for a voyage's pipeline stage (P4 — dashboard table + case header).
-// Maps each PipelineStage to a design-token color and a human label. The mid-
-// pipeline stages (extracting/calculating/analyzing/drafting) share the in-
-// progress (warning) look; done/settled read as success; error reads as danger.
+// Maps each PipelineStage to a design-token color and a human label: in-progress
+// stages (uploaded through drafting) are amber, done reads as ink (claim ready),
+// settled is green (money in), error is red.
 const STAGE: Record<PipelineStage, { label: string; className: string }> = {
-  uploaded: { label: "Uploaded", className: "bg-surface-muted text-secondary" },
+  uploaded: { label: "Uploaded", className: "bg-warning-container text-warning" },
   extracting: { label: "Extracting", className: "bg-warning-container text-warning" },
   calculating: { label: "Calculating", className: "bg-warning-container text-warning" },
   analyzing: { label: "Analyzing", className: "bg-warning-container text-warning" },
   drafting: { label: "Drafting", className: "bg-warning-container text-warning" },
-  done: { label: "Done", className: "bg-success-container text-success" },
+  done: { label: "Done", className: "bg-surface-muted text-primary" },
   settled: { label: "Settled", className: "bg-success-container text-success" },
   error: { label: "Error", className: "bg-danger-container text-danger" },
 };

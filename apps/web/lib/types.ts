@@ -10,7 +10,8 @@ export type PipelineStage =
   | "analyzing"
   | "drafting"
   | "done"
-  | "error";
+  | "error"
+  | "settled";
 
 export interface ClauseExcerpt {
   clause_no: string;
@@ -162,8 +163,22 @@ export interface VoyageState {
   perspective: Perspective;
   stage: PipelineStage;
   error: string | null;
+  created_at: string;
   extraction: ExtractionResult | null;
   laytime: LaytimeResult | null;
   dispute: DisputeAnalysis | null;
   packet: ClaimPacket | null;
+}
+
+// Lightweight list-row projection of a VoyageState (GET /voyages). Fields that
+// depend on a completed pipeline are nullable for still-processing voyages.
+export interface VoyageSummary {
+  id: string;
+  vessel_name: string | null;
+  load_port: string | null;
+  discharge_port: string | null;
+  quantum_eur: number | null;
+  stage: PipelineStage;
+  perspective: Perspective;
+  created_at: string;
 }
