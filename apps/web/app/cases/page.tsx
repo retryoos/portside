@@ -70,9 +70,10 @@ export default function CasesDashboardPage() {
             <button
               type="button"
               onClick={() => setShowUpload((s) => !s)}
+              aria-expanded={showUpload}
               className="rounded-sm bg-cta px-4 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover"
             >
-              New voyage claim
+              {showUpload ? "Close" : "New voyage claim"}
             </button>
           </div>
         </div>
@@ -91,7 +92,24 @@ export default function CasesDashboardPage() {
 
         <div className="mt-8">
           {voyages === null && !error && (
-            <p className="text-body-sm text-secondary">Loading voyages…</p>
+            <div
+              className="overflow-hidden rounded-md border border-border bg-surface"
+              aria-busy="true"
+              aria-label="Loading voyages"
+            >
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 last:border-b-0"
+                >
+                  <div className="space-y-2">
+                    <div className="h-3.5 w-44 animate-pulse rounded-sm bg-surface-muted" />
+                    <div className="h-2.5 w-20 animate-pulse rounded-sm bg-surface-muted" />
+                  </div>
+                  <div className="h-3.5 w-24 animate-pulse rounded-sm bg-surface-muted" />
+                </div>
+              ))}
+            </div>
           )}
 
           {voyages !== null && voyages.length === 0 && (
