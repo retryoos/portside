@@ -10,7 +10,8 @@ export type PipelineStage =
   | "analyzing"
   | "drafting"
   | "done"
-  | "error";
+  | "error"
+  | "settled";
 
 export interface ClauseExcerpt {
   clause_no: string;
@@ -162,8 +163,34 @@ export interface VoyageState {
   perspective: Perspective;
   stage: PipelineStage;
   error: string | null;
+  created_at: string;
   extraction: ExtractionResult | null;
   laytime: LaytimeResult | null;
   dispute: DisputeAnalysis | null;
   packet: ClaimPacket | null;
+}
+
+// Lightweight list-row projection of a VoyageState (GET /voyages). Fields that
+// depend on a completed pipeline are nullable for still-processing voyages.
+export interface VoyageSummary {
+  id: string;
+  vessel_name: string | null;
+  load_port: string | null;
+  discharge_port: string | null;
+  quantum_eur: number | null;
+  stage: PipelineStage;
+  perspective: Perspective;
+  created_at: string;
+}
+
+// Aggregate of all voyages sharing a vessel_name (GET /vessels). total_quantum_eur
+// is null when no constituent voyage has a quantum yet; latest_stage/last_activity
+// come from the most-recent voyage by created_at.
+export interface VesselSummary {
+  name: string;
+  voyage_count: number;
+  total_quantum_eur: number | null;
+  latest_stage: PipelineStage;
+  last_activity: string;
+  perspectives: Perspective[];
 }

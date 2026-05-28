@@ -26,7 +26,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Protocol, runtime_checkable
 
-from .schemas import VoyageState
+from .schemas import VesselSummary, VoyageState, VoyageSummary
 
 
 @runtime_checkable
@@ -38,6 +38,10 @@ class VoyageStore(Protocol):
     async def load(self, voyage_id: str) -> VoyageState | None: ...
 
     async def patch(self, voyage_id: str, /, **fields: Any) -> VoyageState | None: ...
+
+    async def list(self) -> list[VoyageSummary]: ...
+
+    async def list_vessels(self) -> list[VesselSummary]: ...
 
 
 class InMemoryStore:
@@ -72,3 +76,41 @@ class InMemoryStore:
             updated = existing.model_copy(update=fields)
             self._voyages[voyage_id] = updated
             return updated
+
+    async def list(self) -> list[VoyageSummary]:
+        """Return all voyages as summaries, newest-first by ``created_at``."""
+        states = sorted(
+            self._voyages.values(), key=lambda s: s.created_at, reverse=True
+        )
+        return [VoyageSummary.from_state(s) for s in states]
+
+    async def list_vessels(self) -> list[VesselSummary]:
+        """Group voyages by ``vessel_name`` into vessel aggregates, newest-first.
+
+        Voyages still being processed (no extraction yet, so no vessel_name) are
+        skipped — a voyage only gains a vessel identity once Agent 1 names it.
+        Vessels are ordered by ``last_activity`` (the newest voyage in the group),
+        which falls out for free from iterating the already newest-first summaries.
+        """
+        summaries = await self.list()  # newest-first
+        groups: dict[str, list[VoyageSummary]] = {}
+        for s in summaries:
+            if s.vessel_name is None:
+                continue
+            groups.setdefault(s.vessel_name, []).append(s)
+
+        vessels: list[VesselSummary] = []
+        for name, rows in groups.items():
+            quantums = [r.quantum_eur for r in rows if r.quantum_eur is not None]
+            newest = rows[0]  # rows inherit the newest-first ordering of summaries
+            vessels.append(
+                VesselSummary(
+                    name=name,
+                    voyage_count=len(rows),
+                    total_quantum_eur=round(sum(quantums), 2) if quantums else None,
+                    latest_stage=newest.stage,
+                    last_activity=newest.created_at,
+                    perspectives=sorted({r.perspective for r in rows}),
+                )
+            )
+        return vessels

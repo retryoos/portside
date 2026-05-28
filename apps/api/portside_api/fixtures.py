@@ -19,6 +19,8 @@ clause 14 (precipitation > 0.5 mm/hr) is not met, so the time counts.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from .schemas import (
     CharterParty,
     ClaimPacket,
@@ -312,3 +314,47 @@ def demo_voyage_fixture(
         dispute=_dispute(perspective),
         packet=_packet(),
     )
+
+
+def _settled_fixture() -> VoyageState:
+    """A second, already-settled voyage on a different vessel/route.
+
+    Built off the demo packet with the vessel, ports and quantum overridden so
+    the dashboard shows variety (a settled chip + a non-Rotterdam route).
+    """
+    base = demo_voyage_fixture("v_baltic_trader_settled", "owner")
+    assert base.extraction is not None and base.packet is not None
+    cp = base.extraction.charter_party.model_copy(
+        update={
+            "vessel_name": "MT Baltic Trader",
+            "load_port": "Primorsk",
+            "discharge_port": "Wilhelmshaven",
+        }
+    )
+    extraction = base.extraction.model_copy(update={"charter_party": cp})
+    packet = base.packet.model_copy(update={"quantum_eur": 52250.0})
+    return base.model_copy(
+        update={
+            "stage": "settled",
+            "extraction": extraction,
+            "packet": packet,
+            "created_at": datetime(2026, 5, 10, 11, 0, tzinfo=timezone.utc),
+        }
+    )
+
+
+def seed_voyages() -> list[VoyageState]:
+    """Demo cases loaded into the store on startup so the dashboard is populated.
+
+    Ordered by ``created_at`` so the store's newest-first list is deterministic:
+    the owner-perspective Rotterdam claim is the most recent, then a
+    charterer-perspective variant, then an older settled case.
+    """
+    owner = demo_voyage_fixture("v_aegean_pioneer", "owner").model_copy(
+        update={"created_at": datetime(2026, 5, 19, 9, 0, tzinfo=timezone.utc)}
+    )
+    charterer = demo_voyage_fixture("v_aegean_pioneer_charterer", "charterer").model_copy(
+        update={"created_at": datetime(2026, 5, 15, 14, 0, tzinfo=timezone.utc)}
+    )
+    settled = _settled_fixture()
+    return [owner, charterer, settled]

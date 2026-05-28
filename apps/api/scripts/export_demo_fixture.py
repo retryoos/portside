@@ -15,9 +15,14 @@ No network. No Anthropic SDK call. Pure Python data dump.
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 from portside_api.fixtures import demo_voyage_fixture
+
+# Fixed timestamp so the exported JSON stays byte-stable across runs. The live
+# pipeline stamps a real ``created_at``; only this static export pins it.
+_DEMO_CREATED_AT = datetime(2026, 5, 19, 9, 0, tzinfo=timezone.utc)
 
 
 def _output_path() -> Path:
@@ -32,7 +37,7 @@ def export(out_path: Path | None = None) -> Path:
     """Write the canonical demo VoyageState as JSON, return the path written."""
     out_path = out_path or _output_path()
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    state = demo_voyage_fixture()
+    state = demo_voyage_fixture().model_copy(update={"created_at": _DEMO_CREATED_AT})
     # by_alias=True is REQUIRED: LaytimeRow exposes `from`/`to` as aliases over
     # the Python `from_ts`/`to_ts` reserved-keyword-safe field names. The wire
     # contract (apps/web/lib/types.ts) uses the aliases.

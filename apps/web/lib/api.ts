@@ -1,6 +1,11 @@
 // Typed client for the Portside API (notes/04-schemas.md §6).
 
-import type { Perspective, VoyageState } from "./types";
+import type {
+  Perspective,
+  VesselSummary,
+  VoyageState,
+  VoyageSummary,
+} from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -24,6 +29,18 @@ export async function createVoyage(
   if (!res.ok) throw new Error(`createVoyage failed: ${res.status}`);
   const data = (await res.json()) as { voyage_id: string };
   return data.voyage_id;
+}
+
+export async function listVoyages(): Promise<VoyageSummary[]> {
+  const res = await fetch(`${API_BASE}/voyages`);
+  if (!res.ok) throw new Error(`listVoyages failed: ${res.status}`);
+  return (await res.json()) as VoyageSummary[];
+}
+
+export async function listVessels(): Promise<VesselSummary[]> {
+  const res = await fetch(`${API_BASE}/vessels`);
+  if (!res.ok) throw new Error(`listVessels failed: ${res.status}`);
+  return (await res.json()) as VesselSummary[];
 }
 
 export async function getVoyage(voyageId: string): Promise<VoyageState> {
