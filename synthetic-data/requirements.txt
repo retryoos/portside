@@ -1,0 +1,3 @@
+# Dev-time only — used by generate.py to produce the demo voyage PDFs.
+# Pure-Python, no native deps (chosen over weasyprint to avoid cairo/pango).
+fpdf2>=2.8
