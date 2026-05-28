@@ -12,17 +12,71 @@ deterministic half is the gate (tests/test_calculator.py).
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+from pydantic import BaseModel
+
 from ..schemas import (
     EventClassification,
     ExtractionResult,
     LaytimeResult,
     LaytimeRow,
+    Perspective,
     SoFEvent,
 )
+from .llm import cached_system, extract_structured
 
 # Categories that bound the laytime window.
 _START_CATEGORY = "laytime_start"
 _END_CATEGORY = "ops_end"
+
+
+_CLASSIFIER_PROMPT = (
+    Path(__file__).resolve().parent.parent / "prompts" / "classifier.md"
+).read_text()
+
+
+class _ClassificationBatch(BaseModel):
+    """Wrapper so the structured-output call returns a list in one shot."""
+
+    classifications: list[EventClassification]
+
+
+async def classify_events(
+    extraction: ExtractionResult,
+    perspective: Perspective,
+) -> list[EventClassification]:
+    """Agent 2a — LLM classification of every SoF event against the CP clauses.
+
+    One call for all events. The CP exception clauses go in the (cache-eligible)
+    system text; the events go in the user message. No arithmetic here.
+    """
+    cp = extraction.charter_party
+    clause_text = "\n".join(
+        f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
+    )
+    system_text = (
+        f"{_CLASSIFIER_PROMPT}\n\n"
+        f"Perspective: {perspective}\n"
+        f"Charter party form: {cp.form}; laytime basis: {cp.laytime_basis}.\n"
+        f"Exception clauses in force: {', '.join(cp.exception_clauses)}.\n\n"
+        f"Charter-party clause excerpts:\n{clause_text}"
+    )
+    events_payload = [
+        {"id": e.id, "timestamp": e.timestamp.isoformat(), "description": e.description, "category": e.category}
+        for e in extraction.statement_of_facts.events
+    ]
+    user_text = "Classify each of these Statement-of-Facts events:\n" + json.dumps(
+        events_payload, indent=2
+    )
+    batch = await extract_structured(
+        _ClassificationBatch,
+        system=cached_system(system_text),
+        user_text=user_text,
+        max_tokens=4096,
+    )
+    return batch.classifications
 
 
 def _duration_hours(a: SoFEvent, b: SoFEvent) -> float:
