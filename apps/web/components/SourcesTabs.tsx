@@ -1,8 +1,8 @@
 "use client";
 
-// Right-panel tabbed surface (DESIGN.md §Screens 2): Sources / Calculation /
-// Documents. Calculation = LaytimeSummary + SoFTable. Documents = supporting
-// docs list. Sources = CP clause excerpts. Tab labels in text-label-caps.
+// Right-panel tabbed surface (DESIGN.md "Surfaces"): Sources / Calculation /
+// Documents, as a pill segmented control. Calculation = LaytimeSummary + SoFTable.
+// Documents = supporting docs list. Sources = CP clause excerpts.
 import { useState } from "react";
 import { demoVoyage } from "@/lib/demo";
 import LaytimeSummary from "@/components/LaytimeSummary";
@@ -28,11 +28,11 @@ export default function SourcesTabs({
   const documents = voyage.packet?.supporting_documents ?? [];
 
   return (
-    <section className="rounded-md border border-border bg-surface">
+    <section className="rounded-xl border border-border bg-surface p-5">
       <div
         role="tablist"
         aria-label="Claim evidence"
-        className="flex border-b border-border"
+        className="flex gap-1 rounded-full bg-surface-muted p-1"
       >
         {TABS.map((t) => {
           const selected = active === t.id;
@@ -43,10 +43,10 @@ export default function SourcesTabs({
               type="button"
               aria-selected={selected}
               onClick={() => setActive(t.id)}
-              className={`-mb-px border-b-2 px-4 py-3 text-label-caps transition-colors ${
+              className={`flex-1 rounded-full px-4 py-1.5 text-label-caps transition-colors ${
                 selected
-                  ? "border-b-primary text-primary"
-                  : "border-b-transparent text-secondary hover:text-primary"
+                  ? "bg-surface text-primary"
+                  : "text-secondary hover:text-primary"
               }`}
             >
               {t.label}
@@ -55,7 +55,7 @@ export default function SourcesTabs({
         })}
       </div>
 
-      <div className="p-5">
+      <div className="mt-5">
         {active === "calculation" && (
           <div className="space-y-5">
             <LaytimeSummary laytime={voyage.laytime} />
@@ -67,12 +67,9 @@ export default function SourcesTabs({
         )}
 
         {active === "sources" && (
-          <ul className="space-y-4">
+          <ul className="space-y-3">
             {clauses.map((c) => (
-              <li
-                key={c.clause_no}
-                className="rounded-sm border-l-2 border-l-border bg-surface-muted p-4"
-              >
+              <li key={c.clause_no} className="rounded-lg bg-surface-muted p-4">
                 <p className="text-label-caps text-secondary">
                   Clause {c.clause_no}
                 </p>
@@ -89,7 +86,7 @@ export default function SourcesTabs({
                 key={`${doc}-${i}`}
                 className="flex items-baseline gap-3 py-3 text-body-sm text-primary"
               >
-                <span className="text-label-caps text-secondary">
+                <span className="text-label-caps tabular-nums text-secondary">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span>{doc}</span>
