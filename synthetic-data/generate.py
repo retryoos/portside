@@ -2,7 +2,7 @@
 
 Dev-time only. Produces text-native PDFs (fpdf2 — no native deps) that, when run
 through pdfplumber + the agent pipeline, reconcile to the single source of truth:
-MT Aegean Pioneer, Ras Tanura -> Rotterdam, USD 84,375.00.
+MT Aegean Pioneer, Ras Tanura -> Rotterdam, EUR 84,375.00.
 
 Usage:
     pip install -r synthetic-data/requirements.txt
@@ -32,8 +32,8 @@ Load port: Ras Tanura
 Discharge port: Rotterdam
 
 Laytime allowed: 72 running hours, SHINC.
-Demurrage rate: USD 45,000.00 per day, pro rata.
-Despatch rate: USD 22,500.00 per day.
+Demurrage rate: EUR 45,000.00 per day, pro rata.
+Despatch rate: EUR 22,500.00 per day.
 Exception clauses in force: WIBON, WIFPON, SHINC.
 NOR may be tendered any time, day or night, SHINC.
 Time bar: 90 days from completion of discharge.

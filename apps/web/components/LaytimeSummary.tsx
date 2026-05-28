@@ -1,7 +1,7 @@
 // Laytime calculation summary block on surface-muted (DESIGN.md §Screens 2,
 // notes/06-frontend.md §5 quantum). Allowed / used / on demurrage / rate / due.
 import { demoVoyage } from "@/lib/demo";
-import { formatHours, formatUsd } from "@/lib/format";
+import { formatHours, formatEur } from "@/lib/format";
 import type { LaytimeResult } from "@/lib/types";
 
 export default function LaytimeSummary({
@@ -16,7 +16,7 @@ export default function LaytimeSummary({
     { label: "Laytime allowed", value: `${formatHours(lt.laytime_allowed_hours)} h` },
     { label: "Laytime used", value: `${formatHours(lt.laytime_used_hours)} h` },
     { label: "On demurrage", value: `${formatHours(lt.time_on_demurrage_hours)} h` },
-    { label: "Demurrage rate", value: `${formatUsd(lt.demurrage_rate_per_hour_usd)}/h` },
+    { label: "Demurrage rate", value: `${formatEur(lt.demurrage_rate_per_hour_eur)}/h` },
   ];
 
   return (
@@ -31,7 +31,7 @@ export default function LaytimeSummary({
         ))}
         <div className="flex items-baseline justify-between pt-3">
           <dt className="text-h3 text-primary">Demurrage due</dt>
-          <dd className="text-h3 text-primary">{formatUsd(lt.demurrage_due_usd)}</dd>
+          <dd className="text-h3 text-primary">{formatEur(lt.demurrage_due_eur)}</dd>
         </div>
       </dl>
     </div>

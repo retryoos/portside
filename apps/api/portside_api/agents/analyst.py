@@ -5,7 +5,7 @@ argument for each contested window, with CP-clause and SoF-event citations and a
 calibrated confidence. One Sonnet 4.6 call via the structured-output path. See
 notes/03-agents.md "Agent 3" and notes/11-prompts.md "Agent 3".
 
-Money is never trusted from the model: ``incremental_demurrage_usd`` is
+Money is never trusted from the model: ``incremental_demurrage_eur`` is
 re-derived deterministically from the contested laytime rows after the call.
 """
 
@@ -20,9 +20,12 @@ from ..schemas import (
     LaytimeResult,
     Perspective,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 _PROMPT = (Path(__file__).resolve().parent.parent / "prompts" / "analyst.md").read_text()
+# Shared cross-cutting rules prepended to the analyst system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
@@ -32,6 +35,7 @@ def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     return (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_PROMPT}\n\n"
         f"Perspective: {perspective}\n"
         f"Charter party: {cp.vessel_name}, {cp.load_port} / {cp.discharge_port}, "
@@ -72,8 +76,8 @@ def _user_text(laytime: LaytimeResult, perspective: Perspective) -> str:
             "laytime_allowed_hours": laytime.laytime_allowed_hours,
             "laytime_used_hours": laytime.laytime_used_hours,
             "time_on_demurrage_hours": laytime.time_on_demurrage_hours,
-            "demurrage_rate_per_hour_usd": laytime.demurrage_rate_per_hour_usd,
-            "demurrage_due_usd": laytime.demurrage_due_usd,
+            "demurrage_rate_per_hour_eur": laytime.demurrage_rate_per_hour_eur,
+            "demurrage_due_eur": laytime.demurrage_due_eur,
         },
         "contested_rows": contested_rows,
         "classifications": classifications,
@@ -90,7 +94,7 @@ def _recompute_incremental(
     """Override each flagged event's incremental demurrage with the deterministic
     figure (contested-window hours x demurrage rate per hour). The LLM never owns
     a dollar figure."""
-    rate = laytime.demurrage_rate_per_hour_usd
+    rate = laytime.demurrage_rate_per_hour_eur
     for fe in analysis.flagged_events:
         hours = sum(
             r.duration_hours
@@ -98,7 +102,7 @@ def _recompute_incremental(
             if r.contestable and r.event_id_start == fe.event_id
         )
         if hours > 0:
-            fe.incremental_demurrage_usd = round(hours * rate, 2)
+            fe.incremental_demurrage_eur = round(hours * rate, 2)
     return analysis
 
 

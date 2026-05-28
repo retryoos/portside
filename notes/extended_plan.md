@@ -261,7 +261,7 @@ Pick one.
 
 7. **Greek-language UI toggle.** Tailwind makes this an i18n string-table swap. Symbolic — but the room is Athens.
 8. **Gmail inbox monitoring (mocked).** Don't actually integrate Gmail. Build the UI: a "voyage being auto-assembled from your inbox" toast that detects when three documents land and prompts the user to open the voyage. We seed the data; the judge sees the future.
-9. **Confidence-weighted negotiation outcome simulator.** Given the dispute analysis, show "expected settlement: USD 32,000 to 38,000 based on owner-position-strength and historical pattern." Two sentences of math. High judge appeal.
+9. **Confidence-weighted negotiation outcome simulator.** Given the dispute analysis, show "expected settlement: EUR 32,000 to 38,000 based on owner-position-strength and historical pattern." Two sentences of math. High judge appeal.
 
 ### What we do NOT stretch into
 - Real Gmail integration. OAuth + token refresh + email parsing is a half-day in the best case.

@@ -174,7 +174,7 @@ All foreground/background pairs meet WCAG AA.
 
 ## Typography
 
-- **Fraunces (serif)** — `display`, `h1`, `h2`, AND `hero-figure` (the big "Demurrage due to owners: USD 84,375.00" is **serif, not mono** — this is the single biggest type correction from the mockups), AND `letter-body` (the formal claim letter is set in Fraunces, like a printed legal letter).
+- **Fraunces (serif)** — `display`, `h1`, `h2`, AND `hero-figure` (the big "Demurrage due to owners: EUR 84,375.00" is **serif, not mono** — this is the single biggest type correction from the mockups), AND `letter-body` (the formal claim letter is set in Fraunces, like a printed legal letter).
 - **IBM Plex Sans** — `body`, `body-sm`, `h3`, `label-caps`. The UI chrome, nav, metadata, section labels ("DISPUTE TIMELINE", "TO: CHARTERERS").
 - **JetBrains Mono** — `mono`, tabular. Used **only** inside the Statement-of-Facts calculation table (TIMESTAMP / CUM. HRS columns) and other dense numeric tables where vertical alignment matters. NOT for the hero figure.
 
@@ -221,13 +221,13 @@ Show owner position strength as a word — **Strong / Arguable / Weak** — neve
 
 These supersede the old three-panel layout in [notes/06-frontend.md](../../notes/06-frontend.md) wherever they differ. 06-frontend's *content* (laytime table, quantum, dispute narrative, letter) still applies — it just maps onto these layouts.
 
-1. **Case detail / settled** (`screen_1.png`) — top nav + breadcrumb + serif title ("MT Aegean Pioneer — Ras Tanura / Rotterdam", "Settled at USD 79,000 — 21 days from claim submission") + a vertical **dispute correspondence timeline** (claim submitted → charterer response *"Detected from inbox"* → rebuttal sent → revised offer → settlement accepted) + an **Outcome** table (original claim, settled at, recovery %, days to settlement, time-bar status "Cleared 67 days early").
-2. **Claim view** (`screen_2.png`) — breadcrumb + amber time-bar countdown + ink "Send to charterer". Two columns: the **formal letter** (left, "TO: CHARTERERS", serif hero figure "Demurrage due to owners: USD 84,375.00", letter body) and a right panel with **Sources / Calculation / Documents** tabs showing the laytime summary block + the **SoF timeline table** (TIMESTAMP / DESCRIPTION / CATEGORY / CUM. HRS, contested row amber).
+1. **Case detail / settled** (`screen_1.png`) — top nav + breadcrumb + serif title ("MT Aegean Pioneer — Ras Tanura / Rotterdam", "Settled at EUR 79,000 — 21 days from claim submission") + a vertical **dispute correspondence timeline** (claim submitted → charterer response *"Detected from inbox"* → rebuttal sent → revised offer → settlement accepted) + an **Outcome** table (original claim, settled at, recovery %, days to settlement, time-bar status "Cleared 67 days early").
+2. **Claim view** (`screen_2.png`) — breadcrumb + amber time-bar countdown + ink "Send to charterer". Two columns: the **formal letter** (left, "TO: CHARTERERS", serif hero figure "Demurrage due to owners: EUR 84,375.00", letter body) and a right panel with **Sources / Calculation / Documents** tabs showing the laytime summary block + the **SoF timeline table** (TIMESTAMP / DESCRIPTION / CATEGORY / CUM. HRS, contested row amber).
 3. **Inline highlight-and-revise** (`screen_3.png`) — full-width letter; a floating quick-prompt ("Make the weather argument stronger and cite The Mexico 1"); the old sentence struck through in `danger`; the replacement paragraph in a `revise-highlight` amber block (citing The Mexico 1 [1990] 1 Lloyd's Rep 507 + Rotterdam Port Authority precipitation data); an **Accept / Reject** control. See [notes/13-inline-revision.md](../../notes/13-inline-revision.md).
 
 ## Demo content (align to the mockups)
 
-Use the mockup voyage, not the old Piraeus one: **MT Aegean Pioneer, Ras Tanura → Rotterdam**, CP dated 12 Feb 2026, demurrage USD 45,000/day, laytime 72h allowed / 117h used, **claim USD 84,375.00**, contested 4-hour weather stoppage on 17 May, weather clause on a **precipitation threshold (0.5 mm/hr)**, authority **The Mexico 1 [1990] 1 Lloyd's Rep 507**. Rotterdam keeps us consistent with the "Europe, starting in Greece" positioning.
+Use the mockup voyage, not the old Piraeus one: **MT Aegean Pioneer, Ras Tanura → Rotterdam**, CP dated 12 Feb 2026, demurrage EUR 45,000/day, laytime 72h allowed / 117h used, **claim EUR 84,375.00**, contested 4-hour weather stoppage on 17 May, weather clause on a **precipitation threshold (0.5 mm/hr)**, authority **The Mexico 1 [1990] 1 Lloyd's Rep 507**. Rotterdam keeps us consistent with the "Europe, starting in Greece" positioning.
 
 ## Do's and Don'ts
 

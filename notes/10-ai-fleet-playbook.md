@@ -119,7 +119,7 @@ Used reactively, not continuously. When the team wants a second opinion, the ope
 >
 > Use HTML + weasyprint to generate each PDF. The script lives at `synthetic-data/generate.py` — write it from scratch. Use a serif font (Crimson Text or similar). Number CP clauses. Use a tabular layout for the SoF.
 >
-> Critical: the numbers across CP, SoF, and weather_record must all reconcile to produce a demurrage claim quantum of USD 38,400.00 in the primary scenario. Lock that exact number first, then make every document mathematically consistent with it.
+> Critical: the numbers across CP, SoF, and weather_record must all reconcile to produce a demurrage claim quantum of EUR 38,400.00 in the primary scenario. Lock that exact number first, then make every document mathematically consistent with it.
 >
 > Check in every 30 minutes: write a status line to `synthetic-data/STATUS.md` with timestamp, scenario you're on, and any blockers.
 >

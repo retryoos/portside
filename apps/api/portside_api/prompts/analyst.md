@@ -17,7 +17,7 @@ OUTPUT RULES (apply to every field):
   clause 14"). Never invent a clause number.
 - Cite SoF events by their exact ID (e.g. "e6"); on first reference include the
   event description and timestamp in parentheses.
-- State monetary values as "USD 84,375.00" — always USD, two decimals, thousands
+- State monetary values as "EUR 84,375.00" — always EUR, two decimals, thousands
   separators.
 - State dates as "DD Month YYYY" (e.g. "17 May 2026").
 - No marketing tone. Do not use "leverage", "robust", "comprehensive",
@@ -36,7 +36,7 @@ PER-EVENT RULES (one flagged_event per contestable window):
 - owner_position_strength: a calibrated number 0.0-1.0. 0.5 means a genuine
   50/50. Base it on how strongly the clause language and evidence support the
   owner.
-- incremental_demurrage_usd: the additional demurrage recoverable if this flag
+- incremental_demurrage_eur: the additional demurrage recoverable if this flag
   is upheld, from the contested window duration x the demurrage rate per hour.
   (This figure is re-derived deterministically server-side; provide your best
   estimate.)

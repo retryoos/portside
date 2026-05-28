@@ -81,8 +81,8 @@ Claude Sonnet 4.6. One call, text input, tool-use with `strict: true`.
     "discharge_port": "Piraeus",
     "laytime_allowed_hours": 72,
     "laytime_basis": "SHINC",
-    "demurrage_rate_usd_per_day": 48000,
-    "despatch_rate_usd_per_day": 24000,
+    "demurrage_rate_eur_per_day": 48000,
+    "despatch_rate_eur_per_day": 24000,
     "exception_clauses": ["WIBON", "WIFPON", "SHINC"],
     "nor_tender_window": "Any time, day or night, SHINC",
     "laytime_commencement_rule": "6 hours after tender of NOR or upon commencement of cargo ops, whichever earlier",
@@ -202,8 +202,8 @@ The output schema is `LaytimeResult` in [04-schemas.md](04-schemas.md). The key 
   "laytime_allowed_hours": 72,
   "laytime_used_hours": 89.5,
   "time_on_demurrage_hours": 17.5,
-  "demurrage_rate_per_hour_usd": 2000,
-  "demurrage_due_usd": 35000,
+  "demurrage_rate_per_hour_eur": 2000,
+  "demurrage_due_eur": 35000,
   "rows": [
     {
       "from": "2026-05-08T13:00:00+03:00",
@@ -258,7 +258,7 @@ Claude Sonnet 4.6. Opus 4.7 escape hatch via `ANTHROPIC_MODEL_PRIMARY` if writin
       "owner_argument": "The stoppage does not meet the contractual threshold in CP clause 17 and should be charged at the demurrage rate.",
       "charterer_argument": "Local conditions on the berth were worse than the port-wide record; the master agreed in writing to the stoppage.",
       "owner_position_strength": 0.88,
-      "incremental_demurrage_usd": 2200,
+      "incremental_demurrage_eur": 2200,
       "clauses_cited": ["CP clause 17"],
       "evidence_required": ["port authority meteorological record", "berth-specific wind data if available"]
     }
@@ -296,10 +296,10 @@ Claude Sonnet 4.6. Opus 4.7 escape hatch via `ANTHROPIC_MODEL_PRIMARY` if the BI
 ### Output (`ClaimPacket` schema)
 ```json
 {
-  "quantum_usd": 35000,
-  "executive_summary": "Owners claim demurrage of USD 35,000 against charterers in respect of the discharge port call at Piraeus on the voyage MV Anthem of Piraeus, Ras Tanura / Piraeus, CP dated 12 April 2026.",
+  "quantum_eur": 35000,
+  "executive_summary": "Owners claim demurrage of EUR 35,000 against charterers in respect of the discharge port call at Piraeus on the voyage MV Anthem of Piraeus, Ras Tanura / Piraeus, CP dated 12 April 2026.",
   "dispute_narrative_markdown": "## Dispute summary\n\nThe total laytime used in this discharge exceeded the contractually agreed allowance of 72 hours by 17.5 hours...",
-  "claim_letter_markdown": "[Owner letterhead]\n\n12 May 2026\n\nMediterranean Crude Trading\n...\n\nDear Sirs,\n\n**Re: Demurrage Claim — MV Anthem of Piraeus — Ras Tanura / Piraeus — CP dated 12 April 2026**\n\nWe write further to the captioned charter party to claim demurrage in the amount of USD 35,000 in respect of the discharge port call at Piraeus...",
+  "claim_letter_markdown": "[Owner letterhead]\n\n12 May 2026\n\nMediterranean Crude Trading\n...\n\nDear Sirs,\n\n**Re: Demurrage Claim — MV Anthem of Piraeus — Ras Tanura / Piraeus — CP dated 12 April 2026**\n\nWe write further to the captioned charter party to claim demurrage in the amount of EUR 35,000 in respect of the discharge port call at Piraeus...",
   "supporting_documents": [
     "Charter Party dated 12 April 2026",
     "Notice of Readiness tendered 8 May 2026 at 0700 LT",
@@ -334,8 +334,8 @@ We write further to the captioned charter party in respect of the discharge port
    - Laytime allowed: {LAYTIME_ALLOWED_HOURS} hours {LAYTIME_BASIS}
    - Laytime used: {LAYTIME_USED_HOURS} hours
    - Time on demurrage: {TIME_ON_DEMURRAGE_HOURS} hours
-   - Demurrage rate: USD {DEMURRAGE_RATE_PER_DAY} per day pro rata
-   - Demurrage due: USD {QUANTUM}
+   - Demurrage rate: EUR {DEMURRAGE_RATE_PER_DAY} per day pro rata
+   - Demurrage due: EUR {QUANTUM}
 
 2. Statement of facts
    {NARRATIVE_PARAGRAPHS}
@@ -350,7 +350,7 @@ We write further to the captioned charter party in respect of the discharge port
    {SUPPORTING_DOCS_LIST}
 
 6. Demand
-   We accordingly demand payment of USD {QUANTUM} within 30 days of the date of this letter to the account details previously notified.
+   We accordingly demand payment of EUR {QUANTUM} within 30 days of the date of this letter to the account details previously notified.
 
 All rights reserved.
 

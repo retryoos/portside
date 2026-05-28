@@ -44,7 +44,7 @@ Center panel fills with the laytime table. Bottom shows:
 
 ```
 DEMURRAGE DUE TO OWNERS
-USD 38,400.00
+EUR 38,400.00
 Laytime allowed 72h · Used 89.5h · On demurrage 17.5h
 ```
 
@@ -59,7 +59,7 @@ The inline expansion shows:
 ```
 ⚑  Weather exception not supported by CP clause threshold
    Owner's position: 88% confidence
-   Incremental recoverable demurrage: USD 22,000
+   Incremental recoverable demurrage: EUR 22,000
    Citations: CP clause 17; SoF event e6
 ```
 
@@ -163,5 +163,5 @@ Different from the demo. No screen. Just the team standing up and talking.
 - **Have the backup video ready.** Pre-launched, paused on frame 0.
 - **The printed claim letter.** If the venue allows, bring one printed copy of the BIMCO letter to hand to a judge. The tactile evidence is disproportionately persuasive.
 - **No emojis on screen. No memes. No GIFs.** This is a maritime industry audience.
-- **Spell out dollar amounts.** "USD 22,000" or "twenty-two thousand dollars" — not "$22k."
+- **Spell out dollar amounts.** "EUR 22,000" or "twenty-two thousand dollars" — not "$22k."
 - **Use port local time on timestamps.** "08 May 13:00 LT" — that's how the industry writes it.

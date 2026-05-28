@@ -24,7 +24,7 @@ The contract between owner and charterer. Different standard forms for different
 - **Shellvoy** — Shell tanker voyage form
 - **BPVOY** — BP tanker voyage form
 
-The CP contains the laytime allowed (e.g., "72 hours SHINC"), the demurrage rate ("USD 30,000 per day pro rata"), the despatch rate ("half demurrage on all working time saved"), the loading and discharging port(s), the laycan window, and the exception clauses.
+The CP contains the laytime allowed (e.g., "72 hours SHINC"), the demurrage rate ("EUR 30,000 per day pro rata"), the despatch rate ("half demurrage on all working time saved"), the loading and discharging port(s), the laycan window, and the exception clauses.
 
 ### Notice of Readiness (NOR)
 A formal notice from the master to the charterer (or shipper/receiver) that the vessel has arrived and is **ready in all respects** to load or discharge. Tendering NOR triggers the clock — laytime usually starts a fixed number of hours after NOR is tendered (e.g., "6 hours after tender of NOR or commencement of cargo operations, whichever is earlier").
@@ -114,11 +114,11 @@ These are the five archetypes our Dispute Analyst should know cold:
 
 ## 6. Numbers, units, and conventions to get right
 
-- **Demurrage rates** are quoted in USD per day or per day pro rata (PDPR — partial days charged proportionally).
+- **Demurrage rates** are quoted in EUR per day or per day pro rata (PDPR — partial days charged proportionally).
 - **Laytime** is quoted in hours or days. "72 running hours" means 72 consecutive clock hours including weekends. "3 weather working days" means 3 days that count as weather working.
 - **Time precision** — to the minute, not the hour. SoFs record "1437 LT" (local time) routinely. Round only at final output.
-- **Time zone** — SoFs use port local time. CP rates are in USD. The claim letter uses port local time + UTC offset.
-- **Currency** — almost always USD in international tanker trades.
+- **Time zone** — SoFs use port local time. CP rates are in EUR. The claim letter uses port local time + UTC offset.
+- **Currency** — almost always EUR in international tanker trades.
 - **Day of week** — the calculator needs the day-of-week of every event because of SHEX. We will use the port's local timezone.
 
 ## 7. Anatomy of a claim letter (what Agent 4 must produce)

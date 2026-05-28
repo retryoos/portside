@@ -83,14 +83,14 @@ class _SegmentRevisions(BaseModel):
 # Safety validation (pure stdlib — the non-negotiable check)
 # --------------------------------------------------------------------------- #
 
-_USD_RE = re.compile(r"USD\s*([0-9][0-9,]*(?:\.[0-9]+)?)", re.IGNORECASE)
+_EUR_RE = re.compile(r"EUR\s*([0-9][0-9,]*(?:\.[0-9]+)?)", re.IGNORECASE)
 _CLAUSE_RE = re.compile(r"clause\s+([0-9]+[A-Za-z]?)", re.IGNORECASE)
 _SECTION_RE = re.compile(r"§\s*([0-9]+[A-Za-z]?)")
 _EVENT_RE = re.compile(r"\b(e[0-9]+)\b", re.IGNORECASE)
 
 
-def _usd_values(text: str) -> set[float]:
-    return {round(float(m.replace(",", "")), 2) for m in _USD_RE.findall(text)}
+def _eur_values(text: str) -> set[float]:
+    return {round(float(m.replace(",", "")), 2) for m in _EUR_RE.findall(text)}
 
 
 def _clauses(text: str) -> set[str]:
@@ -104,18 +104,18 @@ def _events(text: str) -> set[str]:
 def validate_revision(old_text: str, new_text: str) -> tuple[bool, SafetyReport]:
     """Return (ok, report). A revision is rejected if any monetary value changed
     or any CP clause / SoF event reference was dropped or renumbered."""
-    old_usd, new_usd = _usd_values(old_text), _usd_values(new_text)
+    old_eur, new_eur = _eur_values(old_text), _eur_values(new_text)
     old_clauses, new_clauses = _clauses(old_text), _clauses(new_text)
     old_events, new_events = _events(old_text), _events(new_text)
 
-    quantum_unchanged = old_usd == new_usd
+    quantum_unchanged = old_eur == new_eur
     missing_clauses = old_clauses - new_clauses
     missing_events = old_events - new_events
 
     warnings: list[str] = []
     if not quantum_unchanged:
         warnings.append(
-            f"monetary value changed: {sorted(old_usd)} -> {sorted(new_usd)}"
+            f"monetary value changed: {sorted(old_eur)} -> {sorted(new_eur)}"
         )
     if missing_clauses:
         warnings.append(f"CP clause citation(s) dropped: {sorted(missing_clauses)}")
@@ -143,7 +143,7 @@ def _locked_summary(voyage: VoyageState) -> str:
         return "Locked values: (none available yet)."
     return (
         "Locked values you must not alter — quantum "
-        f"USD {packet.quantum_usd:,.2f}, time-bar date {packet.time_bar_date}, "
+        f"EUR {packet.quantum_eur:,.2f}, time-bar date {packet.time_bar_date}, "
         "and the supporting-documents list."
     )
 

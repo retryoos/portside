@@ -52,8 +52,8 @@ class CharterParty(BaseModel):
     discharge_port: str
     laytime_allowed_hours: float
     laytime_basis: str                        # e.g., "SHINC", "WWDSHEX"
-    demurrage_rate_usd_per_day: float
-    despatch_rate_usd_per_day: Optional[float] = None
+    demurrage_rate_eur_per_day: float
+    despatch_rate_eur_per_day: Optional[float] = None
     exception_clauses: list[str]              # e.g., ["WIBON", "WIFPON", "SHINC"]
     nor_tender_window: str                    # free text
     laytime_commencement_rule: str            # free text — e.g., "6 hours after NOR"
@@ -146,9 +146,9 @@ class LaytimeResult(BaseModel):
     laytime_used_hours: float
     time_on_demurrage_hours: float
     time_excepted_hours: float
-    demurrage_rate_per_hour_usd: float
-    demurrage_due_usd: float
-    despatch_due_usd: Optional[float] = None        # if vessel finished early
+    demurrage_rate_per_hour_eur: float
+    demurrage_due_eur: float
+    despatch_due_eur: Optional[float] = None        # if vessel finished early
     rows: list[LaytimeRow]
     classifications: list[EventClassification]      # carry through for Agent 3
 ```
@@ -165,7 +165,7 @@ class FlaggedEvent(BaseModel):
     owner_argument: str
     charterer_argument: str
     owner_position_strength: float                  # 0.0–1.0
-    incremental_demurrage_usd: float                # additional $ if this flag is upheld
+    incremental_demurrage_eur: float                # additional $ if this flag is upheld
     clauses_cited: list[str]
     evidence_required: list[str]
 
@@ -183,7 +183,7 @@ class DisputeAnalysis(BaseModel):
 
 ```python
 class ClaimPacket(BaseModel):
-    quantum_usd: float
+    quantum_eur: float
     executive_summary: str
     dispute_narrative_markdown: str
     claim_letter_markdown: str
@@ -243,8 +243,8 @@ For the demo scenario `athens-weather-dispute`:
     "laytime_used_hours": 89.5,
     "time_on_demurrage_hours": 17.5,
     "time_excepted_hours": 11.0,
-    "demurrage_rate_per_hour_usd": 2000,
-    "demurrage_due_usd": 35000,
+    "demurrage_rate_per_hour_eur": 2000,
+    "demurrage_due_eur": 35000,
     "rows": [
       {
         "from": "2026-05-08T13:00:00+03:00",

@@ -2,7 +2,7 @@
 
 Locks the deterministic Agent 2b arithmetic against the single-source-of-truth
 demo voyage (MT Aegean Pioneer, Ras Tanura -> Rotterdam): 72h allowed, 117h
-used, 45h on demurrage at USD 1,875/hr -> USD 84,375.00.
+used, 45h on demurrage at EUR 1,875/hr -> EUR 84,375.00.
 
 If this fails, do not merge — the quantum is the demo's headline number.
 """
@@ -25,8 +25,8 @@ def test_quantum_matches_source_of_truth():
     assert result.laytime_used_hours == 117.0
     assert result.time_on_demurrage_hours == 45.0
     assert result.time_excepted_hours == 0.0
-    assert result.demurrage_rate_per_hour_usd == 1875.0
-    assert result.demurrage_due_usd == 84375.0
+    assert result.demurrage_rate_per_hour_eur == 1875.0
+    assert result.demurrage_due_eur == 84375.0
 
 
 def test_rows_and_contested():
@@ -48,5 +48,5 @@ def test_matches_fixture_summary():
     state = demo_voyage_fixture()
     assert state.laytime is not None
     computed = calculate_laytime(state.extraction, state.laytime.classifications)  # type: ignore[arg-type]
-    assert computed.demurrage_due_usd == state.laytime.demurrage_due_usd
+    assert computed.demurrage_due_eur == state.laytime.demurrage_due_eur
     assert computed.laytime_used_hours == state.laytime.laytime_used_hours

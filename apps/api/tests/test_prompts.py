@@ -23,7 +23,7 @@ def test_load_cross_cutting_non_empty() -> None:
 
 def test_load_cross_cutting_contains_maritime_vocab() -> None:
     text = load_prompt("cross_cutting")
-    for marker in ("SHINC", "WIBON", "demurrage", "Notice of Readiness", "USD 84,375.00"):
+    for marker in ("SHINC", "WIBON", "demurrage", "Notice of Readiness", "EUR 84,375.00"):
         assert marker in text, f"cross_cutting.md missing expected marker: {marker!r}"
 
 

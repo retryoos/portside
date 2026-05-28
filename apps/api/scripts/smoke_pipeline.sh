@@ -14,7 +14,7 @@
 # Usage:
 #   bash apps/api/scripts/smoke_pipeline.sh
 #
-# Pass criterion: final state has laytime.demurrage_due_usd == 84375 (the gate).
+# Pass criterion: final state has laytime.demurrage_due_eur == 84375 (the gate).
 
 set -euo pipefail
 
@@ -110,11 +110,11 @@ if [[ "${final_stage}" != "done" ]]; then
   fail "voyage did not reach stage=done within 60s (final stage='${final_stage}')"
 fi
 
-# 6. Assert the gate: laytime.demurrage_due_usd == 84375.
-QUANTUM="$(json_field "${STATE_BODY}" laytime.demurrage_due_usd)"
+# 6. Assert the gate: laytime.demurrage_due_eur == 84375.
+QUANTUM="$(json_field "${STATE_BODY}" laytime.demurrage_due_eur)"
 if [[ "${QUANTUM}" != "84375" && "${QUANTUM}" != "84375.0" && "${QUANTUM}" != "84375.00" ]]; then
-  fail "demurrage_due_usd expected 84375, got '${QUANTUM}'"
+  fail "demurrage_due_eur expected 84375, got '${QUANTUM}'"
 fi
 
-echo "PASS: voyage ${VOYAGE_ID} reached stage=done with demurrage_due_usd=${QUANTUM}"
+echo "PASS: voyage ${VOYAGE_ID} reached stage=done with demurrage_due_eur=${QUANTUM}"
 exit 0

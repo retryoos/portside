@@ -25,6 +25,7 @@ from ..schemas import (
     Perspective,
     SoFEvent,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 # Categories that bound the laytime window.
@@ -35,6 +36,8 @@ _END_CATEGORY = "ops_end"
 _CLASSIFIER_PROMPT = (
     Path(__file__).resolve().parent.parent / "prompts" / "classifier.md"
 ).read_text()
+# Shared cross-cutting rules prepended to the classifier system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 class _ClassificationBatch(BaseModel):
@@ -57,6 +60,7 @@ async def classify_events(
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     system_text = (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_CLASSIFIER_PROMPT}\n\n"
         f"Perspective: {perspective}\n"
         f"Charter party form: {cp.form}; laytime basis: {cp.laytime_basis}.\n"
@@ -127,7 +131,7 @@ def calculate_laytime(
     """
     cp = extraction.charter_party
     allowed = cp.laytime_allowed_hours
-    rate_per_hour = cp.demurrage_rate_usd_per_day / 24.0
+    rate_per_hour = cp.demurrage_rate_eur_per_day / 24.0
 
     events = sorted(extraction.statement_of_facts.events, key=lambda e: e.timestamp)
     cls_by_id: dict[str, EventClassification] = {c.event_id: c for c in classifications}
@@ -146,9 +150,9 @@ def calculate_laytime(
             laytime_used_hours=0.0,
             time_on_demurrage_hours=0.0,
             time_excepted_hours=0.0,
-            demurrage_rate_per_hour_usd=round(rate_per_hour, 4),
-            demurrage_due_usd=0.0,
-            despatch_due_usd=None,
+            demurrage_rate_per_hour_eur=round(rate_per_hour, 4),
+            demurrage_due_eur=0.0,
+            despatch_due_eur=None,
             rows=[],
             classifications=classifications,
         )
@@ -186,17 +190,17 @@ def calculate_laytime(
     used = running
     on_demurrage = max(0.0, used - allowed)
     despatch = None
-    if used < allowed and cp.despatch_rate_usd_per_day:
-        despatch = round((allowed - used) * (cp.despatch_rate_usd_per_day / 24.0), 2)
+    if used < allowed and cp.despatch_rate_eur_per_day:
+        despatch = round((allowed - used) * (cp.despatch_rate_eur_per_day / 24.0), 2)
 
     return LaytimeResult(
         laytime_allowed_hours=allowed,
         laytime_used_hours=round(used, 4),
         time_on_demurrage_hours=round(on_demurrage, 4),
         time_excepted_hours=round(excepted_total, 4),
-        demurrage_rate_per_hour_usd=round(rate_per_hour, 4),
-        demurrage_due_usd=round(on_demurrage * rate_per_hour, 2),
-        despatch_due_usd=despatch,
+        demurrage_rate_per_hour_eur=round(rate_per_hour, 4),
+        demurrage_due_eur=round(on_demurrage * rate_per_hour, 2),
+        despatch_due_eur=despatch,
         rows=rows,
         classifications=classifications,
     )

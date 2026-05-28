@@ -11,7 +11,7 @@ import {
   confidenceWord,
   formatHours,
   formatLocalTimestamp,
-  formatUsd,
+  formatEur,
 } from "@/lib/format";
 import type { FlaggedEvent, LaytimeResult } from "@/lib/types";
 
@@ -144,7 +144,7 @@ function RowFragment({
                     Incremental demurrage
                   </dt>
                   <dd className="text-body-sm text-primary">
-                    {formatUsd(flag.incremental_demurrage_usd)}
+                    {formatEur(flag.incremental_demurrage_eur)}
                   </dd>
                 </div>
                 <div className="flex items-baseline gap-2">

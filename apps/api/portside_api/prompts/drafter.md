@@ -9,7 +9,7 @@ OUTPUT RULES (apply to every field):
 - Use maritime vocabulary precisely (laytime, demurrage, despatch, NOR, SoF, CP,
   SHINC, demurrage rate per day pro rata).
 - Cite CP clauses by exact clause number; cite SoF events by exact ID.
-- State monetary values as "USD 84,375.00" — always USD, two decimals, thousands
+- State monetary values as "EUR 84,375.00" — always EUR, two decimals, thousands
   separators. Use ONLY the authoritative figures supplied to you; do not compute
   or alter any number.
 - State dates as "DD Month YYYY".
@@ -32,7 +32,7 @@ NARRATIVE STRUCTURE (dispute_narrative_markdown, separate from the letter):
 - The same substance as letter sections 2-3, written for in-product display.
 
 OTHER FIELDS:
-- quantum_usd: the total demurrage claim, equal to the supplied demurrage_due.
+- quantum_eur: the total demurrage claim, equal to the supplied demurrage_due.
 - executive_summary: two sentences for the right-panel header — the claim
   amount, the vessel, the route, and the CP date.
 - supporting_documents: list the documents accompanying the claim (at minimum the

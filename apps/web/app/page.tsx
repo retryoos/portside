@@ -15,7 +15,7 @@ export default function CaseDetailPage() {
       <main className="mx-auto max-w-[960px] px-8 py-10">
         <CaseHeader
           title="MT Aegean Pioneer — Ras Tanura / Rotterdam"
-          settledUsd={demoOutcome.settled_usd}
+          settledUsd={demoOutcome.settled_eur}
           daysToSettlement={demoOutcome.days_to_settlement}
         />
         <div className="mt-10">

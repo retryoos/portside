@@ -52,7 +52,7 @@ One voyage, one port call, one disputed laytime calculation, one claim packet. O
 - Annotated event timeline with exceptions applied
 - Plain-language dispute narrative
 - Formal BIMCO-style claim letter (PDF + Word)
-- Claim quantum in USD
+- Claim quantum in EUR
 
 ## 6. Non-goals (explicitly out)
 
@@ -88,7 +88,7 @@ Five minutes. Pre-prepared synthetic voyage scenario with a contested weather ex
 1. Land on the empty three-panel app. Click **New Voyage Claim**.
 2. Drag three PDFs onto the dropzone (already in the demo folder).
 3. Show the four agents running in sequence with live status (one to two seconds each, ~30s total).
-4. Center panel fills with the per-event laytime table. Right panel shows the dispute narrative. Bottom shows **Demurrage due to owners: USD 38,400.00** in big text.
+4. Center panel fills with the per-event laytime table. Right panel shows the dispute narrative. Bottom shows **Demurrage due to owners: EUR 38,400.00** in big text.
 5. Click the one contested row. Inline expansion shows: "Charterer claimed 11 hours of weather exception. Port authority weather record shows wind speeds below the 25-knot threshold per CP clause 17. Time should be charged at $200/hr = $2,200 additional recoverable." Confidence: 88%.
 6. Click **Generate Claim Letter**. A polished one-page BIMCO-style PDF appears in the right panel.
 7. End.

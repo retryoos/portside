@@ -1,12 +1,12 @@
 // Canonical demo voyage for the UI — MT Aegean Pioneer, Ras Tanura -> Rotterdam,
-// claim USD 84,375.00 (per apps/web/DESIGN.md "Demo content"). Authored here as a
+// claim EUR 84,375.00 (per apps/web/DESIGN.md "Demo content"). Authored here as a
 // typed module so it is committed source (survives the shared working tree) and
 // type-checked against the API contract. The "Try the demo voyage" button renders
 // this offline; the live POST /voyages flow uses the backend's own fixture.
 //
-// Reconciliation: demurrage USD 45,000/day = USD 1,875/hr; laytime allowed 72h,
-// used 117h, on demurrage 45h -> 45 * 1,875 = USD 84,375.00. The contested 4h
-// weather stoppage on 17 May is worth 4 * 1,875 = USD 7,500 if the charterer's
+// Reconciliation: demurrage EUR 45,000/day = EUR 1,875/hr; laytime allowed 72h,
+// used 117h, on demurrage 45h -> 45 * 1,875 = EUR 84,375.00. The contested 4h
+// weather stoppage on 17 May is worth 4 * 1,875 = EUR 7,500 if the charterer's
 // exception is rejected (owner's position).
 
 import type { VoyageState } from "./types";
@@ -27,8 +27,8 @@ export const demoVoyage: VoyageState = {
       discharge_port: "Rotterdam",
       laytime_allowed_hours: 72,
       laytime_basis: "SHINC",
-      demurrage_rate_usd_per_day: 45000,
-      despatch_rate_usd_per_day: 22500,
+      demurrage_rate_eur_per_day: 45000,
+      despatch_rate_eur_per_day: 22500,
       exception_clauses: ["WIBON", "WIFPON", "SHINC"],
       nor_tender_window: "Any time, day or night, SHINC",
       laytime_commencement_rule:
@@ -75,9 +75,9 @@ export const demoVoyage: VoyageState = {
     laytime_used_hours: 117,
     time_on_demurrage_hours: 45,
     time_excepted_hours: 0,
-    demurrage_rate_per_hour_usd: 1875,
-    demurrage_due_usd: 84375,
-    despatch_due_usd: null,
+    demurrage_rate_per_hour_eur: 1875,
+    demurrage_due_eur: 84375,
+    despatch_due_eur: null,
     classifications: [
       { event_id: "e6", counts_against_laytime: true, applicable_exception: "weather", clause_basis: "CP clause 14 (weather exception, precipitation > 0.5mm/hr)", reasoning: "Charterer claims a 4-hour rain stoppage. Per CP clause 14, weather stoppages are excepted only where precipitation exceeded 0.5 mm/hr. The Rotterdam Port Authority record shows 0.2 mm/hr at the relevant times, so the exception is not met and the time counts.", contestable: true },
       { event_id: "e8", counts_against_laytime: true, applicable_exception: null, clause_basis: "operational time, no exception applicable", reasoning: "Standard discharge operations, fully chargeable.", contestable: false },
@@ -96,7 +96,7 @@ export const demoVoyage: VoyageState = {
     narrative_paragraphs: [
       "The total laytime used at Rotterdam exceeded the contractually agreed allowance of 72 hours by 45 hours, placing the vessel on demurrage from 17 May 2026. The charterer disputes a 4-hour weather stoppage on 17 May, which is the only contested period in the calculation.",
       "Per CP clause 14, weather stoppages are excepted from laytime only where precipitation at the place of discharge exceeds 0.5 mm per hour. The Rotterdam Port Authority precipitation record for 17 May 2026 shows a maximum of 0.2 mm/hr during the claimed period — below the contractual threshold.",
-      "The position is supported by The Mexico 1 [1990] 1 Lloyd's Rep 507, which confirms that a stoppage must satisfy the express contractual condition before it can be deducted from laytime. The 4-hour period therefore counts and the full demurrage of USD 84,375.00 is due.",
+      "The position is supported by The Mexico 1 [1990] 1 Lloyd's Rep 507, which confirms that a stoppage must satisfy the express contractual condition before it can be deducted from laytime. The 4-hour period therefore counts and the full demurrage of EUR 84,375.00 is due.",
     ],
     flagged_events: [
       {
@@ -106,7 +106,7 @@ export const demoVoyage: VoyageState = {
         owner_argument: "The stoppage does not meet the 0.5 mm/hr threshold in CP clause 14 and, per The Mexico 1 [1990] 1 Lloyd's Rep 507, must count as laytime/demurrage.",
         charterer_argument: "Discharge was physically suspended due to rain and the master recorded the stoppage in the Statement of Facts without protest.",
         owner_position_strength: 0.8,
-        incremental_demurrage_usd: 7500,
+        incremental_demurrage_eur: 7500,
         clauses_cited: ["CP clause 14"],
         evidence_required: [
           "Rotterdam Port Authority precipitation record for 17 May 2026",
@@ -116,13 +116,13 @@ export const demoVoyage: VoyageState = {
     ],
   },
   packet: {
-    quantum_usd: 84375,
+    quantum_eur: 84375,
     executive_summary:
-      "Owners claim demurrage of USD 84,375.00 against charterers in respect of the discharge port call at Rotterdam on the voyage MT Aegean Pioneer, Ras Tanura / Rotterdam, CP dated 12 February 2026. The claim turns on a disputed 4-hour weather stoppage that does not meet the CP clause 14 precipitation threshold.",
+      "Owners claim demurrage of EUR 84,375.00 against charterers in respect of the discharge port call at Rotterdam on the voyage MT Aegean Pioneer, Ras Tanura / Rotterdam, CP dated 12 February 2026. The claim turns on a disputed 4-hour weather stoppage that does not meet the CP clause 14 precipitation threshold.",
     dispute_narrative_markdown:
       "## Dispute summary\n\nThe total laytime used at Rotterdam exceeded the contractually agreed allowance of 72 hours by 45 hours. The only contested period is a 4-hour weather stoppage on 17 May 2026. Per CP clause 14, weather is excepted only above 0.5 mm/hr precipitation; the Rotterdam Port Authority record shows 0.2 mm/hr. The position is supported by *The Mexico 1* [1990] 1 Lloyd's Rep 507.",
     claim_letter_markdown:
-      "**Aegean Tankers S.A.**\nAkti Miaouli 1, Piraeus 185 35, Greece\n\n19 May 2026\n\nNorth Sea Crude Trading B.V.\nRotterdam\n\nDear Sirs,\n\n**Re: Demurrage Claim — MT Aegean Pioneer — Ras Tanura / Rotterdam — CP dated 12 February 2026**\n\nWe write further to the captioned charter party in respect of the discharge port call at Rotterdam, completed on 19 May 2026.\n\n**1. Summary of claim**\n- Laytime allowed: 72 hours SHINC\n- Laytime used: 117 hours\n- Time on demurrage: 45 hours\n- Demurrage rate: USD 45,000.00 per day pro rata\n- Demurrage due: USD 84,375.00\n\n**2. Disputed time**\nThe charterer claims a 4-hour weather stoppage on 17 May 2026. Per CP clause 14, weather is excepted only where precipitation exceeds 0.5 mm/hr. The Rotterdam Port Authority record shows a maximum of 0.2 mm/hr. Per *The Mexico 1* [1990] 1 Lloyd's Rep 507, the stoppage must count.\n\n**3. Time bar**\nThis claim is submitted within the contractual time bar of 90 days from completion of discharge (17 August 2026).\n\n**4. Demand**\nWe accordingly demand payment of USD 84,375.00 within 30 days of the date of this letter.\n\nAll rights reserved.\n\nYours faithfully,\nFor and on behalf of Aegean Tankers S.A.",
+      "**Aegean Tankers S.A.**\nAkti Miaouli 1, Piraeus 185 35, Greece\n\n19 May 2026\n\nNorth Sea Crude Trading B.V.\nRotterdam\n\nDear Sirs,\n\n**Re: Demurrage Claim — MT Aegean Pioneer — Ras Tanura / Rotterdam — CP dated 12 February 2026**\n\nWe write further to the captioned charter party in respect of the discharge port call at Rotterdam, completed on 19 May 2026.\n\n**1. Summary of claim**\n- Laytime allowed: 72 hours SHINC\n- Laytime used: 117 hours\n- Time on demurrage: 45 hours\n- Demurrage rate: EUR 45,000.00 per day pro rata\n- Demurrage due: EUR 84,375.00\n\n**2. Disputed time**\nThe charterer claims a 4-hour weather stoppage on 17 May 2026. Per CP clause 14, weather is excepted only where precipitation exceeds 0.5 mm/hr. The Rotterdam Port Authority record shows a maximum of 0.2 mm/hr. Per *The Mexico 1* [1990] 1 Lloyd's Rep 507, the stoppage must count.\n\n**3. Time bar**\nThis claim is submitted within the contractual time bar of 90 days from completion of discharge (17 August 2026).\n\n**4. Demand**\nWe accordingly demand payment of EUR 84,375.00 within 30 days of the date of this letter.\n\nAll rights reserved.\n\nYours faithfully,\nFor and on behalf of Aegean Tankers S.A.",
     supporting_documents: [
       "Charter Party dated 12 February 2026",
       "Notice of Readiness tendered 14 May 2026 at 0600 LT",
@@ -146,24 +146,24 @@ export interface CorrespondenceItem {
 }
 
 export interface CaseOutcome {
-  original_claim_usd: number;
-  settled_usd: number;
+  original_claim_eur: number;
+  settled_eur: number;
   recovery_pct: number;
   days_to_settlement: number;
   time_bar_status: string;
 }
 
 export const demoCorrespondence: CorrespondenceItem[] = [
-  { date: "2026-05-20", actor: "Aegean Tankers S.A.", summary: "Demurrage claim submitted to charterer — USD 84,375.00, with laytime calculation and supporting documents." },
+  { date: "2026-05-20", actor: "Aegean Tankers S.A.", summary: "Demurrage claim submitted to charterer — EUR 84,375.00, with laytime calculation and supporting documents." },
   { date: "2026-05-27", actor: "North Sea Crude Trading B.V.", summary: "Charterer response disputing the 4-hour weather stoppage on 17 May.", detectedFromInbox: true },
   { date: "2026-05-29", actor: "Aegean Tankers S.A.", summary: "Rebuttal sent citing CP clause 14 and The Mexico 1 [1990] 1 Lloyd's Rep 507; attached Port Authority precipitation record." },
-  { date: "2026-06-05", actor: "North Sea Crude Trading B.V.", summary: "Revised settlement offer of USD 79,000.00." },
-  { date: "2026-06-10", actor: "Aegean Tankers S.A.", summary: "Settlement accepted at USD 79,000.00 — 21 days from claim submission.", settled: true },
+  { date: "2026-06-05", actor: "North Sea Crude Trading B.V.", summary: "Revised settlement offer of EUR 79,000.00." },
+  { date: "2026-06-10", actor: "Aegean Tankers S.A.", summary: "Settlement accepted at EUR 79,000.00 — 21 days from claim submission.", settled: true },
 ];
 
 export const demoOutcome: CaseOutcome = {
-  original_claim_usd: 84375,
-  settled_usd: 79000,
+  original_claim_eur: 84375,
+  settled_eur: 79000,
   recovery_pct: 93.6,
   days_to_settlement: 21,
   time_bar_status: "Cleared 67 days early",

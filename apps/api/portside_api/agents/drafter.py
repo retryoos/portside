@@ -25,15 +25,18 @@ from ..schemas import (
     LaytimeResult,
     Perspective,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 _BASE = Path(__file__).resolve().parent.parent
 _PROMPT = (_BASE / "prompts" / "drafter.md").read_text()
 _TEMPLATE = (_BASE / "letter_template.html").read_text()
+# Shared cross-cutting rules prepended to the drafter system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
-def _usd(value: float) -> str:
-    """Format as the canonical 'USD' figure body: '84,375.00' (no prefix)."""
+def _eur(value: float) -> str:
+    """Format as the canonical 'EUR' figure body: '84,375.00' (no prefix)."""
     return f"{value:,.2f}"
 
 
@@ -63,6 +66,7 @@ def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     return (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_PROMPT}\n\n"
         f"Perspective: {perspective}\n\n"
         f"LETTER TEMPLATE (follow exactly, fill the slots):\n{_TEMPLATE}\n\n"
@@ -88,7 +92,7 @@ def _user_text(
             "summary": fe.summary,
             "owner_argument": fe.owner_argument,
             "charterer_argument": fe.charterer_argument,
-            "incremental_demurrage_usd": _usd(fe.incremental_demurrage_usd),
+            "incremental_demurrage_eur": _eur(fe.incremental_demurrage_eur),
             "clauses_cited": fe.clauses_cited,
             "evidence_required": fe.evidence_required,
         }
@@ -110,8 +114,8 @@ def _user_text(
             "laytime_allowed_hours": laytime.laytime_allowed_hours,
             "laytime_used_hours": laytime.laytime_used_hours,
             "time_on_demurrage_hours": laytime.time_on_demurrage_hours,
-            "demurrage_rate_per_day_usd": _usd(cp.demurrage_rate_usd_per_day),
-            "quantum_usd": _usd(laytime.demurrage_due_usd),
+            "demurrage_rate_per_day_eur": _eur(cp.demurrage_rate_eur_per_day),
+            "quantum_eur": _eur(laytime.demurrage_due_eur),
             "time_bar_date": bar_date,
             "days_until_time_bar": days_until,
             "submitted_within_time_bar": within_bar,
@@ -156,7 +160,7 @@ async def run(
     )
 
     # Deterministic overwrite — money and dates never come from the model.
-    packet.quantum_usd = laytime.demurrage_due_usd
+    packet.quantum_eur = laytime.demurrage_due_eur
     packet.time_bar_date = bar_date
     packet.days_until_time_bar = days_until
     packet.submitted_within_time_bar = within_bar

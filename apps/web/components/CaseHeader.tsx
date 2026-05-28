@@ -1,4 +1,4 @@
-import { formatUsd } from "@/lib/format";
+import { formatEur } from "@/lib/format";
 
 // Screen 1 case header (DESIGN.md §Screens 1). Serif title + settlement subline.
 // At most ONE small amber accent dot beside the title (the single sanctioned
@@ -22,7 +22,7 @@ export default function CaseHeader({
         />
       </div>
       <p className="mt-2 text-body text-secondary">
-        Settled at {formatUsd(settledUsd)} — {daysToSettlement} days from claim
+        Settled at {formatEur(settledUsd)} — {daysToSettlement} days from claim
         submission
       </p>
     </header>

@@ -62,7 +62,7 @@ export default function ReviseLetter() {
       )}
 
       <p className="mt-4">
-        We accordingly demand payment of USD 84,375.00 within 30 days of the date
+        We accordingly demand payment of EUR 84,375.00 within 30 days of the date
         of this letter. All rights reserved.
       </p>
 

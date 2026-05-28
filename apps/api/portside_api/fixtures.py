@@ -7,11 +7,11 @@ signature.
 
 Reconciliation (internally consistent):
 
-    demurrage rate      USD 45,000 / day  ==  USD 1,875 / hour
+    demurrage rate      EUR 45,000 / day  ==  EUR 1,875 / hour
     laytime allowed     72.0 h
     laytime used        117.0 h
     time on demurrage   117.0 - 72.0 = 45.0 h
-    quantum             45.0 h * USD 1,875/h  =  USD 84,375.00
+    quantum             45.0 h * EUR 1,875/h  =  EUR 84,375.00
 
 The contested row is e6->e7 (a 4h weather stoppage on 17 May). Owner contends CP
 clause 14 (precipitation > 0.5 mm/hr) is not met, so the time counts.
@@ -42,7 +42,7 @@ LAYTIME_ALLOWED_HOURS = 72.0
 LAYTIME_USED_HOURS = 117.0
 TIME_EXCEPTED_HOURS = 0.0
 TIME_ON_DEMURRAGE_HOURS = LAYTIME_USED_HOURS - LAYTIME_ALLOWED_HOURS  # 45.0
-QUANTUM_USD = round(TIME_ON_DEMURRAGE_HOURS * DEMURRAGE_RATE_PER_HOUR, 2)  # 84375.0
+QUANTUM_EUR = round(TIME_ON_DEMURRAGE_HOURS * DEMURRAGE_RATE_PER_HOUR, 2)  # 84375.0
 
 
 def _charter_party() -> CharterParty:
@@ -56,8 +56,8 @@ def _charter_party() -> CharterParty:
         discharge_port="Rotterdam",
         laytime_allowed_hours=LAYTIME_ALLOWED_HOURS,
         laytime_basis="SHINC",
-        demurrage_rate_usd_per_day=DEMURRAGE_RATE_PER_DAY,
-        despatch_rate_usd_per_day=22500.0,
+        demurrage_rate_eur_per_day=DEMURRAGE_RATE_PER_DAY,
+        despatch_rate_eur_per_day=22500.0,
         exception_clauses=["WIBON", "WIFPON", "SHINC"],
         nor_tender_window="Any time, day or night, SHINC",
         laytime_commencement_rule=(
@@ -176,9 +176,9 @@ def _laytime() -> LaytimeResult:
         laytime_used_hours=LAYTIME_USED_HOURS,
         time_on_demurrage_hours=TIME_ON_DEMURRAGE_HOURS,
         time_excepted_hours=TIME_EXCEPTED_HOURS,
-        demurrage_rate_per_hour_usd=DEMURRAGE_RATE_PER_HOUR,
-        demurrage_due_usd=QUANTUM_USD,
-        despatch_due_usd=None,
+        demurrage_rate_per_hour_eur=DEMURRAGE_RATE_PER_HOUR,
+        demurrage_due_eur=QUANTUM_EUR,
+        despatch_due_eur=None,
         rows=_laytime_rows(),
         classifications=_classifications(),
     )
@@ -200,7 +200,7 @@ def _dispute(perspective: Perspective) -> DisputeAnalysis:
             "The position is supported by The Mexico 1 [1990] 1 Lloyd's Rep 507, which confirms "
             "that a stoppage must satisfy the express contractual condition before it can be "
             "deducted from laytime. The 4-hour period therefore counts and the full demurrage of "
-            "USD 84,375.00 is due.",
+            "EUR 84,375.00 is due.",
         ],
         flagged_events=[
             FlaggedEvent(
@@ -220,7 +220,7 @@ def _dispute(perspective: Perspective) -> DisputeAnalysis:
                     "stoppage in the Statement of Facts without protest."
                 ),
                 owner_position_strength=0.8,
-                incremental_demurrage_usd=7500.0,
+                incremental_demurrage_eur=7500.0,
                 clauses_cited=["CP clause 14"],
                 evidence_required=[
                     "Rotterdam Port Authority precipitation record for 17 May 2026",
@@ -249,8 +249,8 @@ We write further to the captioned charter party in respect of the discharge port
 - Laytime allowed: 72 hours SHINC
 - Laytime used: 117 hours
 - Time on demurrage: 45 hours
-- Demurrage rate: USD 45,000.00 per day pro rata
-- Demurrage due: USD 84,375.00
+- Demurrage rate: EUR 45,000.00 per day pro rata
+- Demurrage due: EUR 84,375.00
 
 **2. Disputed time**
 The charterer claims a 4-hour weather stoppage on 17 May 2026. Per CP clause 14, weather is excepted only where precipitation exceeds 0.5 mm/hr. The Rotterdam Port Authority record shows a maximum of 0.2 mm/hr. Per The Mexico 1 [1990] 1 Lloyd's Rep 507, the stoppage must count.
@@ -259,7 +259,7 @@ The charterer claims a 4-hour weather stoppage on 17 May 2026. Per CP clause 14,
 This claim is submitted within the contractual time bar of 90 days from completion of discharge (17 August 2026).
 
 **4. Demand**
-We accordingly demand payment of USD 84,375.00 within 30 days of the date of this letter.
+We accordingly demand payment of EUR 84,375.00 within 30 days of the date of this letter.
 
 All rights reserved.
 
@@ -270,9 +270,9 @@ For and on behalf of Aegean Tankers S.A.
 
 def _packet() -> ClaimPacket:
     return ClaimPacket(
-        quantum_usd=QUANTUM_USD,
+        quantum_eur=QUANTUM_EUR,
         executive_summary=(
-            "Owners claim demurrage of USD 84,375.00 against charterers in respect of the "
+            "Owners claim demurrage of EUR 84,375.00 against charterers in respect of the "
             "discharge port call at Rotterdam on the voyage MT Aegean Pioneer, Ras Tanura / "
             "Rotterdam, CP dated 12 February 2026. The claim turns on a disputed 4-hour weather "
             "stoppage that does not meet the CP clause 14 precipitation threshold."
