@@ -18,6 +18,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Annotated
 
 from fastapi import FastAPI, Form, HTTPException, UploadFile
@@ -32,7 +34,26 @@ from .storage import InMemoryStore, VoyageStore
 
 logger = logging.getLogger("portside_api")
 
-app = FastAPI(title="Portside API", version="0.1.0")
+# In-memory store, shared for the process lifetime.
+store: VoyageStore = InMemoryStore()
+
+# Hold strong references to in-flight background tasks. asyncio.create_task only
+# weakly references its task, so without this the pipeline task can be GC'd /
+# cancelled mid-run.
+_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Seed the in-memory store with demo cases on startup so the dashboard is
+    never empty on a fresh process (notes: in-memory + startup seed; restart
+    resets)."""
+    for state in seed_voyages():
+        await store.save(state)
+    yield
+
+
+app = FastAPI(title="Portside API", version="0.1.0", lifespan=lifespan)
 
 # CORS allowlist comes from settings.cors_origins (notes/02-architecture.md §12):
 # local dev defaults to http://localhost:3000; add the Amplify domain on deploy
@@ -44,22 +65,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# In-memory store, shared for the process lifetime.
-store: VoyageStore = InMemoryStore()
-
-# Hold strong references to in-flight background tasks. asyncio.create_task only
-# weakly references its task, so without this the pipeline task can be GC'd /
-# cancelled mid-run.
-_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
-
-
-@app.on_event("startup")
-async def _seed_demo_voyages() -> None:
-    """Populate the in-memory store with demo cases so the dashboard is never
-    empty on a fresh process (notes: in-memory + startup seed; restart resets)."""
-    for state in seed_voyages():
-        await store.save(state)
 
 
 @app.get("/healthz")
