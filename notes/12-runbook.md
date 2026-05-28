@@ -30,6 +30,8 @@ python3 --version     # expect 3.12+
 uv --version          # expect >= 0.5   (install: curl -LsSf https://astral.sh/uv/install.sh | sh)
 git --version
 claude --version      # Claude Code CLI
+entire --version      # Entire CLI — REQUIRED (see §1c). install: curl -fsSL https://entire.io/install.sh | sh
+entire status         # must show Entire ENABLED for this repo before you write any code
 jq --version          # nice to have for poking JSON   (brew install jq)
 # OrbStack only if you want to test the deploy container — not required for dev
 cat apps/api/.env     # confirm ANTHROPIC_API_KEY is set (see Environment below)
@@ -41,6 +43,8 @@ node --version        # expect v22.x   (install Node 22 LTS)
 pnpm --version        # expect >= 9     (install: corepack enable)
 git --version         # Git for Windows
 claude --version      # Claude Code CLI
+entire --version      # Entire CLI — REQUIRED (see §1c)
+entire status         # must show Entire ENABLED for this repo before you write any code
 # No Python, no WSL, no Docker needed for frontend
 ```
 
@@ -72,8 +76,15 @@ claude --version          # expect latest
 ```bash
 cd ~/Desktop/Code/FlorentHackathon/Source
 git pull
-ls notes/                 # confirm the 10+ planning docs are present
+ls notes/                 # confirm the planning docs are present
+
+# Entire — install + enable BEFORE writing any code (see §1c)
+curl -fsSL https://entire.io/install.sh | sh
+entire enable             # installs git hooks in THIS clone — each machine runs this
+entire status             # confirm ENABLED
 ```
+
+**Each machine must run `entire enable` in its own clone** — the git hooks that capture sessions are local to each clone. The captured session data is committed to the repo and shared.
 
 ### Environment
 
@@ -98,6 +109,35 @@ curl https://api.anthropic.com/v1/messages \
   -H "content-type: application/json" \
   -d '{"model":"claude-sonnet-4-6","max_tokens":50,"messages":[{"role":"user","content":"say hi"}]}'
 ```
+
+---
+
+## 1c. Entire — session capture + dispatch (JUDGING REQUIREMENT)
+
+> The judges said: *"Submit with Entire and use it to give an overview of what you did (dispatches) so we can win the prizes."* This is tied to the prize. Treat it as mandatory, not optional.
+
+**What Entire is:** a git-observability CLI ([entireio/cli](https://github.com/entireio/cli), [docs](https://docs.entire.io/cli/commands)) that captures your AI agent (Claude Code) sessions and indexes them alongside your commits — a searchable record of *how* the code was written. `entire dispatch` then generates the overview the judges want.
+
+**The hard timing rule:** Entire only captures sessions that happen **after** `entire enable`. If you enable it late, all earlier agent work is invisible to the dispatch. **So `entire enable` is the first thing on every machine, before any coding.** Each agent's pre-flight (§1) checks `entire status` returns ENABLED.
+
+**Workflow:**
+```bash
+# Once per machine, at setup (already in Repo bootstrap above):
+curl -fsSL https://entire.io/install.sh | sh
+entire enable
+entire status                 # ENABLED
+
+# During the day — sanity check it's tracking:
+entire session info           # shows agent, model, tokens, files touched, checkpoint linkage
+
+# At submission (~18:30, see §submission):
+entire auth login             # if using cloud dispatch (shareable link for judges)
+entire dispatch               # generates the overview of everything the agents built
+#   or, no-account fallback:
+entire dispatch --local       # generates from local repo data using your local agent CLI
+```
+
+**For the submission:** run `entire dispatch` near the freeze, capture the dispatch link/output, and include it in whatever the hackathon submission form asks for. This is the "overview of what you did" the judges scored on.
 
 ---
 
@@ -130,7 +170,7 @@ Follow the merge rules in [09-pre-merge-protocol.md](09-pre-merge-protocol.md).
 
 Paste this into your `claude` session:
 
-> You are building the backend for Portside (`apps/api/`). Read `notes/02-architecture.md`, `notes/03-agents.md`, and `notes/04-schemas.md` first.
+> You are building the backend for Portside (`apps/api/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/02-architecture.md`, `notes/03-agents.md`, and `notes/04-schemas.md`.
 >
 > **PR #1 — `track-a/api-skeleton` (do this first and push to main so the frontend agent can start):**
 > 1. Scaffold `apps/api` with `uv` (Python 3.12, FastAPI, uvicorn, pydantic v2, anthropic, pdfplumber).
@@ -146,7 +186,7 @@ Paste this into your `claude` session:
 
 Paste this into the `claude` session on the Windows machine:
 
-> You are building the frontend for Portside (`apps/web/`). Read `notes/06-frontend.md` (especially §0 — the mandatory `/impeccable` + `apps/web/DESIGN.md` workflow), `apps/web/DESIGN.md`, and `notes/04-schemas.md` first.
+> You are building the frontend for Portside (`apps/web/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/06-frontend.md` (especially §0 — the mandatory `/impeccable` + `apps/web/DESIGN.md` workflow), `apps/web/DESIGN.md`, and `notes/04-schemas.md`.
 >
 > **PR — `track-c/web-skeleton`:**
 > 1. Scaffold `apps/web` with Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui. Load the fonts and tokens from `apps/web/DESIGN.md` (Fraunces / IBM Plex Sans / JetBrains Mono).
