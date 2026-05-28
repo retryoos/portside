@@ -11,6 +11,8 @@ export type PipelineStage =
   | "drafting"
   | "done"
   | "error"
+  | "pending"
+  | "rejected"
   | "settled";
 
 export interface ClauseExcerpt {

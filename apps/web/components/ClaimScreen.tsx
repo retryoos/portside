@@ -1,29 +1,70 @@
 "use client";
 
-// Claim screen container (notes/15-next-phase.md — Agent 2 live frontend wiring).
-// Runs on the LIVE pipeline when an `id` is supplied via the /cases/<id> route
-// (pollVoyage feeds each stage in); otherwise it renders the offline lib/demo.ts
-// fixture. The leaf components take their data via props, so the same screen
-// serves both the live and demo paths. The "demo" id is reserved for the fixture.
+// Claim detail for a single voyage. Driven by the /cases/<id> route: it polls
+// the backend (live pipeline -> staged progress -> packet) and then exposes the
+// negotiation lifecycle actions (send -> settled | rejected -> revise & resend).
+// The reserved id "demo" renders the offline lib/demo.ts fixture read-only (no
+// actions, since it is not a real voyage). Uploading new claims lives on /cases.
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createVoyage, pollVoyage, type VoyageFiles } from "@/lib/api";
+import { pollVoyage, setVoyageStatus } from "@/lib/api";
 import { demoVoyage } from "@/lib/demo";
-import type { Perspective, VoyageState } from "@/lib/types";
+import type { PipelineStage, VoyageState } from "@/lib/types";
 import ClaimLetter, { LETTER_DOM_ID } from "@/components/ClaimLetter";
 import SourcesTabs from "@/components/SourcesTabs";
 import TimebarBadge from "@/components/TimebarBadge";
 import ExportPdfButton from "@/components/ExportPdfButton";
 import AgentSteps from "@/components/AgentSteps";
-import Dropzone from "@/components/Dropzone";
+import StageChip from "@/components/StageChip";
+
+const PRIMARY =
+  "rounded-sm bg-cta px-4 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50";
+const GHOST =
+  "rounded-sm px-3.5 py-2.5 text-body-sm text-secondary transition-colors hover:text-primary disabled:opacity-50";
+
+function StageActions({
+  stage,
+  busy,
+  onTransition,
+}: {
+  stage: PipelineStage;
+  busy: boolean;
+  onTransition: (next: PipelineStage) => void;
+}) {
+  if (stage === "done") {
+    return (
+      <button type="button" disabled={busy} onClick={() => onTransition("pending")} className={PRIMARY}>
+        Send to charterer
+      </button>
+    );
+  }
+  if (stage === "pending") {
+    return (
+      <>
+        <button type="button" disabled={busy} onClick={() => onTransition("rejected")} className={GHOST}>
+          Charterer rejected
+        </button>
+        <button type="button" disabled={busy} onClick={() => onTransition("settled")} className={PRIMARY}>
+          Mark as settled
+        </button>
+      </>
+    );
+  }
+  if (stage === "rejected") {
+    return (
+      <button type="button" disabled={busy} onClick={() => onTransition("pending")} className={PRIMARY}>
+        Revise &amp; resend
+      </button>
+    );
+  }
+  return null;
+}
 
 export default function ClaimScreen({ id }: { id?: string }) {
-  const router = useRouter();
   const voyageId = id && id !== "demo" ? id : null;
   const live = Boolean(voyageId);
 
   const [voyage, setVoyage] = useState<VoyageState>(demoVoyage);
-  const [createBusy, setCreateBusy] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Live mode: poll the backend until the pipeline reaches a terminal stage.
@@ -44,27 +85,21 @@ export default function ClaimScreen({ id }: { id?: string }) {
     };
   }, [voyageId]);
 
-  const handleSubmit = useCallback(
-    async (files: VoyageFiles, perspective: Perspective) => {
+  const handleTransition = useCallback(
+    async (next: PipelineStage) => {
+      if (!voyageId) return;
       setError(null);
-      setCreateBusy(true);
+      setActionBusy(true);
       try {
-        const newId = await createVoyage(files, perspective);
-        router.push(`/cases/${newId}`);
+        setVoyage(await setVoyageStatus(voyageId, next));
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
-        setCreateBusy(false);
+        setActionBusy(false);
       }
     },
-    [router],
+    [voyageId],
   );
-
-  const handleDemo = useCallback(() => {
-    setError(null);
-    setVoyage(demoVoyage);
-    router.push("/cases/demo");
-  }, [router]);
 
   const cp = voyage.extraction?.charter_party;
   const title = cp
@@ -74,42 +109,40 @@ export default function ClaimScreen({ id }: { id?: string }) {
       : "MT Aegean Pioneer — Ras Tanura / Rotterdam";
 
   const hasPacket = Boolean(voyage.packet);
-  const showProgress = live && voyage.stage !== "done";
+  const showProgress = live && !hasPacket;
 
   return (
     <main className="mx-auto max-w-[1200px] px-8 py-10">
-      <Dropzone onSubmit={handleSubmit} onDemo={handleDemo} busy={createBusy} />
-
       {error && (
-        <p className="mt-6 rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
+        <p className="mb-6 rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
           {error}
         </p>
       )}
 
-      {showProgress && (
-        <div className="mt-8">
-          <AgentSteps stage={voyage.stage} error={voyage.error} />
-        </div>
-      )}
+      {showProgress && <AgentSteps stage={voyage.stage} error={voyage.error} />}
 
       {hasPacket && (
         <>
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span aria-hidden="true" className="inline-block h-2 w-2 rounded-sm bg-accent" />
               <h1 className="text-h1 text-primary">{title}</h1>
+              {live && <StageChip stage={voyage.stage} />}
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <TimebarBadge days={voyage.packet?.days_until_time_bar ?? 0} />
               <ExportPdfButton targetId={LETTER_DOM_ID} />
-              <button
-                type="button"
-                className="rounded-sm bg-cta px-4 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover"
-              >
-                Send to charterer
-              </button>
+              {live && (
+                <StageActions stage={voyage.stage} busy={actionBusy} onTransition={handleTransition} />
+              )}
             </div>
           </div>
+
+          {live && voyage.stage === "rejected" && (
+            <p className="mt-4 rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
+              The charterer rejected this claim. Revise the letter, then resend to reopen negotiation.
+            </p>
+          )}
 
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[58fr_42fr]">
             <div>
@@ -120,12 +153,6 @@ export default function ClaimScreen({ id }: { id?: string }) {
             </div>
           </div>
         </>
-      )}
-
-      {live && !hasPacket && voyage.stage !== "error" && (
-        <p className="mt-8 text-body-sm text-secondary">
-          Generating the claim packet from your documents…
-        </p>
       )}
     </main>
   );

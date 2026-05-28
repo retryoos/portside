@@ -25,6 +25,8 @@ PipelineStage = Literal[
     "drafting",
     "done",
     "error",
+    "pending",
+    "rejected",
     "settled",
 ]
 
@@ -92,6 +94,13 @@ class VesselSummary(BaseModel):
     latest_stage: PipelineStage
     last_activity: datetime
     perspectives: list[Perspective]
+
+
+class StatusUpdate(BaseModel):
+    """Body for POST /voyages/{id}/status — a human-driven lifecycle transition
+    (send to charterer, settle, reject, revise & resend)."""
+
+    stage: PipelineStage
 
 
 # ---------------------------------------------------------------------------

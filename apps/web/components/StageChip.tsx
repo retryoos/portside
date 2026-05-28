@@ -1,18 +1,25 @@
 import type { PipelineStage } from "@/lib/types";
 
 // Status chip for a voyage's claim lifecycle, mapped from the pipeline stage.
-// Kept to the few statuses a claims desk actually acts on: In progress (the
-// pipeline is still extracting/calculating/drafting) -> Draft (the claim packet
-// is drafted and ready to send to the charterer; the pipeline's "done" stage)
-// -> Settled (resolved, money in). Error on failure. Colors: amber = working,
-// ink = drafted/ready to send, green = settled, red = error.
+// The lifecycle a claims desk actually works through:
+//   In progress -> Draft -> Pending -> (Rejected -> back to Draft) -> Settled
+// In progress: the pipeline is still extracting/calculating/drafting.
+// Draft:       the claim packet is drafted, ready to send to the charterer.
+// Pending:     sent, awaiting the charterer's negotiation feedback.
+// Rejected:    the charterer pushed back; review and revise, then resend.
+// Settled:     resolved, money in.
+// Error:       the pipeline itself failed (technical), distinct from Rejected.
+// Colors group by meaning: amber = working, ink = on our desk (draft/awaiting),
+// green = resolved, red = needs attention (rejected or failed).
 const STAGE: Record<PipelineStage, { label: string; className: string }> = {
   uploaded: { label: "In progress", className: "bg-warning-container text-warning" },
   extracting: { label: "In progress", className: "bg-warning-container text-warning" },
   calculating: { label: "In progress", className: "bg-warning-container text-warning" },
   analyzing: { label: "In progress", className: "bg-warning-container text-warning" },
   drafting: { label: "In progress", className: "bg-warning-container text-warning" },
-  done: { label: "Draft", className: "bg-surface-muted text-primary" },
+  done: { label: "Draft", className: "bg-surface-muted text-secondary" },
+  pending: { label: "Pending", className: "bg-surface-muted text-primary" },
+  rejected: { label: "Rejected", className: "bg-danger-container text-danger" },
   settled: { label: "Settled", className: "bg-success-container text-success" },
   error: { label: "Error", className: "bg-danger-container text-danger" },
 };

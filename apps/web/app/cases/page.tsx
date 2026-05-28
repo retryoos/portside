@@ -11,7 +11,7 @@ import TopNav from "@/components/TopNav";
 import CasesTable from "@/components/CasesTable";
 import Dropzone from "@/components/Dropzone";
 import { createVoyage, listVoyages, type VoyageFiles } from "@/lib/api";
-import type { Perspective, VoyageSummary } from "@/lib/types";
+import type { VoyageSummary } from "@/lib/types";
 
 export default function CasesDashboardPage() {
   const router = useRouter();
@@ -31,11 +31,12 @@ export default function CasesDashboardPage() {
   }, []);
 
   const handleSubmit = useCallback(
-    async (files: VoyageFiles, perspective: Perspective) => {
+    async (files: VoyageFiles) => {
       setError(null);
       setCreateBusy(true);
       try {
-        const id = await createVoyage(files, perspective);
+        // Single-perspective product: every claim is filed from the owner's side.
+        const id = await createVoyage(files, "owner");
         router.push(`/cases/${id}`);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
