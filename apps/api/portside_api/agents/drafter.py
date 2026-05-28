@@ -18,6 +18,8 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from ..schemas import (
     ClaimPacket,
     DisputeAnalysis,
@@ -27,6 +29,22 @@ from ..schemas import (
 )
 from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
+
+
+class _DraftedClaim(BaseModel):
+    """Prose-only projection of the ClaimPacket for the LLM call.
+
+    The model writes only the narrative fields. Every number and date is
+    re-derived deterministically in Python and never asked of the model — that
+    way a model degeneration can't produce an out-of-range numeric field and
+    fail the whole packet parse (numbers can still appear inside the prose as
+    plain text, where a glitch is non-fatal).
+    """
+
+    executive_summary: str
+    dispute_narrative_markdown: str
+    claim_letter_markdown: str
+    supporting_documents: list[str]
 
 _BASE = Path(__file__).resolve().parent.parent
 _PROMPT = (_BASE / "prompts" / "drafter.md").read_text()
@@ -150,8 +168,8 @@ async def run(
     """Produce the ClaimPacket. Prose from the model; all numbers/dates from Python."""
     bar_date, days_until, within_bar = _time_bar(extraction)
 
-    packet = await extract_structured(
-        ClaimPacket,
+    drafted = await extract_structured(
+        _DraftedClaim,
         system=cached_system(_system_text(extraction, perspective)),
         user_text=_user_text(
             extraction, laytime, dispute, perspective, bar_date, days_until, within_bar
@@ -159,9 +177,14 @@ async def run(
         max_tokens=8192,
     )
 
-    # Deterministic overwrite — money and dates never come from the model.
-    packet.quantum_eur = laytime.demurrage_due_eur
-    packet.time_bar_date = bar_date
-    packet.days_until_time_bar = days_until
-    packet.submitted_within_time_bar = within_bar
-    return packet
+    # Assemble the packet: prose from the model, money and dates from Python.
+    return ClaimPacket(
+        quantum_eur=laytime.demurrage_due_eur,
+        executive_summary=drafted.executive_summary,
+        dispute_narrative_markdown=drafted.dispute_narrative_markdown,
+        claim_letter_markdown=drafted.claim_letter_markdown,
+        supporting_documents=drafted.supporting_documents,
+        time_bar_date=bar_date,
+        submitted_within_time_bar=within_bar,
+        days_until_time_bar=days_until,
+    )
