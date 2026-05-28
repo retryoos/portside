@@ -57,7 +57,7 @@ export default function VesselDetailPage() {
   return (
     <div className="min-h-screen">
       <TopNav />
-      <Breadcrumb segments={["Vessels", name || "—"]} />
+      <Breadcrumb segments={["Vessels", name || "·"]} />
       <main className="mx-auto max-w-[960px] px-8 py-10">
         {error && (
           <p className="rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
@@ -100,7 +100,7 @@ export default function VesselDetailPage() {
                 <div className="text-right">
                   <dt className="text-label-caps text-secondary">Total quantum</dt>
                   <dd className="mt-0.5 text-body tabular-nums text-primary">
-                    {aggregates.total != null ? formatEur(aggregates.total) : "—"}
+                    {aggregates.total != null ? formatEur(aggregates.total) : "·"}
                   </dd>
                 </div>
                 <div className="text-right">

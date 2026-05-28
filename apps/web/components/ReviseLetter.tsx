@@ -16,7 +16,7 @@ const ORIGINAL_SENTENCE =
   "The charterer claims a 4-hour weather stoppage on 17 May 2026; we consider that this time should count.";
 
 const REPLACEMENT_PARAGRAPH =
-  "The charterer's claim of a 4-hour weather stoppage on 17 May 2026 cannot be sustained. CP clause 14 excepts weather from laytime only where precipitation at the place of discharge exceeds 0.5 mm per hour. The Rotterdam Port Authority precipitation data records a maximum of 0.2 mm/hr on 17 May 2026 — below the 0.5 mm/hr threshold — so the contractual condition is not met. As confirmed in The Mexico 1 [1990] 1 Lloyd's Rep 507, a stoppage must satisfy the express contractual condition before it may be deducted from laytime; the 4-hour period therefore counts in full.";
+  "The charterer's claim of a 4-hour weather stoppage on 17 May 2026 cannot be sustained. CP clause 14 excepts weather from laytime only where precipitation at the place of discharge exceeds 0.5 mm per hour. The Rotterdam Port Authority precipitation data records a maximum of 0.2 mm/hr on 17 May 2026, below the 0.5 mm/hr threshold, so the contractual condition is not met. As confirmed in The Mexico 1 [1990] 1 Lloyd's Rep 507, a stoppage must satisfy the express contractual condition before it may be deducted from laytime; the 4-hour period therefore counts in full.";
 
 const PROMPT_DEFAULT =
   "Make the weather argument stronger and cite The Mexico 1";
@@ -33,8 +33,8 @@ export default function ReviseLetter() {
       <p className="mt-6">Dear Sirs,</p>
 
       <p className="mt-4 font-medium">
-        Re: Demurrage Claim — MT Aegean Pioneer — Ras Tanura / Rotterdam — CP
-        dated 12 February 2026
+        Re: Demurrage Claim, MT Aegean Pioneer (Ras Tanura / Rotterdam), CP dated
+        12 February 2026
       </p>
 
       <p className="mt-4">
@@ -92,8 +92,8 @@ export default function ReviseLetter() {
         <div className="mt-10 flex items-center justify-between rounded-md border border-border bg-surface-muted p-4">
           <p className="text-body-sm text-secondary">
             {state === "accepted"
-              ? "Revision accepted — the letter now uses the strengthened weather argument."
-              : "Revision rejected — the original sentence is retained."}
+              ? "Revision accepted. The letter now uses the strengthened weather argument."
+              : "Revision rejected. The original sentence is retained."}
           </p>
           <button
             type="button"

@@ -24,9 +24,9 @@ export default function CasesTable({ voyages }: { voyages: VoyageSummary[] }) {
           const route =
             v.load_port && v.discharge_port
               ? `${v.load_port} / ${v.discharge_port}`
-              : "—";
+              : "·";
           const quantum =
-            v.quantum_eur != null ? formatEur(v.quantum_eur) : "—";
+            v.quantum_eur != null ? formatEur(v.quantum_eur) : "·";
           const created = formatDate(v.created_at);
           return (
             <li key={v.id} className="border-b border-border last:border-b-0">

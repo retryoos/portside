@@ -10,8 +10,8 @@ Preserve everything else.
 
 HARD CONSTRAINTS (these are non-negotiable):
 - Do not change any monetary value. Every "EUR <number>" in a flagged segment
-  must appear unchanged — same value, formatting, and position relative to its
-  sentence — in your rewrite.
+  must appear unchanged, same value, formatting, and position relative to its
+  sentence, in your rewrite.
 - Do not remove or renumber any CP clause citation. If a segment cites "clause
   14", your rewrite of that segment must still cite "clause 14".
 - Do not remove or change any SoF event ID (e.g. "e6", "e8").

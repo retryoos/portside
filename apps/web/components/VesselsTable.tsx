@@ -26,7 +26,7 @@ export default function VesselsTable({ vessels }: { vessels: VesselSummary[] }) 
         {vessels.map((v) => {
           const href = `/vessels/${encodeURIComponent(v.name)}`;
           const quantum =
-            v.total_quantum_eur != null ? formatEur(v.total_quantum_eur) : "—";
+            v.total_quantum_eur != null ? formatEur(v.total_quantum_eur) : "·";
           const activity = formatDate(v.last_activity);
           const perspectives = v.perspectives.join(", ");
           return (

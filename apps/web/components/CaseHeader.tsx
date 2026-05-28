@@ -22,7 +22,7 @@ export default function CaseHeader({
         />
       </div>
       <p className="mt-2 text-body text-secondary">
-        Settled at {formatEur(settledUsd)} — {daysToSettlement} days from claim
+        Settled at {formatEur(settledUsd)}, {daysToSettlement} days from claim
         submission
       </p>
     </header>
