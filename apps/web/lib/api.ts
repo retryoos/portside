@@ -49,7 +49,16 @@ export async function getVoyage(voyageId: string): Promise<VoyageState> {
   return (await res.json()) as VoyageState;
 }
 
-const TERMINAL: ReadonlySet<string> = new Set(["done", "error"]);
+// Stages where the pipeline has stopped advancing on its own. Past "done" the
+// claim sits in a human-driven negotiation lifecycle (pending/rejected/settled),
+// so polling stops there too rather than looping forever.
+const TERMINAL: ReadonlySet<string> = new Set([
+  "done",
+  "error",
+  "pending",
+  "rejected",
+  "settled",
+]);
 
 /** Poll until the pipeline reaches a terminal stage, calling onUpdate each tick. */
 export async function pollVoyage(

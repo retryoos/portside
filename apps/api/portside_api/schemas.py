@@ -25,6 +25,8 @@ PipelineStage = Literal[
     "drafting",
     "done",
     "error",
+    "pending",
+    "rejected",
     "settled",
 ]
 

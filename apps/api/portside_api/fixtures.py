@@ -33,6 +33,7 @@ from .schemas import (
     LaytimeRow,
     NoticeOfReadiness,
     Perspective,
+    PipelineStage,
     SoFEvent,
     StatementOfFacts,
     VoyageState,
@@ -316,45 +317,98 @@ def demo_voyage_fixture(
     )
 
 
-def _settled_fixture() -> VoyageState:
-    """A second, already-settled voyage on a different vessel/route.
+def _variant_fixture(
+    voyage_id: str,
+    *,
+    vessel_name: str,
+    load_port: str,
+    discharge_port: str,
+    stage: PipelineStage,
+    created_at: datetime,
+    quantum_eur: float | None = None,
+    include_packet: bool = True,
+) -> VoyageState:
+    """A demo voyage on a different vessel/route/stage, built off the base packet.
 
-    Built off the demo packet with the vessel, ports and quantum overridden so
-    the dashboard shows variety (a settled chip + a non-Rotterdam route).
+    Overrides the vessel, ports, quantum and stage so the dashboard shows a row
+    per claim status. ``include_packet=False`` models a voyage still being drafted
+    (extraction present, no packet yet -> no quantum), for the "In progress" row.
     """
-    base = demo_voyage_fixture("v_baltic_trader_settled", "owner")
+    base = demo_voyage_fixture(voyage_id, "owner")
     assert base.extraction is not None and base.packet is not None
     cp = base.extraction.charter_party.model_copy(
         update={
-            "vessel_name": "MT Baltic Trader",
-            "load_port": "Primorsk",
-            "discharge_port": "Wilhelmshaven",
+            "vessel_name": vessel_name,
+            "load_port": load_port,
+            "discharge_port": discharge_port,
         }
     )
     extraction = base.extraction.model_copy(update={"charter_party": cp})
-    packet = base.packet.model_copy(update={"quantum_eur": 52250.0})
-    return base.model_copy(
-        update={
-            "stage": "settled",
-            "extraction": extraction,
-            "packet": packet,
-            "created_at": datetime(2026, 5, 10, 11, 0, tzinfo=timezone.utc),
-        }
-    )
+    update: dict[str, object] = {
+        "stage": stage,
+        "extraction": extraction,
+        "created_at": created_at,
+    }
+    if include_packet:
+        update["packet"] = base.packet.model_copy(
+            update={"quantum_eur": quantum_eur if quantum_eur is not None else base.packet.quantum_eur}
+        )
+    else:
+        update["packet"] = None
+    return base.model_copy(update=update)
 
 
 def seed_voyages() -> list[VoyageState]:
     """Demo cases loaded into the store on startup so the dashboard is populated.
 
-    Ordered by ``created_at`` so the store's newest-first list is deterministic:
-    the owner-perspective Rotterdam claim is the most recent, then a
-    charterer-perspective variant, then an older settled case.
+    All from a single (owner) perspective — a real user is one party, not both —
+    and one per claim status so the dashboard demonstrates the full lifecycle:
+    In progress -> Draft -> Pending -> Rejected -> Settled. Ordered newest-first
+    by ``created_at`` (the store sorts on it, this just keeps it readable).
     """
-    owner = demo_voyage_fixture("v_aegean_pioneer", "owner").model_copy(
+    aegean_draft = demo_voyage_fixture("v_aegean_pioneer", "owner").model_copy(
         update={"created_at": datetime(2026, 5, 19, 9, 0, tzinfo=timezone.utc)}
     )
-    charterer = demo_voyage_fixture("v_aegean_pioneer_charterer", "charterer").model_copy(
-        update={"created_at": datetime(2026, 5, 15, 14, 0, tzinfo=timezone.utc)}
+    levant_in_progress = _variant_fixture(
+        "v_levant_carrier",
+        vessel_name="MT Levant Carrier",
+        load_port="Sidi Kerir",
+        discharge_port="Algeciras",
+        stage="drafting",
+        created_at=datetime(2026, 5, 18, 7, 30, tzinfo=timezone.utc),
+        include_packet=False,
     )
-    settled = _settled_fixture()
-    return [owner, charterer, settled]
+    ionian_pending = _variant_fixture(
+        "v_ionian_star",
+        vessel_name="MT Ionian Star",
+        load_port="Novorossiysk",
+        discharge_port="Trieste",
+        stage="pending",
+        created_at=datetime(2026, 5, 16, 13, 0, tzinfo=timezone.utc),
+        quantum_eur=61200.0,
+    )
+    adriatic_rejected = _variant_fixture(
+        "v_adriatic_dawn",
+        vessel_name="MT Adriatic Dawn",
+        load_port="Augusta",
+        discharge_port="Fos-sur-Mer",
+        stage="rejected",
+        created_at=datetime(2026, 5, 13, 10, 0, tzinfo=timezone.utc),
+        quantum_eur=38500.0,
+    )
+    baltic_settled = _variant_fixture(
+        "v_baltic_trader_settled",
+        vessel_name="MT Baltic Trader",
+        load_port="Primorsk",
+        discharge_port="Wilhelmshaven",
+        stage="settled",
+        created_at=datetime(2026, 5, 10, 11, 0, tzinfo=timezone.utc),
+        quantum_eur=52250.0,
+    )
+    return [
+        aegean_draft,
+        levant_in_progress,
+        ionian_pending,
+        adriatic_rejected,
+        baltic_settled,
+    ]
