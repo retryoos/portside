@@ -1,39 +1,62 @@
 /* Portside design tokens -> Tailwind v4 theme.
-   Source of truth: apps/web/DESIGN.md (the rewritten editorial/legal palette).
-   Every Tailwind class in components must map to a token here — no raw hex. */
+   Source of truth: apps/web/DESIGN.md (ElevenLabs-derived clean-product palette).
+   Every Tailwind class in components must map to a token here, no raw hex.
+   Colours are OKLCH and tinted toward a faint cool hue, never pure black/white. */
 
 @theme {
-  /* Colors — warm-ink-on-paper, legal-tech register */
-  --color-primary: #1b1c18;
-  --color-on-primary: #faf9f6;
-  --color-secondary: #6f6e66;
-  --color-neutral: #faf9f6;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f3f1eb;
-  --color-border: #e7e4dc;
-  --color-cta: #1b1c18;
-  --color-on-cta: #ffffff;
-  --color-cta-hover: #33342d;
-  --color-accent: #d98a2c;
-  --color-success: #2f7a55;
-  --color-on-success: #ffffff;
-  --color-success-container: #e4f0e9;
-  --color-warning: #a96a1e;
-  --color-on-warning: #ffffff;
-  --color-warning-container: #fbf1dc;
-  --color-contested: #a96a1e;
-  --color-contested-container: #fbf1dc;
-  --color-danger: #b4453c;
-  --color-on-danger: #ffffff;
-  --color-danger-container: #f7e0dd;
+  /* Neutrals: cool-tinted, near-monochrome */
+  --color-primary: oklch(0.23 0.006 265); /* ink near-black: text + CTA fill */
+  --color-on-primary: oklch(0.985 0.002 265);
+  --color-secondary: oklch(0.556 0.008 265); /* muted gray: metadata, labels */
+  --color-neutral: oklch(0.981 0.002 265); /* page background, soft cool white */
+  --color-surface: oklch(0.997 0.001 265); /* white cards / sheets */
+  --color-surface-muted: oklch(0.966 0.003 265); /* soft gray cards / panels */
+  --color-border: oklch(0.922 0.004 265); /* hairlines, dividers */
 
-  /* Fonts */
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  /* Action */
+  --color-cta: oklch(0.23 0.006 265);
+  --color-on-cta: oklch(0.985 0.002 265);
+  --color-cta-hover: oklch(0.32 0.006 265);
+
+  /* Accent: a single restrained indigo, used sparingly (links, focus, one dot) */
+  --color-accent: oklch(0.55 0.17 268);
+  --color-accent-container: oklch(0.95 0.03 268);
+
+  /* Semantic status (claim lifecycle), tuned calm and slightly desaturated */
+  --color-success: oklch(0.55 0.11 155);
+  --color-on-success: oklch(0.99 0.01 155);
+  --color-success-container: oklch(0.95 0.03 155);
+  --color-warning: oklch(0.58 0.11 70);
+  --color-on-warning: oklch(0.99 0.01 70);
+  --color-warning-container: oklch(0.95 0.045 75);
+  --color-contested: oklch(0.58 0.11 70);
+  --color-contested-container: oklch(0.95 0.045 75);
+  --color-danger: oklch(0.55 0.17 25);
+  --color-on-danger: oklch(0.99 0.01 25);
+  --color-danger-container: oklch(0.94 0.035 25);
+
+  /* Fonts: Inter carries display + UI; JetBrains Mono only for dense numerics */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Radii: pill chrome (full) + large soft cards */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Decorative gradients (ElevenLabs orbs). Used as media/accents, never on text. */
+  --gradient-warm: linear-gradient(
+    135deg,
+    oklch(0.84 0.12 70),
+    oklch(0.72 0.16 25),
+    oklch(0.63 0.16 305)
+  );
+  --gradient-cool: linear-gradient(
+    135deg,
+    oklch(0.8 0.12 250),
+    oklch(0.82 0.09 200),
+    oklch(0.84 0.1 150)
+  );
 }
