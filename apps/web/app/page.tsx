@@ -1,20 +1,29 @@
 import Breadcrumb from "@/components/Breadcrumb";
 import TopNav from "@/components/TopNav";
+import CaseHeader from "@/components/CaseHeader";
+import CorrespondenceTimeline from "@/components/CorrespondenceTimeline";
+import OutcomeTable from "@/components/OutcomeTable";
+import { demoCorrespondence, demoOutcome } from "@/lib/demo";
 
-// SCREEN 1 — Case detail / settled (DESIGN.md §Screens 1). STUB — built by the
-// Screen-1/3 subagent. Build: serif case title ("MT Aegean Pioneer — Ras Tanura
-// / Rotterdam", "Settled at USD 79,000 — 21 days from claim submission"); a
-// vertical dispute-correspondence timeline (demoCorrespondence, "Detected from
-// inbox" badge, green settled item); an Outcome table (demoOutcome). Keep TopNav
-// + Breadcrumb. Data: lib/demo.ts (demoCorrespondence, demoOutcome, demoVoyage).
+// SCREEN 1 — Case detail / settled (DESIGN.md §Screens 1). Serif case title +
+// settlement subline; vertical dispute-correspondence timeline; an Outcome table.
 export default function CaseDetailPage() {
   return (
     <div className="min-h-screen">
       <TopNav />
       <Breadcrumb segments={["Vessels", "MT Aegean Pioneer", "Settled"]} />
       <main className="mx-auto max-w-[960px] px-8 py-10">
-        <h1 className="text-h1 text-primary">MT Aegean Pioneer — Ras Tanura / Rotterdam</h1>
-        <p className="mt-2 text-body text-secondary">Case detail screen — to be built.</p>
+        <CaseHeader
+          title="MT Aegean Pioneer — Ras Tanura / Rotterdam"
+          settledUsd={demoOutcome.settled_usd}
+          daysToSettlement={demoOutcome.days_to_settlement}
+        />
+        <div className="mt-10">
+          <CorrespondenceTimeline items={demoCorrespondence} />
+        </div>
+        <div className="mt-10">
+          <OutcomeTable outcome={demoOutcome} />
+        </div>
       </main>
     </div>
   );
