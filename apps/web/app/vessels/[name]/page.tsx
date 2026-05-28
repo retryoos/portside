@@ -57,21 +57,21 @@ export default function VesselDetailPage() {
   return (
     <div className="min-h-screen">
       <TopNav />
-      <Breadcrumb segments={["Vessels", name || "—"]} />
-      <main className="mx-auto max-w-[960px] px-8 py-10">
+      <Breadcrumb segments={["Vessels", name || "Vessel"]} />
+      <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
         {error && (
-          <p className="rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
+          <p className="rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
             {error}
           </p>
         )}
 
         {voyages === null && !error && (
-          <div className="h-8 w-64 animate-pulse rounded-sm bg-surface-muted" aria-busy="true" />
+          <div className="h-8 w-64 animate-pulse rounded-full bg-surface-muted" aria-busy="true" />
         )}
 
         {voyages !== null && voyages.length === 0 && !error && (
-          <div className="rounded-md border border-border bg-surface px-6 py-12 text-center">
-            <p className="text-body text-primary">No claims for {name || "this vessel"}</p>
+          <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center">
+            <p className="text-h2 text-primary">No claims for {name || "this vessel"}</p>
             <p className="mt-2 text-body-sm text-secondary">
               This vessel has no voyage on file yet.
             </p>
@@ -100,7 +100,7 @@ export default function VesselDetailPage() {
                 <div className="text-right">
                   <dt className="text-label-caps text-secondary">Total quantum</dt>
                   <dd className="mt-0.5 text-body tabular-nums text-primary">
-                    {aggregates.total != null ? formatEur(aggregates.total) : "—"}
+                    {aggregates.total != null ? formatEur(aggregates.total) : "Pending"}
                   </dd>
                 </div>
                 <div className="text-right">
