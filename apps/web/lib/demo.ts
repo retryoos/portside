@@ -1,4 +1,4 @@
-// Canonical demo voyage for the UI — MT Aegean Pioneer, Ras Tanura -> Rotterdam,
+// Canonical demo voyage for the UI: MT Aegean Pioneer, Ras Tanura -> Rotterdam,
 // claim EUR 84,375.00 (per apps/web/DESIGN.md "Demo content"). Authored here as a
 // typed module so it is committed source (survives the shared working tree) and
 // type-checked against the API contract. The "Try the demo voyage" button renders
@@ -136,7 +136,7 @@ export const demoVoyage: VoyageState = {
   },
 };
 
-// ---- Screen 1 (settled case detail) demo data — NOT part of the API contract ----
+// ---- Screen 1 (settled case detail) demo data: NOT part of the API contract ----
 
 export interface CorrespondenceItem {
   date: string; // ISO date

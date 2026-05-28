@@ -1,6 +1,6 @@
 "use client";
 
-// SCREEN — Vessel detail. The vessel has no dedicated endpoint: we fetch the full
+// SCREEN: Vessel detail. The vessel has no dedicated endpoint: we fetch the full
 // voyage list and filter client-side by vessel_name (route param is
 // encodeURIComponent'd, decoded here). Header shows the vessel's aggregates;
 // the voyage list reuses the shared <CasesTable/>.

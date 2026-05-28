@@ -2,7 +2,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import TopNav from "@/components/TopNav";
 import ReviseLetter from "@/components/ReviseLetter";
 
-// SCREEN 3 — Inline highlight-and-revise (DESIGN.md §Screens 3,
+// SCREEN 3: Inline highlight-and-revise (DESIGN.md §Screens 3,
 // notes/13-inline-revision.md). Full-width letter (~820px); a client-side mock of
 // the highlight-and-revise interaction. No backend revise endpoint in scope.
 export default function RevisePage() {

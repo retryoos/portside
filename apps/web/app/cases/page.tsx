@@ -1,6 +1,6 @@
 "use client";
 
-// SCREEN 0 — Cases dashboard (the app's home; / redirects here). Lists every
+// SCREEN 0: Cases dashboard (the app's home; / redirects here). Lists every
 // voyage from GET /voyages newest-first, each row linking to /cases/<id>. The
 // "New voyage claim" button reveals the shared <Dropzone/> (live upload +
 // "Try the demo voyage"); empty and error states are handled inline.

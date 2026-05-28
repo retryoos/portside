@@ -1,6 +1,6 @@
 "use client";
 
-// Client-side PDF export (notes/06-frontend.md §6 — no backend endpoint).
+// Client-side PDF export (notes/06-frontend.md §6: no backend endpoint).
 // Runs html2pdf.js (dynamic import) on the letter DOM node identified by
 // targetId. Ghost-style button; this is NOT the one ink primary action.
 import { useState } from "react";

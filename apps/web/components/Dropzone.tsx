@@ -1,6 +1,6 @@
 "use client";
 
-// Upload entry for a live voyage (notes/15-next-phase.md — Agent 2 frontend
+// Upload entry for a live voyage (notes/15-next-phase.md: Agent 2 frontend
 // wiring). Collects the three PDFs + perspective and hands them up to ClaimScreen,
 // which calls createVoyage + pollVoyage. "Try the demo voyage" is the offline
 // fallback that renders lib/demo.ts without touching the backend.

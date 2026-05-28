@@ -1,6 +1,6 @@
 "use client";
 
-// SCREEN — Vessels dashboard. Lists every vessel from GET /vessels (voyages
+// SCREEN: Vessels dashboard. Lists every vessel from GET /vessels (voyages
 // grouped by vessel_name), newest activity first, each row linking to the
 // filtered detail at /vessels/<encoded name>. Loading/empty/error states mirror
 // the /cases dashboard.
