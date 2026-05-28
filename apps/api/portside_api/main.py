@@ -26,7 +26,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import pipeline, reviser
 from .fixtures import seed_voyages
 from .reviser import ReviseRequest, ReviseResponse
-from .schemas import Perspective, VesselSummary, VoyageState, VoyageSummary
+from .schemas import (
+    Perspective,
+    StatusUpdate,
+    VesselSummary,
+    VoyageState,
+    VoyageSummary,
+)
 from .settings import settings
 from .storage import InMemoryStore, VoyageStore
 
@@ -116,6 +122,41 @@ async def get_voyage(voyage_id: str) -> VoyageState:
     if state is None:
         raise HTTPException(status_code=404, detail="voyage not found")
     return state
+
+
+# Allowed human-driven lifecycle transitions once the pipeline is done. The
+# claim then moves through negotiation: send it (-> pending), the charterer
+# settles (-> settled) or rejects (-> rejected), and a rejected claim is revised
+# and resent (-> pending). The pipeline stages (uploaded..drafting) are not in
+# here — they advance on their own inside pipeline.run.
+_NEXT_STAGES: dict[str, set[str]] = {
+    "done": {"pending"},
+    "pending": {"settled", "rejected"},
+    "rejected": {"pending"},
+}
+
+
+@app.post("/voyages/{voyage_id}/status")
+async def set_voyage_status(voyage_id: str, body: StatusUpdate) -> VoyageState:
+    """Advance a voyage through the negotiation lifecycle (notes: status chips).
+
+    Only the transitions in ``_NEXT_STAGES`` are permitted; anything else is a
+    409 so the UI can't drive the claim into an inconsistent state.
+    """
+    state = await store.load(voyage_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+
+    allowed = _NEXT_STAGES.get(state.stage, set())
+    if body.stage not in allowed:
+        raise HTTPException(
+            status_code=409,
+            detail=f"cannot move from '{state.stage}' to '{body.stage}'",
+        )
+
+    updated = await store.patch(voyage_id, stage=body.stage)
+    assert updated is not None  # load() above proved it exists
+    return updated
 
 
 @app.post("/voyages/{voyage_id}/revise")

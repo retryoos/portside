@@ -2,6 +2,7 @@
 
 import type {
   Perspective,
+  PipelineStage,
   VesselSummary,
   VoyageState,
   VoyageSummary,
@@ -52,6 +53,20 @@ export async function getVoyage(voyageId: string): Promise<VoyageState> {
 // Stages where the pipeline has stopped advancing on its own. Past "done" the
 // claim sits in a human-driven negotiation lifecycle (pending/rejected/settled),
 // so polling stops there too rather than looping forever.
+/** Advance a voyage through the negotiation lifecycle (send/settle/reject/revise). */
+export async function setVoyageStatus(
+  voyageId: string,
+  stage: PipelineStage,
+): Promise<VoyageState> {
+  const res = await fetch(`${API_BASE}/voyages/${voyageId}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ stage }),
+  });
+  if (!res.ok) throw new Error(`setVoyageStatus failed: ${res.status}`);
+  return (await res.json()) as VoyageState;
+}
+
 const TERMINAL: ReadonlySet<string> = new Set([
   "done",
   "error",

@@ -96,6 +96,13 @@ class VesselSummary(BaseModel):
     perspectives: list[Perspective]
 
 
+class StatusUpdate(BaseModel):
+    """Body for POST /voyages/{id}/status — a human-driven lifecycle transition
+    (send to charterer, settle, reject, revise & resend)."""
+
+    stage: PipelineStage
+
+
 # ---------------------------------------------------------------------------
 # 2. ExtractionResult — output of Agent 1
 # ---------------------------------------------------------------------------

@@ -6,7 +6,6 @@
 // fallback that renders lib/demo.ts without touching the backend.
 import { useState } from "react";
 import type { VoyageFiles } from "@/lib/api";
-import type { Perspective } from "@/lib/types";
 
 type Role = "cp" | "nor" | "sof";
 
@@ -21,21 +20,17 @@ export default function Dropzone({
   onDemo,
   busy = false,
 }: {
-  onSubmit: (files: VoyageFiles, perspective: Perspective) => void;
+  onSubmit: (files: VoyageFiles) => void;
   onDemo: () => void;
   busy?: boolean;
 }) {
   const [files, setFiles] = useState<Partial<Record<Role, File>>>({});
-  const [perspective, setPerspective] = useState<Perspective>("owner");
 
   const ready = ROLES.every((r) => files[r.id]);
 
   function handleSubmit() {
     if (!ready) return;
-    onSubmit(
-      { cp: files.cp!, nor: files.nor!, sof: files.sof! },
-      perspective,
-    );
+    onSubmit({ cp: files.cp!, nor: files.nor!, sof: files.sof! });
   }
 
   return (
@@ -69,23 +64,6 @@ export default function Dropzone({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
-        <fieldset className="flex items-center gap-3">
-          <legend className="sr-only">Perspective</legend>
-          {(["owner", "charterer"] as Perspective[]).map((p) => (
-            <label key={p} className="flex items-center gap-1.5 text-body-sm text-primary">
-              <input
-                type="radio"
-                name="perspective"
-                value={p}
-                checked={perspective === p}
-                disabled={busy}
-                onChange={() => setPerspective(p)}
-              />
-              <span className="capitalize">{p}</span>
-            </label>
-          ))}
-        </fieldset>
-
         <button
           type="button"
           onClick={handleSubmit}
