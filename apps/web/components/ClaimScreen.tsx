@@ -73,16 +73,13 @@ export default function ClaimScreen({ id }: { id?: string }) {
       setVoyage(demoVoyage);
       return;
     }
-    let active = true;
+    const controller = new AbortController();
     setError(null);
-    pollVoyage(voyageId, (s) => {
-      if (active) setVoyage(s);
-    }).catch((e) => {
-      if (active) setError(e instanceof Error ? e.message : String(e));
+    pollVoyage(voyageId, setVoyage, { signal: controller.signal }).catch((e) => {
+      if (controller.signal.aborted) return; // unmount/navigation, not a real error
+      setError(e instanceof Error ? e.message : String(e));
     });
-    return () => {
-      active = false;
-    };
+    return () => controller.abort();
   }, [voyageId]);
 
   const handleTransition = useCallback(
