@@ -24,8 +24,9 @@ from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import pipeline, reviser
+from .fixtures import seed_voyages
 from .reviser import ReviseRequest, ReviseResponse
-from .schemas import Perspective, VoyageState
+from .schemas import Perspective, VoyageState, VoyageSummary
 from .settings import settings
 from .storage import InMemoryStore, VoyageStore
 
@@ -53,9 +54,23 @@ store: VoyageStore = InMemoryStore()
 _BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 
+@app.on_event("startup")
+async def _seed_demo_voyages() -> None:
+    """Populate the in-memory store with demo cases so the dashboard is never
+    empty on a fresh process (notes: in-memory + startup seed; restart resets)."""
+    for state in seed_voyages():
+        await store.save(state)
+
+
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/voyages")
+async def list_voyages() -> list[VoyageSummary]:
+    """Return all voyages as lightweight summaries, newest-first (dashboard)."""
+    return await store.list()
 
 
 @app.post("/voyages", status_code=201)

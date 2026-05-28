@@ -7,7 +7,7 @@ and produce them. Do not silently rename fields.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -25,7 +25,12 @@ PipelineStage = Literal[
     "drafting",
     "done",
     "error",
+    "settled",
 ]
+
+
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class VoyageState(BaseModel):
@@ -33,11 +38,44 @@ class VoyageState(BaseModel):
     perspective: Perspective
     stage: PipelineStage
     error: Optional[str] = None
+    created_at: datetime = Field(default_factory=_utc_now)
 
     extraction: Optional["ExtractionResult"] = None
     laytime: Optional["LaytimeResult"] = None
     dispute: Optional["DisputeAnalysis"] = None
     packet: Optional["ClaimPacket"] = None
+
+
+class VoyageSummary(BaseModel):
+    """Lightweight list-row projection of a VoyageState for the dashboard.
+
+    Additive: derived from VoyageState, never stored separately. Fields that
+    depend on a completed pipeline (vessel/ports/quantum) are optional because a
+    voyage that is still uploading/extracting has no extraction or packet yet.
+    """
+
+    id: str
+    vessel_name: Optional[str] = None
+    load_port: Optional[str] = None
+    discharge_port: Optional[str] = None
+    quantum_eur: Optional[float] = None
+    stage: PipelineStage
+    perspective: Perspective
+    created_at: datetime
+
+    @classmethod
+    def from_state(cls, state: "VoyageState") -> "VoyageSummary":
+        cp = state.extraction.charter_party if state.extraction else None
+        return cls(
+            id=state.voyage_id,
+            vessel_name=cp.vessel_name if cp else None,
+            load_port=cp.load_port if cp else None,
+            discharge_port=cp.discharge_port if cp else None,
+            quantum_eur=state.packet.quantum_eur if state.packet else None,
+            stage=state.stage,
+            perspective=state.perspective,
+            created_at=state.created_at,
+        )
 
 
 # ---------------------------------------------------------------------------

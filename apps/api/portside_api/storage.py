@@ -26,7 +26,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Protocol, runtime_checkable
 
-from .schemas import VoyageState
+from .schemas import VoyageState, VoyageSummary
 
 
 @runtime_checkable
@@ -38,6 +38,8 @@ class VoyageStore(Protocol):
     async def load(self, voyage_id: str) -> VoyageState | None: ...
 
     async def patch(self, voyage_id: str, /, **fields: Any) -> VoyageState | None: ...
+
+    async def list(self) -> list[VoyageSummary]: ...
 
 
 class InMemoryStore:
@@ -72,3 +74,10 @@ class InMemoryStore:
             updated = existing.model_copy(update=fields)
             self._voyages[voyage_id] = updated
             return updated
+
+    async def list(self) -> list[VoyageSummary]:
+        """Return all voyages as summaries, newest-first by ``created_at``."""
+        states = sorted(
+            self._voyages.values(), key=lambda s: s.created_at, reverse=True
+        )
+        return [VoyageSummary.from_state(s) for s in states]
