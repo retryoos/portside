@@ -18,6 +18,7 @@ import sys
 from pathlib import Path
 
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 _ROOT = Path(__file__).resolve().parent
 _OUT = _ROOT / "scenarios" / "rotterdam-weather-dispute"
@@ -80,12 +81,25 @@ TIMESTAMP            | DESCRIPTION                              | CATEGORY
 """
 
 
+# fpdf2's built-in Helvetica is latin-1 only; map common Unicode punctuation to
+# ASCII so the text-native PDFs render (and pdfplumber reads them) cleanly.
+_ASCII_MAP = {
+    ord("—"): "-", ord("–"): "-", ord("’"): "'", ord("‘"): "'",
+    ord("“"): '"', ord("”"): '"', ord("§"): "Sec ", ord("·"): "-",
+    ord("…"): "...",
+}
+
+
+def _ascii(s: str) -> str:
+    return s.translate(_ASCII_MAP).encode("latin-1", "replace").decode("latin-1")
+
+
 def _write_pdf(text: str, path: Path) -> None:
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Helvetica", size=10)
     for line in text.splitlines():
-        pdf.multi_cell(0, 5, line if line else " ")
+        pdf.multi_cell(0, 5, _ascii(line) if line else " ", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.output(str(path))
 
 
