@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Portside — Demurrage & Laytime Resolution",
+  title: "Portside: Demurrage & Laytime Resolution",
   description:
     "One voyage document bundle in. One legally-structured demurrage claim packet out.",
 };
