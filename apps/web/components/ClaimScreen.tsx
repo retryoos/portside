@@ -17,9 +17,9 @@ import AgentSteps from "@/components/AgentSteps";
 import StageChip from "@/components/StageChip";
 
 const PRIMARY =
-  "rounded-sm bg-cta px-4 py-2.5 text-body-sm text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50";
+  "rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50";
 const GHOST =
-  "rounded-sm px-3.5 py-2.5 text-body-sm text-secondary transition-colors hover:text-primary disabled:opacity-50";
+  "rounded-full border border-border bg-surface px-4 py-2.5 text-body-sm font-medium text-primary transition-colors hover:bg-surface-muted disabled:opacity-50";
 
 function StageActions({
   stage,
@@ -103,10 +103,10 @@ export default function ClaimScreen({ id }: { id?: string }) {
 
   const cp = voyage.extraction?.charter_party;
   const title = cp
-    ? `${cp.vessel_name} · ${cp.load_port} / ${cp.discharge_port}`
+    ? `${cp.vessel_name}, ${cp.load_port} / ${cp.discharge_port}`
     : live
       ? "Processing voyage…"
-      : "MT Aegean Pioneer · Ras Tanura / Rotterdam";
+      : "MT Aegean Pioneer, Ras Tanura / Rotterdam";
 
   const hasPacket = Boolean(voyage.packet);
   const showProgress = live && !hasPacket;
@@ -114,7 +114,7 @@ export default function ClaimScreen({ id }: { id?: string }) {
   return (
     <main className="mx-auto max-w-[1200px] px-8 py-10">
       {error && (
-        <p className="mb-6 rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
+        <p className="mb-6 rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
           {error}
         </p>
       )}
@@ -125,7 +125,6 @@ export default function ClaimScreen({ id }: { id?: string }) {
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span aria-hidden="true" className="inline-block h-2 w-2 rounded-sm bg-accent" />
               <h1 className="text-h1 text-primary">{title}</h1>
               {live && <StageChip stage={voyage.stage} />}
             </div>
@@ -139,7 +138,7 @@ export default function ClaimScreen({ id }: { id?: string }) {
           </div>
 
           {live && voyage.stage === "rejected" && (
-            <p className="mt-4 rounded-md bg-danger-container px-4 py-3 text-body-sm text-danger">
+            <p className="mt-4 rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
               The charterer rejected this claim. Revise the letter, then resend to reopen negotiation.
             </p>
           )}

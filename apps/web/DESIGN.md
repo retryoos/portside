@@ -178,19 +178,19 @@ Style register: **product**, clean and modern.
 
 Tokens are OKLCH and tinted toward a faint cool hue (~265). Never `#000` / `#fff`.
 
-- **`primary`** — ink near-black. Headings, body, table cells, primary CTA fill.
-- **`secondary`** — muted gray. Metadata, captions, breadcrumbs, section labels.
-- **`neutral`** — soft cool white. Page background.
-- **`surface`** — white cards, the letter sheet, tab panels.
-- **`surface-muted`** — soft gray cards and secondary panels (the calculation block,
+- **`primary`**: ink near-black. Headings, body, table cells, primary CTA fill.
+- **`secondary`**: muted gray. Metadata, captions, breadcrumbs, section labels.
+- **`neutral`**: soft cool white. Page background.
+- **`surface`**: white cards, the letter sheet, tab panels.
+- **`surface-muted`**: soft gray cards and secondary panels (the calculation block,
   the inactive sources cards). This is the dominant "soft card" fill, ElevenLabs-style.
-- **`border`** — hairlines, card borders, table dividers.
-- **`cta` / `cta-hover`** — the ink pill buttons. White text. One primary per view.
-- **`accent`** — a single restrained indigo. Links, focus rings, at most one small
+- **`border`**: hairlines, card borders, table dividers.
+- **`cta` / `cta-hover`**: the ink pill buttons. White text. One primary per view.
+- **`accent`**: a single restrained indigo. Links, focus rings, at most one small
   status marker. Not decoration.
-- **`success` / container** — settled, recovery, positive time-bar status.
-- **`warning` / `contested` / containers** — time-bar countdown and contested SoF time.
-- **`danger` / container** — rejected claims, struck text in revision.
+- **`success` / container**: settled, recovery, positive time-bar status.
+- **`warning` / `contested` / containers**: time-bar countdown and contested SoF time.
+- **`danger` / container**: rejected claims, struck text in revision.
 
 All foreground/background pairs meet WCAG AA.
 
@@ -234,14 +234,14 @@ Generous rounding. Pills (`full`) on buttons, nav tabs, chips, and badges.
 
 ## Components
 
-- **`button-primary`** — ink pill, white text. "Send to charterer", "Accept". One per view.
-- **`button-secondary`** — white pill with hairline border. Secondary actions.
-- **`button-ghost`** — text-only pill, secondary colour. Tertiary actions, "Export".
-- **`nav-tab`** — pill nav item; active is a soft-gray pill.
-- **`card` / `card-soft`** — white (hairline) or soft-gray (no border) rounded panels.
-- **`badge`** — small pill status chip (claim stage, time bar, recovery).
-- **`table-row-contested`** — amber-tinted SoF row (full tint, no left stripe).
-- **gradient orbs** — `gradients.warm` / `gradients.cool` decorative media on the
+- **`button-primary`**: ink pill, white text. "Send to charterer", "Accept". One per view.
+- **`button-secondary`**: white pill with hairline border. Secondary actions.
+- **`button-ghost`**: text-only pill, secondary colour. Tertiary actions, "Export".
+- **`nav-tab`**: pill nav item; active is a soft-gray pill.
+- **`card` / `card-soft`**: white (hairline) or soft-gray (no border) rounded panels.
+- **`badge`**: small pill status chip (claim stage, time bar, recovery).
+- **`table-row-contested`**: amber-tinted SoF row (full tint, no left stripe).
+- **gradient orbs**: `gradients.warm` / `gradients.cool` decorative media on the
   dashboard hero and empty states. Never used behind text via `background-clip: text`.
 
 ## Confidence display
@@ -253,16 +253,16 @@ percentage. Senior arbitrators read numeric confidence as gimmicky.
 
 The live app routes (these are what ship):
 
-1. **Dashboard** (`/cases`) — voyage cases table, claim-stage chips, a gradient hero
+1. **Dashboard** (`/cases`): voyage cases table, claim-stage chips, a gradient hero
    strip, the "New voyage claim" pill revealing the upload dropzone, empty + loading states.
-2. **Case detail** (`/cases/<id>`) — the formal claim letter (left), Inter hero quantum
+2. **Case detail** (`/cases/<id>`): the formal claim letter (left), Inter hero quantum
    ("Demurrage due to owners: EUR 84,375.00"), and a right panel with Sources /
    Calculation / Documents tabs (laytime summary + SoF table, contested row amber).
    Lifecycle actions: Send to charterer -> settled | rejected -> revise & resend.
    A labeled numbered stepper shows live pipeline progress (no pulsing dots).
-3. **Vessels** (`/vessels`, `/vessels/<name>`) — fleet aggregate view, reusing the
+3. **Vessels** (`/vessels`, `/vessels/<name>`): fleet aggregate view, reusing the
    cases table and chips.
-4. **Inline revise** (`/revise`) — full-width letter with a floating quick-prompt; the
+4. **Inline revise** (`/revise`): full-width letter with a floating quick-prompt; the
    replaced sentence struck through in `danger`, the suggestion in an amber-tinted
    block (full tint, no left stripe), Accept / Reject.
 

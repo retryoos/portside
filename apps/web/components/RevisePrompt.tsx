@@ -14,20 +14,20 @@ export default function RevisePrompt({
   const [value, setValue] = useState(defaultValue);
 
   return (
-    <div className="rounded-md border border-border bg-surface p-3">
-      <p className="text-label-caps uppercase text-secondary">Refine selection</p>
+    <div className="rounded-lg border border-border bg-surface p-3">
+      <p className="text-label-caps text-secondary">Refine selection</p>
       <div className="mt-2 flex items-center gap-2">
         <input
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          className="flex-1 rounded-sm border border-border bg-neutral px-3 py-2 text-body text-primary outline-none focus:border-primary"
+          className="flex-1 rounded-full border border-border bg-neutral px-4 py-2 text-body text-primary outline-none transition-colors focus:border-accent"
           placeholder="How should this be revised?"
         />
         <button
           type="button"
           onClick={() => onRefine?.(value)}
-          className="shrink-0 rounded-sm bg-cta px-4 py-2 text-body-sm text-on-cta transition-colors hover:bg-cta-hover"
+          className="shrink-0 rounded-full bg-cta px-5 py-2 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover"
         >
           Refine
         </button>

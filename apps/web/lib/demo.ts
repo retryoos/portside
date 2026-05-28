@@ -1,4 +1,4 @@
-// Canonical demo voyage for the UI, MT Aegean Pioneer, Ras Tanura -> Rotterdam,
+// Canonical demo voyage for the UI: MT Aegean Pioneer, Ras Tanura -> Rotterdam,
 // claim EUR 84,375.00 (per apps/web/DESIGN.md "Demo content"). Authored here as a
 // typed module so it is committed source (survives the shared working tree) and
 // type-checked against the API contract. The "Try the demo voyage" button renders
@@ -65,7 +65,7 @@ export const demoVoyage: VoyageState = {
         { id: "e3", timestamp: "2026-05-14T12:00:00+02:00", description: "Laytime commenced", category: "laytime_start" },
         { id: "e4", timestamp: "2026-05-14T20:00:00+02:00", description: "All fast at berth", category: "berthing" },
         { id: "e5", timestamp: "2026-05-14T22:00:00+02:00", description: "Commenced discharge", category: "ops_start" },
-        { id: "e6", timestamp: "2026-05-17T12:00:00+02:00", description: "Stoppage, rain claimed by charterer", category: "stoppage_weather" },
+        { id: "e6", timestamp: "2026-05-17T12:00:00+02:00", description: "Stoppage: rain claimed by charterer", category: "stoppage_weather" },
         { id: "e7", timestamp: "2026-05-17T16:00:00+02:00", description: "Resumed discharge", category: "ops_resume" },
         { id: "e8", timestamp: "2026-05-19T09:00:00+02:00", description: "Completed discharge", category: "ops_end" },
       ],
@@ -84,11 +84,11 @@ export const demoVoyage: VoyageState = {
       { event_id: "e8", counts_against_laytime: true, applicable_exception: null, clause_basis: "operational time, no exception applicable", reasoning: "Standard discharge operations, fully chargeable.", contestable: false },
     ],
     rows: [
-      { from: "2026-05-14T12:00:00+02:00", to: "2026-05-14T20:00:00+02:00", duration_hours: 8, counts: true, status: "laytime", reason: "Laytime, pre-berth", running_total_hours: 8, event_id_start: "e3", event_id_end: "e4", contestable: false },
-      { from: "2026-05-14T20:00:00+02:00", to: "2026-05-14T22:00:00+02:00", duration_hours: 2, counts: true, status: "laytime", reason: "Laytime, at berth", running_total_hours: 10, event_id_start: "e4", event_id_end: "e5", contestable: false },
-      { from: "2026-05-14T22:00:00+02:00", to: "2026-05-17T12:00:00+02:00", duration_hours: 62, counts: true, status: "laytime", reason: "Laytime, discharge ops (allowance exhausted at 72h)", running_total_hours: 72, event_id_start: "e5", event_id_end: "e6", contestable: false },
-      { from: "2026-05-17T12:00:00+02:00", to: "2026-05-17T16:00:00+02:00", duration_hours: 4, counts: true, status: "demurrage", reason: "Contested, weather, CP clause 14", running_total_hours: 76, event_id_start: "e6", event_id_end: "e7", contestable: true },
-      { from: "2026-05-17T16:00:00+02:00", to: "2026-05-19T09:00:00+02:00", duration_hours: 41, counts: true, status: "demurrage", reason: "On demurrage, discharge ops", running_total_hours: 117, event_id_start: "e7", event_id_end: "e8", contestable: false },
+      { from: "2026-05-14T12:00:00+02:00", to: "2026-05-14T20:00:00+02:00", duration_hours: 8, counts: true, status: "laytime", reason: "Laytime: pre-berth", running_total_hours: 8, event_id_start: "e3", event_id_end: "e4", contestable: false },
+      { from: "2026-05-14T20:00:00+02:00", to: "2026-05-14T22:00:00+02:00", duration_hours: 2, counts: true, status: "laytime", reason: "Laytime: at berth", running_total_hours: 10, event_id_start: "e4", event_id_end: "e5", contestable: false },
+      { from: "2026-05-14T22:00:00+02:00", to: "2026-05-17T12:00:00+02:00", duration_hours: 62, counts: true, status: "laytime", reason: "Laytime: discharge ops (allowance exhausted at 72h)", running_total_hours: 72, event_id_start: "e5", event_id_end: "e6", contestable: false },
+      { from: "2026-05-17T12:00:00+02:00", to: "2026-05-17T16:00:00+02:00", duration_hours: 4, counts: true, status: "demurrage", reason: "Contested: weather, CP clause 14", running_total_hours: 76, event_id_start: "e6", event_id_end: "e7", contestable: true },
+      { from: "2026-05-17T16:00:00+02:00", to: "2026-05-19T09:00:00+02:00", duration_hours: 41, counts: true, status: "demurrage", reason: "On demurrage: discharge ops", running_total_hours: 117, event_id_start: "e7", event_id_end: "e8", contestable: false },
     ],
   },
   dispute: {
@@ -136,7 +136,7 @@ export const demoVoyage: VoyageState = {
   },
 };
 
-// ---- Screen 1 (settled case detail) demo data, NOT part of the API contract ----
+// ---- Screen 1 (settled case detail) demo data: NOT part of the API contract ----
 
 export interface CorrespondenceItem {
   date: string; // ISO date
@@ -155,7 +155,7 @@ export interface CaseOutcome {
 }
 
 export const demoCorrespondence: CorrespondenceItem[] = [
-  { date: "2026-05-20", actor: "Aegean Tankers S.A.", summary: "Demurrage claim submitted to charterer, EUR 84,375.00, with laytime calculation and supporting documents." },
+  { date: "2026-05-20", actor: "Aegean Tankers S.A.", summary: "Demurrage claim submitted to charterer: EUR 84,375.00, with laytime calculation and supporting documents." },
   { date: "2026-05-27", actor: "North Sea Crude Trading B.V.", summary: "Charterer response disputing the 4-hour weather stoppage on 17 May.", detectedFromInbox: true },
   { date: "2026-05-29", actor: "Aegean Tankers S.A.", summary: "Rebuttal sent citing CP clause 14 and The Mexico 1 [1990] 1 Lloyd's Rep 507; attached Port Authority precipitation record." },
   { date: "2026-06-05", actor: "North Sea Crude Trading B.V.", summary: "Revised settlement offer of EUR 79,000.00." },

@@ -4,13 +4,12 @@ import { useState } from "react";
 import RevisePrompt from "@/components/RevisePrompt";
 import ReviseActions from "@/components/ReviseActions";
 
-// Screen 3 inline highlight-and-revise (DESIGN.md §Screens 3, notes/13-inline-revision.md).
-// Self-contained CLIENT MOCK — no backend revise endpoint. Renders the formal
-// letter with ONE target sentence (the weather argument). A floating quick-prompt
-// is pre-filled; the original sentence shows struck-through in danger; the
-// replacement paragraph sits in an amber revise-highlight block with a left
-// border, citing The Mexico 1 + Rotterdam Port Authority precipitation data.
-// Accept / Reject toggles which version is "live".
+// Inline highlight-and-revise (DESIGN.md "Surfaces"). Self-contained CLIENT MOCK,
+// no backend revise endpoint. Renders the formal letter with ONE target sentence
+// (the weather argument). A floating quick-prompt is pre-filled; the original
+// sentence shows struck-through in danger; the replacement paragraph sits in an
+// amber-tinted block (full tint, no side stripe), citing The Mexico 1 + Rotterdam
+// Port Authority precipitation data. Accept / Reject toggles which version is live.
 
 const ORIGINAL_SENTENCE =
   "The charterer claims a 4-hour weather stoppage on 17 May 2026; we consider that this time should count.";
@@ -27,13 +26,13 @@ export default function ReviseLetter() {
   const [state, setState] = useState<RevisionState>("pending");
 
   return (
-    <article className="text-letter-body text-primary">
-      <p className="text-label-caps uppercase text-secondary">To: Charterers</p>
+    <article className="rounded-xl border border-border bg-surface p-8 text-letter-body text-primary md:p-12">
+      <p className="text-label-caps text-secondary">To: Charterers</p>
 
       <p className="mt-6">Dear Sirs,</p>
 
-      <p className="mt-4 font-medium">
-        Re: Demurrage Claim, MT Aegean Pioneer (Ras Tanura / Rotterdam), CP dated
+      <p className="mt-4 font-semibold">
+        Re: Demurrage Claim, MT Aegean Pioneer, Ras Tanura / Rotterdam, CP dated
         12 February 2026
       </p>
 
@@ -52,10 +51,8 @@ export default function ReviseLetter() {
       ) : (
         <div className="mt-4">
           <p className="text-danger line-through">{ORIGINAL_SENTENCE}</p>
-          <div className="mt-3 rounded-sm border-l-[3px] border-l-contested bg-contested-container p-4">
-            <p className="text-label-caps uppercase text-contested">
-              Suggested revision
-            </p>
+          <div className="mt-3 rounded-lg bg-contested-container p-4">
+            <p className="text-label-caps text-contested">Suggested revision</p>
             <p className="mt-2 text-primary">{REPLACEMENT_PARAGRAPH}</p>
           </div>
         </div>
@@ -72,11 +69,11 @@ export default function ReviseLetter() {
         For and on behalf of Aegean Tankers S.A.
       </p>
 
-      {/* Floating quick-prompt + accept/reject — only while a revision is pending. */}
+      {/* Floating quick-prompt + accept/reject, only while a revision is pending. */}
       {state === "pending" && (
-        <div className="sticky bottom-6 mt-10 rounded-md border border-border bg-surface p-4">
+        <div className="sticky bottom-6 mt-10 rounded-xl border border-border bg-surface-muted p-4">
           <RevisePrompt defaultValue={PROMPT_DEFAULT} />
-          <div className="mt-4 flex items-center justify-between gap-4">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
             <p className="text-body-sm text-secondary">
               The agent rewrote one sentence. Quantum and citations are preserved.
             </p>
@@ -89,7 +86,7 @@ export default function ReviseLetter() {
       )}
 
       {state !== "pending" && (
-        <div className="mt-10 flex items-center justify-between rounded-md border border-border bg-surface-muted p-4">
+        <div className="mt-10 flex items-center justify-between gap-4 rounded-xl bg-surface-muted p-4">
           <p className="text-body-sm text-secondary">
             {state === "accepted"
               ? "Revision accepted. The letter now uses the strengthened weather argument."
@@ -98,7 +95,7 @@ export default function ReviseLetter() {
           <button
             type="button"
             onClick={() => setState("pending")}
-            className="rounded-sm px-3 py-2 text-body-sm text-secondary transition-colors hover:text-primary"
+            className="rounded-full px-3.5 py-2 text-body-sm font-medium text-secondary transition-colors hover:text-primary"
           >
             Undo
           </button>

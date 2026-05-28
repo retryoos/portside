@@ -1,4 +1,4 @@
-// Minimal module declaration — html2pdf.js ships no types.
+// Minimal module declaration: html2pdf.js ships no types.
 declare module "html2pdf.js" {
   interface Html2PdfOptions {
     margin?: number | [number, number] | [number, number, number, number];

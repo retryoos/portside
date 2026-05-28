@@ -3,18 +3,17 @@ import type { VesselSummary } from "@/lib/types";
 import { formatEur, formatDate } from "@/lib/format";
 import StageChip from "@/components/StageChip";
 
-// Dashboard list of vessels (DESIGN.md editorial/legal register). Each row
-// aggregates every voyage that shares a vessel_name and links to the filtered
-// detail at /vessels/<encoded name>. Mirrors CasesTable: a five-column ledger on
-// desktop, a scannable stack on mobile, quantum set in tabular numerals.
+// Dashboard list of vessels. Each row aggregates every voyage that shares a
+// vessel_name and links to the filtered detail at /vessels/<encoded name>.
+// Mirrors CasesTable: a five-column ledger on desktop, a scannable stack on mobile.
 function claimsLabel(n: number): string {
   return n === 1 ? "1 claim" : `${n} claims`;
 }
 
 export default function VesselsTable({ vessels }: { vessels: VesselSummary[] }) {
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-surface">
-      <div className="hidden grid-cols-[2.4fr_1.4fr_1fr_1.2fr_1fr] gap-4 border-b border-border px-5 py-3 text-label-caps text-secondary md:grid">
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="hidden grid-cols-[2.4fr_1.4fr_auto_1.2fr_1fr] gap-4 border-b border-border px-5 py-3 text-label-caps text-secondary md:grid">
         <span>Vessel</span>
         <span>Claims</span>
         <span>Status</span>
@@ -26,7 +25,7 @@ export default function VesselsTable({ vessels }: { vessels: VesselSummary[] }) 
         {vessels.map((v) => {
           const href = `/vessels/${encodeURIComponent(v.name)}`;
           const quantum =
-            v.total_quantum_eur != null ? formatEur(v.total_quantum_eur) : "·";
+            v.total_quantum_eur != null ? formatEur(v.total_quantum_eur) : "Pending";
           const activity = formatDate(v.last_activity);
           const perspectives = v.perspectives.join(", ");
           return (
@@ -36,7 +35,7 @@ export default function VesselsTable({ vessels }: { vessels: VesselSummary[] }) 
                 className="block transition-colors hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
               >
                 {/* Desktop ledger row */}
-                <div className="hidden grid-cols-[2.4fr_1.4fr_1fr_1.2fr_1fr] items-center gap-4 px-5 py-4 md:grid">
+                <div className="hidden grid-cols-[2.4fr_1.4fr_auto_1.2fr_1fr] items-center gap-4 px-5 py-4 md:grid">
                   <div>
                     <div className="text-body text-primary">{v.name}</div>
                     <div className="mt-0.5 text-label-caps capitalize text-secondary">
