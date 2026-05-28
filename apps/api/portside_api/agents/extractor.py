@@ -9,10 +9,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ..prompts import load_prompt
 from ..schemas import ExtractionResult, Perspective
 from .llm import cached_system, extract_structured
 
 _PROMPT = (Path(__file__).resolve().parent.parent / "prompts" / "extractor.md").read_text()
+# Shared cross-cutting rules (AI-tell suppression, EUR/clause/event formatting)
+# are prepended to every agent's system prompt — see notes/11-prompts.md.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 def _build_user_text(texts: dict[str, str]) -> str:
@@ -33,7 +37,7 @@ async def run(
     perspective: Perspective,
 ) -> ExtractionResult:
     """Classify + extract the three documents into an ExtractionResult."""
-    system = cached_system(_PROMPT)
+    system = cached_system(_CROSS_CUTTING + "\n\n" + _PROMPT)
     user_text = _build_user_text(texts)
     return await extract_structured(
         ExtractionResult,

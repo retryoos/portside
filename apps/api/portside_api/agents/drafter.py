@@ -25,11 +25,14 @@ from ..schemas import (
     LaytimeResult,
     Perspective,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 _BASE = Path(__file__).resolve().parent.parent
 _PROMPT = (_BASE / "prompts" / "drafter.md").read_text()
 _TEMPLATE = (_BASE / "letter_template.html").read_text()
+# Shared cross-cutting rules prepended to the drafter system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 def _eur(value: float) -> str:
@@ -63,6 +66,7 @@ def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     return (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_PROMPT}\n\n"
         f"Perspective: {perspective}\n\n"
         f"LETTER TEMPLATE (follow exactly, fill the slots):\n{_TEMPLATE}\n\n"

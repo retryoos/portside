@@ -25,6 +25,7 @@ from ..schemas import (
     Perspective,
     SoFEvent,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 # Categories that bound the laytime window.
@@ -35,6 +36,8 @@ _END_CATEGORY = "ops_end"
 _CLASSIFIER_PROMPT = (
     Path(__file__).resolve().parent.parent / "prompts" / "classifier.md"
 ).read_text()
+# Shared cross-cutting rules prepended to the classifier system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 class _ClassificationBatch(BaseModel):
@@ -57,6 +60,7 @@ async def classify_events(
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     system_text = (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_CLASSIFIER_PROMPT}\n\n"
         f"Perspective: {perspective}\n"
         f"Charter party form: {cp.form}; laytime basis: {cp.laytime_basis}.\n"

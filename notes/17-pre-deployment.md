@@ -26,8 +26,8 @@ Work top-down. Don't deploy until §1–§3 are green.
 
 ## 2. Known gaps to close (carry-overs from the parallel merge)
 
-- [ ] **Wire the cross-cutting prompt.** Track D built `prompts/cross_cutting.md` + `load_prompt()`, but no agent prepends it — the AI-tell-suppression + EUR/clause/event formatting rules are currently inert. Prepend `load_prompt("cross_cutting") + "\n\n" + <role prompt>` in the system text of `extractor.py`, `calculator.py` (classifier), `analyst.py`, `drafter.py`. (4 small edits; biggest quality lever.)
-- [ ] **Confirm `client.py` is intentionally absent.** Track D's plan named an `AnthropicClient` in `client.py`; it was never created and is referenced nowhere — every agent uses `agents/llm.py`. Either delete the plan reference or leave as-is. Not a blocker.
+- [x] **Cross-cutting prompt wired (done in this PR).** `extractor.py`, `calculator.py` (classifier), `analyst.py`, and `drafter.py` now prepend `load_prompt("cross_cutting")` to their system text, so the shared AI-tell-suppression + EUR/clause/event formatting rules apply to every agent.
+- [x] **`client.py` confirmed unnecessary (reference removed).** It was never created and is referenced nowhere — every agent uses `agents/llm.py`. No action needed.
 - [ ] **EUR copy sweep.** Skim the rendered letter, dispute narrative, and the three screens for any lingering "$" or "dollar" wording in free-text prose the token-rename didn't catch.
 
 ## 3. Secrets & configuration

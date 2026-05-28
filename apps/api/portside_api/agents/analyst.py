@@ -20,9 +20,12 @@ from ..schemas import (
     LaytimeResult,
     Perspective,
 )
+from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
 
 _PROMPT = (Path(__file__).resolve().parent.parent / "prompts" / "analyst.md").read_text()
+# Shared cross-cutting rules prepended to the analyst system prompt.
+_CROSS_CUTTING = load_prompt("cross_cutting")
 
 
 def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
@@ -32,6 +35,7 @@ def _system_text(extraction: ExtractionResult, perspective: Perspective) -> str:
         f"- Clause {c.clause_no}: {c.text}" for c in cp.clause_excerpts
     )
     return (
+        f"{_CROSS_CUTTING}\n\n"
         f"{_PROMPT}\n\n"
         f"Perspective: {perspective}\n"
         f"Charter party: {cp.vessel_name}, {cp.load_port} / {cp.discharge_port}, "
