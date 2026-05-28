@@ -3,10 +3,8 @@ import Link from "next/link";
 // Top app bar (DESIGN.md "Layout"): serif "Portside" wordmark + nav. Shared
 // chrome across all screens. Foundation-owned — screen subagents import, not edit.
 const NAV = [
-  { label: "Dashboard", href: "/" },
-  { label: "Claims", href: "/claim" },
+  { label: "Claims", href: "/cases" },
   { label: "Vessels", href: "/vessels" },
-  { label: "Reports", href: "/" },
 ];
 
 export default function TopNav() {
