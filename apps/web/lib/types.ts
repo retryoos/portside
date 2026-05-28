@@ -182,3 +182,15 @@ export interface VoyageSummary {
   perspective: Perspective;
   created_at: string;
 }
+
+// Aggregate of all voyages sharing a vessel_name (GET /vessels). total_quantum_eur
+// is null when no constituent voyage has a quantum yet; latest_stage/last_activity
+// come from the most-recent voyage by created_at.
+export interface VesselSummary {
+  name: string;
+  voyage_count: number;
+  total_quantum_eur: number | null;
+  latest_stage: PipelineStage;
+  last_activity: string;
+  perspectives: Perspective[];
+}
