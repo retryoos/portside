@@ -1,14 +1,14 @@
 """Pipeline orchestrator.
 
-STUB for the backend-foundation PR: this returns the Athens weather-dispute
-fixture without making any LLM calls. The real implementation will run Agents
+STUB for the backend-foundation PR: this returns the demo voyage fixture
+(MT Aegean Pioneer, Rotterdam) without making any LLM calls. The real implementation will run Agents
 1–4 (extraction -> classify+calculate -> dispute -> draft) and slot in here
 behind the same signature, so call sites do not change.
 """
 
 from __future__ import annotations
 
-from .fixtures import athens_weather_fixture
+from .fixtures import demo_voyage_fixture
 from .schemas import Perspective, VoyageState
 
 
@@ -38,4 +38,4 @@ async def run(
     #   )
     #   packet = await drafter.run(extraction, laytime, dispute, perspective)
     #   return VoyageState(..., stage="done", ...)
-    return athens_weather_fixture(voyage_id, perspective)
+    return demo_voyage_fixture(voyage_id, perspective)
