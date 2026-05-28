@@ -1,12 +1,12 @@
 "use client";
 
 // Claim screen container (notes/15-next-phase.md — Agent 2 live frontend wiring).
-// Runs on the LIVE pipeline when the URL carries ?voyage=<id> (createVoyage from
-// the dropzone, then pollVoyage feeds each stage in); otherwise it renders the
-// offline lib/demo.ts fixture. The leaf components take their data via props, so
-// the same screen serves both the live and demo paths.
+// Runs on the LIVE pipeline when an `id` is supplied via the /cases/<id> route
+// (pollVoyage feeds each stage in); otherwise it renders the offline lib/demo.ts
+// fixture. The leaf components take their data via props, so the same screen
+// serves both the live and demo paths. The "demo" id is reserved for the fixture.
 import { useCallback, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createVoyage, pollVoyage, type VoyageFiles } from "@/lib/api";
 import { demoVoyage } from "@/lib/demo";
 import type { Perspective, VoyageState } from "@/lib/types";
@@ -17,10 +17,9 @@ import ExportPdfButton from "@/components/ExportPdfButton";
 import AgentSteps from "@/components/AgentSteps";
 import Dropzone from "@/components/Dropzone";
 
-export default function ClaimScreen() {
+export default function ClaimScreen({ id }: { id?: string }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const voyageId = params.get("voyage");
+  const voyageId = id && id !== "demo" ? id : null;
   const live = Boolean(voyageId);
 
   const [voyage, setVoyage] = useState<VoyageState>(demoVoyage);
@@ -50,8 +49,8 @@ export default function ClaimScreen() {
       setError(null);
       setCreateBusy(true);
       try {
-        const id = await createVoyage(files, perspective);
-        router.push(`/claim?voyage=${id}`);
+        const newId = await createVoyage(files, perspective);
+        router.push(`/cases/${newId}`);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -64,7 +63,7 @@ export default function ClaimScreen() {
   const handleDemo = useCallback(() => {
     setError(null);
     setVoyage(demoVoyage);
-    router.push("/claim");
+    router.push("/cases/demo");
   }, [router]);
 
   const cp = voyage.extraction?.charter_party;
