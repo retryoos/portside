@@ -10,7 +10,7 @@ import StageChip from "@/components/StageChip";
 export default function CasesTable({ voyages }: { voyages: VoyageSummary[] }) {
   return (
     <div className="overflow-hidden rounded-md border border-border bg-surface">
-      <div className="hidden grid-cols-[2.2fr_2fr_auto_1.2fr_1fr] gap-4 border-b border-border px-5 py-3 text-label-caps text-secondary md:grid">
+      <div className="hidden grid-cols-[2.2fr_2fr_1fr_1.2fr_1fr] gap-4 border-b border-border px-5 py-3 text-label-caps text-secondary md:grid">
         <span>Vessel</span>
         <span>Route</span>
         <span>Status</span>
@@ -35,7 +35,7 @@ export default function CasesTable({ voyages }: { voyages: VoyageSummary[] }) {
                 className="block transition-colors hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
               >
                 {/* Desktop ledger row */}
-                <div className="hidden grid-cols-[2.2fr_2fr_auto_1.2fr_1fr] items-center gap-4 px-5 py-4 md:grid">
+                <div className="hidden grid-cols-[2.2fr_2fr_1fr_1.2fr_1fr] items-center gap-4 px-5 py-4 md:grid">
                   <div>
                     <div className="text-body text-primary">{vessel}</div>
                     <div className="mt-0.5 text-label-caps capitalize text-secondary">

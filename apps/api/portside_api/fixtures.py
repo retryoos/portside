@@ -361,54 +361,117 @@ def _variant_fixture(
 def seed_voyages() -> list[VoyageState]:
     """Demo cases loaded into the store on startup so the dashboard is populated.
 
-    All from a single (owner) perspective — a real user is one party, not both —
-    and one per claim status so the dashboard demonstrates the full lifecycle:
-    In progress -> Draft -> Pending -> Rejected -> Settled. Ordered newest-first
-    by ``created_at`` (the store sorts on it, this just keeps it readable).
+    All from a single (owner) perspective — a real user is one party, not both.
+    Deliberately one-to-MANY: a vessel runs many voyages, each with its own claim,
+    so the /vessels view (one row per vessel, claims + quantum aggregated) reads
+    as clearly distinct from /cases (one row per claim). A variable number of
+    claims per vessel (Aegean ×3, Ionian ×4, Baltic ×2, Levant ×1) makes that
+    one-to-many obvious, and the mix covers every status
+    (In progress / Draft / Pending / Rejected / Settled).
     """
-    aegean_draft = demo_voyage_fixture("v_aegean_pioneer", "owner").model_copy(
-        update={"created_at": datetime(2026, 5, 19, 9, 0, tzinfo=timezone.utc)}
-    )
-    levant_in_progress = _variant_fixture(
-        "v_levant_carrier",
-        vessel_name="MT Levant Carrier",
-        load_port="Sidi Kerir",
-        discharge_port="Algeciras",
-        stage="drafting",
-        created_at=datetime(2026, 5, 18, 7, 30, tzinfo=timezone.utc),
-        include_packet=False,
-    )
-    ionian_pending = _variant_fixture(
-        "v_ionian_star",
-        vessel_name="MT Ionian Star",
-        load_port="Novorossiysk",
-        discharge_port="Trieste",
-        stage="pending",
-        created_at=datetime(2026, 5, 16, 13, 0, tzinfo=timezone.utc),
-        quantum_eur=61200.0,
-    )
-    adriatic_rejected = _variant_fixture(
-        "v_adriatic_dawn",
-        vessel_name="MT Adriatic Dawn",
-        load_port="Augusta",
-        discharge_port="Fos-sur-Mer",
-        stage="rejected",
-        created_at=datetime(2026, 5, 13, 10, 0, tzinfo=timezone.utc),
-        quantum_eur=38500.0,
-    )
-    baltic_settled = _variant_fixture(
-        "v_baltic_trader_settled",
-        vessel_name="MT Baltic Trader",
-        load_port="Primorsk",
-        discharge_port="Wilhelmshaven",
-        stage="settled",
-        created_at=datetime(2026, 5, 10, 11, 0, tzinfo=timezone.utc),
-        quantum_eur=52250.0,
-    )
-    return [
-        aegean_draft,
-        levant_in_progress,
-        ionian_pending,
-        adriatic_rejected,
-        baltic_settled,
+
+    def utc(*args: int) -> datetime:
+        return datetime(*args, tzinfo=timezone.utc)
+
+    # MT Aegean Pioneer — 3 claims. The first is the full hero case (the live
+    # demo letter); the others are prior voyages in later lifecycle stages.
+    aegean = [
+        demo_voyage_fixture("v_aegean_pioneer", "owner").model_copy(
+            update={"created_at": utc(2026, 5, 19, 9, 0)}
+        ),
+        _variant_fixture(
+            "v_aegean_pioneer_2",
+            vessel_name="MT Aegean Pioneer",
+            load_port="Ras Tanura",
+            discharge_port="Augusta",
+            stage="pending",
+            created_at=utc(2026, 5, 8, 14, 0),
+            quantum_eur=56200.0,
+        ),
+        _variant_fixture(
+            "v_aegean_pioneer_3",
+            vessel_name="MT Aegean Pioneer",
+            load_port="Ras Tanura",
+            discharge_port="Rotterdam",
+            stage="settled",
+            created_at=utc(2026, 3, 28, 10, 0),
+            quantum_eur=71000.0,
+        ),
     ]
+
+    # MT Ionian Star — 4 claims, including one still being drafted (no quantum).
+    ionian = [
+        _variant_fixture(
+            "v_ionian_star",
+            vessel_name="MT Ionian Star",
+            load_port="Novorossiysk",
+            discharge_port="Trieste",
+            stage="drafting",
+            created_at=utc(2026, 5, 18, 7, 30),
+            include_packet=False,
+        ),
+        _variant_fixture(
+            "v_ionian_star_2",
+            vessel_name="MT Ionian Star",
+            load_port="Novorossiysk",
+            discharge_port="Trieste",
+            stage="pending",
+            created_at=utc(2026, 5, 16, 13, 0),
+            quantum_eur=61200.0,
+        ),
+        _variant_fixture(
+            "v_ionian_star_3",
+            vessel_name="MT Ionian Star",
+            load_port="Constanta",
+            discharge_port="Genoa",
+            stage="done",
+            created_at=utc(2026, 5, 12, 11, 0),
+            quantum_eur=29900.0,
+        ),
+        _variant_fixture(
+            "v_ionian_star_4",
+            vessel_name="MT Ionian Star",
+            load_port="Constanta",
+            discharge_port="Trieste",
+            stage="settled",
+            created_at=utc(2026, 3, 15, 9, 0),
+            quantum_eur=44800.0,
+        ),
+    ]
+
+    # MT Baltic Trader — 2 claims.
+    baltic = [
+        _variant_fixture(
+            "v_baltic_trader_settled",
+            vessel_name="MT Baltic Trader",
+            load_port="Primorsk",
+            discharge_port="Wilhelmshaven",
+            stage="settled",
+            created_at=utc(2026, 5, 2, 11, 0),
+            quantum_eur=52250.0,
+        ),
+        _variant_fixture(
+            "v_baltic_trader_2",
+            vessel_name="MT Baltic Trader",
+            load_port="Primorsk",
+            discharge_port="Rotterdam",
+            stage="rejected",
+            created_at=utc(2026, 4, 20, 15, 0),
+            quantum_eur=38500.0,
+        ),
+    ]
+
+    # MT Levant Carrier — 1 claim, still in progress.
+    levant = [
+        _variant_fixture(
+            "v_levant_carrier",
+            vessel_name="MT Levant Carrier",
+            load_port="Sidi Kerir",
+            discharge_port="Algeciras",
+            stage="drafting",
+            created_at=utc(2026, 5, 17, 8, 0),
+            include_packet=False,
+        ),
+    ]
+
+    return [*aegean, *ionian, *baltic, *levant]

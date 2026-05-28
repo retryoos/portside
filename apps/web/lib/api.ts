@@ -32,14 +32,14 @@ export async function createVoyage(
   return data.voyage_id;
 }
 
-export async function listVoyages(): Promise<VoyageSummary[]> {
-  const res = await fetch(`${API_BASE}/voyages`);
+export async function listVoyages(signal?: AbortSignal): Promise<VoyageSummary[]> {
+  const res = await fetch(`${API_BASE}/voyages`, { signal });
   if (!res.ok) throw new Error(`listVoyages failed: ${res.status}`);
   return (await res.json()) as VoyageSummary[];
 }
 
-export async function listVessels(): Promise<VesselSummary[]> {
-  const res = await fetch(`${API_BASE}/vessels`);
+export async function listVessels(signal?: AbortSignal): Promise<VesselSummary[]> {
+  const res = await fetch(`${API_BASE}/vessels`, { signal });
   if (!res.ok) throw new Error(`listVessels failed: ${res.status}`);
   return (await res.json()) as VesselSummary[];
 }

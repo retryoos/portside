@@ -21,13 +21,14 @@ export default function CasesDashboardPage() {
   const [createBusy, setCreateBusy] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    listVoyages()
-      .then((v) => active && setVoyages(v))
-      .catch((e) => active && setError(e instanceof Error ? e.message : String(e)));
-    return () => {
-      active = false;
-    };
+    const controller = new AbortController();
+    listVoyages(controller.signal)
+      .then((v) => setVoyages(v))
+      .catch((e) => {
+        if (controller.signal.aborted) return;
+        setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => controller.abort();
   }, []);
 
   const handleSubmit = useCallback(

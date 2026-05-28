@@ -16,13 +16,14 @@ export default function VesselsDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
-    listVessels()
-      .then((v) => active && setVessels(v))
-      .catch((e) => active && setError(e instanceof Error ? e.message : String(e)));
-    return () => {
-      active = false;
-    };
+    const controller = new AbortController();
+    listVessels(controller.signal)
+      .then((v) => setVessels(v))
+      .catch((e) => {
+        if (controller.signal.aborted) return;
+        setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => controller.abort();
   }, []);
 
   return (
