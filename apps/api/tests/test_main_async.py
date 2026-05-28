@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 
 from portside_api import main as main_mod
 from portside_api.schemas import Perspective, VoyageState
-from portside_api.storage import InMemoryStore
+from portside_api.storage import InMemoryStore, VoyageStore
 
 _VOYAGE_ID_RE = re.compile(r"^v_[0-9a-f]{12}$")
 
@@ -77,12 +77,20 @@ def test_post_voyage_returns_voyage_id_immediately(
     import asyncio
 
     async def slow_pipeline(
-        voyage_id: str, perspective: Perspective, files: dict[str, bytes]
+        voyage_id: str,
+        perspective: Perspective,
+        files: dict[str, bytes],
+        store: VoyageStore | None = None,
     ) -> VoyageState:
         await asyncio.sleep(0.5)
-        return VoyageState(
+        state = VoyageState(
             voyage_id=voyage_id, perspective=perspective, stage="done"
         )
+        # The real pipeline persists staged states via `store`; main ignores the
+        # return value, so the mock must save to be observable by GET polling.
+        if store is not None:
+            await store.save(state)
+        return state
 
     monkeypatch.setattr(main_mod.pipeline, "run", slow_pipeline)
 
@@ -110,12 +118,20 @@ def test_get_voyage_shows_initial_uploaded_stage(
     import asyncio
 
     async def slow_pipeline(
-        voyage_id: str, perspective: Perspective, files: dict[str, bytes]
+        voyage_id: str,
+        perspective: Perspective,
+        files: dict[str, bytes],
+        store: VoyageStore | None = None,
     ) -> VoyageState:
         await asyncio.sleep(1.0)
-        return VoyageState(
+        state = VoyageState(
             voyage_id=voyage_id, perspective=perspective, stage="done"
         )
+        # The real pipeline persists staged states via `store`; main ignores the
+        # return value, so the mock must save to be observable by GET polling.
+        if store is not None:
+            await store.save(state)
+        return state
 
     monkeypatch.setattr(main_mod.pipeline, "run", slow_pipeline)
 
@@ -146,7 +162,10 @@ def test_pipeline_exception_records_error_state(
     stage='error' with the exception message visible in `error`."""
 
     async def boom_pipeline(
-        voyage_id: str, perspective: Perspective, files: dict[str, bytes]
+        voyage_id: str,
+        perspective: Perspective,
+        files: dict[str, bytes],
+        store: VoyageStore | None = None,
     ) -> VoyageState:
         raise RuntimeError("boom")
 
