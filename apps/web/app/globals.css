@@ -1,34 +1,36 @@
 @import "tailwindcss";
 @import "./theme.css";
 
-/* Type scale from DESIGN.md typography tokens. Prefer these over ad-hoc sizing. */
+/* Type scale from DESIGN.md typography tokens. Prefer these over ad-hoc sizing.
+   Inter throughout; mono is reserved for the SoF numeric table. */
 @layer components {
   .text-display {
     font-family: var(--font-display);
     font-size: 2.5rem;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1.08;
-    font-variation-settings: "opsz" 144;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
   }
-  /* The hero demurrage figure is SERIF (Fraunces), not mono — per DESIGN.md. */
+  /* The hero demurrage figure: large Inter, tight tracking. */
   .text-hero-figure {
     font-family: var(--font-display);
     font-size: 2.5rem;
-    font-weight: 500;
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    letter-spacing: -0.025em;
     line-height: 1.1;
   }
   .text-h1 {
     font-family: var(--font-display);
     font-size: 1.75rem;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.2;
   }
   .text-h2 {
     font-family: var(--font-display);
     font-size: 1.375rem;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     line-height: 1.25;
   }
   .text-h3 {
@@ -49,18 +51,18 @@
     font-weight: 400;
     line-height: 1.5;
   }
-  /* The formal claim letter body is set in Fraunces, like a printed legal letter. */
+  /* The formal claim letter body: clean Inter, generous leading. */
   .text-letter-body {
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
     font-size: 0.9375rem;
     font-weight: 400;
-    line-height: 1.7;
+    line-height: 1.75;
   }
   .text-label-caps {
     font-family: var(--font-sans);
     font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     line-height: 1.4;
     text-transform: uppercase;
   }
@@ -69,6 +71,17 @@
     font-size: 0.8125rem;
     font-weight: 400;
     line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Decorative gradient surfaces (ElevenLabs orbs). Never applied to text. */
+@layer utilities {
+  .bg-gradient-warm {
+    background-image: var(--gradient-warm);
+  }
+  .bg-gradient-cool {
+    background-image: var(--gradient-cool);
   }
 }
 
@@ -77,4 +90,6 @@ body {
   background-color: var(--color-neutral);
   color: var(--color-primary);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
