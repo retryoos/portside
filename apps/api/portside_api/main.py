@@ -10,6 +10,7 @@ No database, no auth — in-memory state, one process, for the demo.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from typing import Annotated
 
@@ -34,6 +35,10 @@ app.add_middleware(
 # In-memory store, shared for the process lifetime.
 store: VoyageStore = InMemoryStore()
 
+# Hold references to in-flight pipeline tasks so they are not garbage-collected
+# mid-run (asyncio only keeps weak references to tasks).
+_pipeline_tasks: set[asyncio.Task] = set()
+
 
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
@@ -47,7 +52,11 @@ async def create_voyage(
     sof: UploadFile,
     perspective: Annotated[Perspective, Form()],
 ) -> dict[str, str]:
-    """Accept three voyage PDFs, run the pipeline, store the result."""
+    """Accept three voyage PDFs, kick off the pipeline, return the id immediately.
+
+    The pipeline runs in the background and writes each stage to the store, so the
+    frontend's GET poll sees progress (uploaded -> ... -> done | error).
+    """
     files = {
         "cp": await cp.read(),
         "nor": await nor.read(),
@@ -55,8 +64,13 @@ async def create_voyage(
     }
 
     voyage_id = f"v_{uuid.uuid4().hex[:12]}"
-    state = await pipeline.run(voyage_id, perspective, files)
-    await store.save(state)
+    await store.save(
+        VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded")
+    )
+
+    task = asyncio.create_task(pipeline.run(voyage_id, perspective, files, store))
+    _pipeline_tasks.add(task)
+    task.add_done_callback(_pipeline_tasks.discard)
 
     return {"voyage_id": voyage_id}
 
