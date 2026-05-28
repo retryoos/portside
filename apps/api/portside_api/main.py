@@ -17,7 +17,8 @@ from typing import Annotated
 from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import pipeline
+from . import pipeline, reviser
+from .reviser import ReviseRequest, ReviseResponse
 from .schemas import Perspective, VoyageState
 from .storage import InMemoryStore, VoyageStore
 
@@ -82,3 +83,21 @@ async def get_voyage(voyage_id: str) -> VoyageState:
     if state is None:
         raise HTTPException(status_code=404, detail="voyage not found")
     return state
+
+
+@app.post("/voyages/{voyage_id}/revise")
+async def revise_voyage(voyage_id: str, body: ReviseRequest) -> ReviseResponse:
+    """Inline-revise a letter/narrative segment (notes/13-inline-revision.md).
+
+    The rewrite is validated server-side: if it changed a monetary value or
+    dropped a CP clause / SoF event reference, it is rejected with HTTP 422 and
+    the safety report so the UI can surface why.
+    """
+    state = await store.load(voyage_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+
+    blocked, response = await reviser.revise(body, state)
+    if blocked:
+        raise HTTPException(status_code=422, detail=response.model_dump())
+    return response
