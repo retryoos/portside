@@ -17,6 +17,6 @@ Rules:
   exception applicable".
 - Set `contestable` true when the classification depends on disputed facts the
   charterer and owner would argue about (typically weather stoppages).
-- Do NOT compute durations or totals — only classify. The arithmetic is done
+- Do NOT compute durations or totals, only classify. The arithmetic is done
   deterministically downstream.
 - `applicable_exception` is a short tag like "weather", "shex", "wibon", or null.

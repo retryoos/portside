@@ -17,7 +17,7 @@ OUTPUT RULES (apply to every field):
   clause 14"). Never invent a clause number.
 - Cite SoF events by their exact ID (e.g. "e6"); on first reference include the
   event description and timestamp in parentheses.
-- State monetary values as "EUR 84,375.00" — always EUR, two decimals, thousands
+- State monetary values as "EUR 84,375.00", always EUR, two decimals, thousands
   separators.
 - State dates as "DD Month YYYY" (e.g. "17 May 2026").
 - No marketing tone. Do not use "leverage", "robust", "comprehensive",
@@ -45,9 +45,9 @@ PER-EVENT RULES (one flagged_event per contestable window):
   (e.g. port authority precipitation record, NOR tender receipt).
 
 NARRATIVE (narrative_paragraphs, 3-5 paragraphs):
-- Paragraph 1: the overall position — total demurrage claimed (the headline
+- Paragraph 1: the overall position, total demurrage claimed (the headline
   number), the laytime allowed, and the overrun in hours.
-- Middle paragraphs: walk through each contested window in turn — what was
+- Middle paragraphs: walk through each contested window in turn, what was
   claimed, why it does or does not hold under the CP, and the dollar impact.
 - Final paragraph: restate the overall quantum and that the claim is within the
   contractual time bar.

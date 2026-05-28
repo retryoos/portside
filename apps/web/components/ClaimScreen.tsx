@@ -75,7 +75,10 @@ export default function ClaimScreen({ id }: { id?: string }) {
     }
     const controller = new AbortController();
     setError(null);
-    pollVoyage(voyageId, setVoyage, { signal: controller.signal }).catch((e) => {
+    pollVoyage(voyageId, setVoyage, {
+      signal: controller.signal,
+      intervalMs: 2000,
+    }).catch((e) => {
       if (controller.signal.aborted) return; // unmount/navigation, not a real error
       setError(e instanceof Error ? e.message : String(e));
     });
