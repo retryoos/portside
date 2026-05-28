@@ -44,15 +44,15 @@ export async function listVessels(): Promise<VesselSummary[]> {
   return (await res.json()) as VesselSummary[];
 }
 
-export async function getVoyage(voyageId: string): Promise<VoyageState> {
-  const res = await fetch(`${API_BASE}/voyages/${voyageId}`);
+export async function getVoyage(
+  voyageId: string,
+  signal?: AbortSignal,
+): Promise<VoyageState> {
+  const res = await fetch(`${API_BASE}/voyages/${voyageId}`, { signal });
   if (!res.ok) throw new Error(`getVoyage failed: ${res.status}`);
   return (await res.json()) as VoyageState;
 }
 
-// Stages where the pipeline has stopped advancing on its own. Past "done" the
-// claim sits in a human-driven negotiation lifecycle (pending/rejected/settled),
-// so polling stops there too rather than looping forever.
 /** Advance a voyage through the negotiation lifecycle (send/settle/reject/revise). */
 export async function setVoyageStatus(
   voyageId: string,
@@ -67,6 +67,9 @@ export async function setVoyageStatus(
   return (await res.json()) as VoyageState;
 }
 
+// Stages where the pipeline has stopped advancing on its own. Past "done" the
+// claim sits in a human-driven negotiation lifecycle (pending/rejected/settled),
+// so polling stops there too rather than looping forever.
 const TERMINAL: ReadonlySet<string> = new Set([
   "done",
   "error",
@@ -75,16 +78,38 @@ const TERMINAL: ReadonlySet<string> = new Set([
   "settled",
 ]);
 
-/** Poll until the pipeline reaches a terminal stage, calling onUpdate each tick. */
+/** setTimeout as a promise that resolves early if the signal aborts. */
+function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) return resolve();
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(t);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
+/**
+ * Poll until the voyage reaches a terminal stage, calling onUpdate each tick.
+ * Pass an AbortSignal and abort it (e.g. on component unmount) to stop the loop;
+ * without that the loop would keep hitting the API forever for a voyage that
+ * never reaches a terminal stage (a still-processing one).
+ */
 export async function pollVoyage(
   voyageId: string,
   onUpdate: (state: VoyageState) => void,
-  intervalMs = 500,
-): Promise<VoyageState> {
+  { signal, intervalMs = 1000 }: { signal?: AbortSignal; intervalMs?: number } = {},
+): Promise<VoyageState | undefined> {
   for (;;) {
-    const state = await getVoyage(voyageId);
+    if (signal?.aborted) return undefined;
+    const state = await getVoyage(voyageId, signal);
     onUpdate(state);
     if (TERMINAL.has(state.stage)) return state;
-    await new Promise((r) => setTimeout(r, intervalMs));
+    await delay(intervalMs, signal);
   }
 }
