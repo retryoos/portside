@@ -1,0 +1,28 @@
+# Keep the build context small and auditable. With build context at apps/api,
+# files outside apps/api/ aren't sent by Docker anyway, but being explicit
+# makes the surface easy to review.
+
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+# tests and dev files — runtime image doesn't need them
+tests/
+scripts/
+
+# editor / OS noise
+.DS_Store
+.vscode
+.idea
+
+# never bake a key into the image
+.env
+.env.*
+
+# git / build metadata
+*.log
+Dockerfile
+.dockerignore
