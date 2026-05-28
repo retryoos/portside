@@ -1,0 +1,39 @@
+/* Portside design tokens -> Tailwind v4 theme.
+   Source of truth: apps/web/DESIGN.md (the rewritten editorial/legal palette).
+   Every Tailwind class in components must map to a token here — no raw hex. */
+
+@theme {
+  /* Colors — warm-ink-on-paper, legal-tech register */
+  --color-primary: #1b1c18;
+  --color-on-primary: #faf9f6;
+  --color-secondary: #6f6e66;
+  --color-neutral: #faf9f6;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f1eb;
+  --color-border: #e7e4dc;
+  --color-cta: #1b1c18;
+  --color-on-cta: #ffffff;
+  --color-cta-hover: #33342d;
+  --color-accent: #d98a2c;
+  --color-success: #2f7a55;
+  --color-on-success: #ffffff;
+  --color-success-container: #e4f0e9;
+  --color-warning: #a96a1e;
+  --color-on-warning: #ffffff;
+  --color-warning-container: #fbf1dc;
+  --color-contested: #a96a1e;
+  --color-contested-container: #fbf1dc;
+  --color-danger: #b4453c;
+  --color-on-danger: #ffffff;
+  --color-danger-container: #f7e0dd;
+
+  /* Fonts */
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}

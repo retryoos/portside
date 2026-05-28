@@ -39,3 +39,6 @@ yarn-error.log*
 *.log
 coverage/
 .nyc_output/
+
+# TS build info
+apps/web/tsconfig.tsbuildinfo

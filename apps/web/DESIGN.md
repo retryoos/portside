@@ -2,90 +2,95 @@
 version: alpha
 name: Portside
 description: |
-  A maritime claims tool. The product is read by claims executives, charterers,
-  and maritime lawyers — readers who spend their day inside contracts. The visual
-  language borrows from that world: the gravitas of a counsel's letterhead with
-  the data-density of a Bloomberg terminal. Serif for authority, monospace for
-  numbers, a warm-paper background that reads like the file folder this work has
-  always lived in.
+  A maritime demurrage claims tool for ship owners. The visual language is taken
+  directly from the team mockups (notes reference: ../../mockup/screen_1..3.png):
+  the gravitas of a barrister's opinion letter — serif headlines, warm paper,
+  generous whitespace — with muted green for settled/positive outcomes, warm amber
+  for warnings and contested time, and near-black ink for primary actions. Reads
+  like a premium legal-tech product, not a SaaS dashboard.
 colors:
-  primary: "#0A1929"
-  on-primary: "#F8F6F1"
-  secondary: "#475569"
-  tertiary: "#9C5A2F"
-  on-tertiary: "#FFFFFF"
-  tertiary-container: "#7E4624"
-  neutral: "#F8F6F1"
+  primary: "#1B1C18"
+  on-primary: "#FAF9F6"
+  secondary: "#6F6E66"
+  neutral: "#FAF9F6"
   surface: "#FFFFFF"
-  surface-muted: "#F1EEE7"
-  border: "#D9D4C8"
-  success: "#15803D"
+  surface-muted: "#F3F1EB"
+  border: "#E7E4DC"
+  cta: "#1B1C18"
+  on-cta: "#FFFFFF"
+  cta-hover: "#33342D"
+  accent: "#D98A2C"
+  success: "#2F7A55"
   on-success: "#FFFFFF"
-  success-container: "#DCFCE7"
-  warning: "#B45309"
+  success-container: "#E4F0E9"
+  warning: "#A96A1E"
   on-warning: "#FFFFFF"
-  warning-container: "#FED7AA"
-  danger: "#B91C1C"
+  warning-container: "#FBF1DC"
+  contested: "#A96A1E"
+  contested-container: "#FBF1DC"
+  danger: "#B4453C"
   on-danger: "#FFFFFF"
-  danger-container: "#FECACA"
-  contested: "#D97706"
-  contested-container: "#FEF3C7"
+  danger-container: "#F7E0DD"
 typography:
   display:
     fontFamily: "Fraunces"
-    fontSize: "4rem"
+    fontSize: "2.5rem"
     fontWeight: 500
     letterSpacing: "-0.02em"
-    lineHeight: 1.05
+    lineHeight: 1.08
     fontVariation: "opsz 144"
+  hero-figure:
+    fontFamily: "Fraunces"
+    fontSize: "2.5rem"
+    fontWeight: 500
+    letterSpacing: "-0.01em"
+    lineHeight: 1.1
   h1:
     fontFamily: "Fraunces"
-    fontSize: "2rem"
+    fontSize: "1.75rem"
     fontWeight: 500
     lineHeight: 1.2
-    letterSpacing: "-0.01em"
   h2:
     fontFamily: "Fraunces"
-    fontSize: "1.5rem"
+    fontSize: "1.375rem"
     fontWeight: 500
     lineHeight: 1.25
   h3:
     fontFamily: "IBM Plex Sans"
-    fontSize: "1.0625rem"
+    fontSize: "1rem"
     fontWeight: 600
-    lineHeight: 1.35
+    lineHeight: 1.4
   body:
     fontFamily: "IBM Plex Sans"
     fontSize: "0.9375rem"
     fontWeight: 400
-    lineHeight: 1.55
+    lineHeight: 1.6
   body-sm:
     fontFamily: "IBM Plex Sans"
     fontSize: "0.8125rem"
     fontWeight: 400
     lineHeight: 1.5
+  letter-body:
+    fontFamily: "Fraunces"
+    fontSize: "0.9375rem"
+    fontWeight: 400
+    lineHeight: 1.7
   label-caps:
     fontFamily: "IBM Plex Sans"
     fontSize: "0.6875rem"
     fontWeight: 600
-    letterSpacing: "0.08em"
+    letterSpacing: "0.1em"
     lineHeight: 1.4
   mono:
     fontFamily: "JetBrains Mono"
     fontSize: "0.8125rem"
     fontWeight: 400
     lineHeight: 1.5
-  mono-quantum:
-    fontFamily: "JetBrains Mono"
-    fontSize: "3.75rem"
-    fontWeight: 500
-    letterSpacing: "-0.02em"
-    lineHeight: 1
 rounded:
   none: "0"
-  sm: "2px"
-  md: "4px"
-  lg: "6px"
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -98,154 +103,146 @@ components:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.primary}"
     rounded: "{rounded.md}"
-    padding: 16px
-  card-muted:
-    backgroundColor: "{colors.surface-muted}"
+    padding: 24px
+  button-primary:
+    backgroundColor: "{colors.cta}"
+    textColor: "{colors.on-cta}"
+    rounded: "{rounded.sm}"
+    padding: "10px 18px"
+    typography: "{typography.body-sm}"
+  button-primary-hover:
+    backgroundColor: "{colors.cta-hover}"
+    textColor: "{colors.on-cta}"
+  button-ghost:
+    backgroundColor: "transparent"
+    textColor: "{colors.secondary}"
+    rounded: "{rounded.sm}"
+    padding: "10px 14px"
+  timeline-item:
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.primary}"
     rounded: "{rounded.md}"
-    padding: 16px
-  button-primary:
-    backgroundColor: "{colors.tertiary}"
-    textColor: "{colors.on-tertiary}"
-    rounded: "{rounded.sm}"
-    padding: "10px 16px"
-    typography: "{typography.label-caps}"
-  button-primary-hover:
-    backgroundColor: "{colors.tertiary-container}"
-    textColor: "{colors.on-tertiary}"
-  button-secondary:
+    padding: 20px
+  timeline-item-settled:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.primary}"
-    rounded: "{rounded.sm}"
-    padding: "10px 16px"
-  table-row:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.primary}"
-    padding: "12px 16px"
-  table-row-contested:
-    backgroundColor: "{colors.contested-container}"
-    textColor: "{colors.primary}"
-    padding: "12px 16px"
-  table-row-demurrage:
-    backgroundColor: "{colors.danger-container}"
-    textColor: "{colors.primary}"
-    padding: "12px 16px"
-  badge-timebar-ok:
+    rounded: "{rounded.md}"
+    padding: 20px
+  badge-success:
     backgroundColor: "{colors.success-container}"
     textColor: "{colors.success}"
     rounded: "{rounded.sm}"
-    padding: "4px 8px"
-  badge-timebar-warning:
+    padding: "3px 9px"
+  badge-warning:
     backgroundColor: "{colors.warning-container}"
     textColor: "{colors.warning}"
     rounded: "{rounded.sm}"
-    padding: "4px 8px"
-  badge-timebar-danger:
-    backgroundColor: "{colors.danger-container}"
-    textColor: "{colors.danger}"
+    padding: "3px 9px"
+  table-row-contested:
+    backgroundColor: "{colors.contested-container}"
+    textColor: "{colors.primary}"
+    padding: "10px 16px"
+  revise-highlight:
+    backgroundColor: "{colors.contested-container}"
+    textColor: "{colors.primary}"
     rounded: "{rounded.sm}"
-    padding: "4px 8px"
+    padding: 16px
 ---
 
 ## Overview
 
-Portside is read by people who spend their day inside contracts. The interface should feel like the file folder this work has always lived in — but loaded with the speed and clarity of a trading terminal. Two motifs:
+Portside is read by owners' claims executives and maritime lawyers. The mockups (`mockup/screen_1..3.png`) set the visual contract: **a barrister's opinion letter, not a SaaS dashboard.** Serif headlines (Fraunces), warm paper, lots of air. The product is calm and authoritative; colour is used sparingly and only to carry meaning — green for a won/settled outcome, amber for warning and contested time, ink for the one action you should take.
 
-- **Letterhead gravitas.** Serif for headings (Fraunces) reads like the top of a formal claim letter. Warm-paper background (`#F8F6F1`) reads like the file you opened on your desk. No floating accents, no gradients, no whitespace-for-whitespace's-sake.
-- **Data-room precision.** Monospace numbers (JetBrains Mono) for every timestamp and dollar figure — they need to align vertically across rows, and they need to read instantly. The headline quantum is set in a very large monospace because that is the number the user is here for.
-
-Style register: **product**, not brand. We are an instrument, not a campaign.
+Style register: **product**, restrained and legal.
 
 ## Colors
 
-The palette is rooted in **deep marine ink** on **warm paper**, with **burnished brass** as the only call-to-action accent. Tinted neutrals throughout — no pure black, no pure gray.
+- **`primary` `#1B1C18`** — warm near-black ink. All headings, body, table cells, and the primary CTA fill.
+- **`secondary` `#6F6E66`** — warm gray. Metadata, captions, breadcrumbs, "27 May 2026" dates, section labels.
+- **`neutral` `#FAF9F6`** — warm paper. Page background.
+- **`surface` `#FFFFFF`** — cards, the letter sheet, timeline items.
+- **`surface-muted` `#F3F1EB`** — secondary panels, the calculation summary block.
+- **`border` `#E7E4DC`** — hairlines, card borders, table dividers.
+- **`cta` `#1B1C18`** — the dark/ink buttons ("Send to charterer", "Accept"). White text. This replaces the old brass CTA — the mockups use ink buttons.
+- **`accent` `#D98A2C`** — the warm amber dot beside a live case title. Decorative, used at most once per header.
+- **`success` `#2F7A55` / container `#E4F0E9`** — settled, recovery rate, "Time bar cleared early", the settlement timeline item's left border.
+- **`warning` `#A96A1E` / container `#FBF1DC`** — time-bar countdown warnings.
+- **`contested` `#A96A1E` / container `#FBF1DC`** — contested SoF rows AND the inline-revise highlight block. Same warm amber.
+- **`danger` `#B4453C` / container `#F7E0DD`** — the strikethrough on text the agent replaced during a revision; reject actions.
 
-- **`primary` `#0A1929`** — Deep marine ink. Headings, body text, table cells. Reads as authoritative without being literal navy.
-- **`secondary` `#475569`** — Tinted slate. Captions, metadata, "from / to" labels, supporting copy.
-- **`tertiary` `#9C5A2F`** — Burnished brass. Reserved for the primary call-to-action (`Generate Claim Letter`, `New Voyage Claim`). Used sparingly; the eye should find it instantly because there is no competition for it.
-- **`neutral` `#F8F6F1`** — Warm paper background. Page-level fill.
-- **`surface` `#FFFFFF`** — Pure white, only inside cards where the data demands maximum clarity (the laytime table, the letter preview).
-- **`surface-muted` `#F1EEE7`** — Slightly darker paper. For the left panel's document cards, to set them off from the main canvas without using shadow.
-- **`border` `#D9D4C8`** — A warm-tinted line one shade above paper. Use for hairlines, table dividers, card borders.
-- **Status colors:**
-  - `success` `#15803D` + `success-container` `#DCFCE7` — time-bar > 30 days
-  - `warning` `#B45309` + `warning-container` `#FED7AA` — time-bar 1–30 days
-  - `danger` `#B91C1C` + `danger-container` `#FECACA` — time-bar passed; "on demurrage" rows
-  - `contested` `#D97706` + `contested-container` `#FEF3C7` — flagged laytime rows
-
-All foreground/background pairs in the `components` block exceed WCAG AA 4.5:1.
+All foreground/background pairs meet WCAG AA.
 
 ## Typography
 
-The type system has three voices, each with a job:
+- **Fraunces (serif)** — `display`, `h1`, `h2`, AND `hero-figure` (the big "Demurrage due to owners: USD 84,375.00" is **serif, not mono** — this is the single biggest type correction from the mockups), AND `letter-body` (the formal claim letter is set in Fraunces, like a printed legal letter).
+- **IBM Plex Sans** — `body`, `body-sm`, `h3`, `label-caps`. The UI chrome, nav, metadata, section labels ("DISPUTE TIMELINE", "TO: CHARTERERS").
+- **JetBrains Mono** — `mono`, tabular. Used **only** inside the Statement-of-Facts calculation table (TIMESTAMP / CUM. HRS columns) and other dense numeric tables where vertical alignment matters. NOT for the hero figure.
 
-- **Fraunces (serif)** — display + h1 + h2. Variable opsz axis tuned to display at the largest sizes. This is the voice of "this is a formal document." It does not appear in body, buttons, or labels.
-- **IBM Plex Sans** — body + label-caps + h3. The chosen sans is deliberately *not* Inter, *not* a generic geometric sans. IBM Plex has a slightly mechanical, drafted-with-precision character that fits the maritime/industrial subject.
-- **JetBrains Mono** — every number, every timestamp, every dollar amount. Fixed width is non-negotiable for the laytime table. The `mono-quantum` token is the headline number at the bottom of the center panel; the size is deliberately oversized to make it the gravitational center of the screen.
+`label-caps` (small, tracked, uppercase, secondary color) marks every section: "DISPUTE TIMELINE", "OUTCOME", "TO: CHARTERERS", "SOURCES / CALCULATION / DOCUMENTS" tabs.
 
-`label-caps` (small, tracked, uppercase) is used for table headers, the "DOCUMENTS | LAYTIME TIMELINE | CLAIM PACKET" panel labels, and button text. It contributes to the "data-room" feel without shouting.
-
-Web font loading:
-
+Web fonts:
 ```html
-<!-- in app/layout.tsx -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-  rel="stylesheet"
-/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 ```
 
 ## Layout
 
-- Page-level: warm paper background (`{colors.neutral}`), full-bleed.
-- Three-panel layout: 25% / 45% / 30% on `lg:` and up. Single-column tab switcher below `md:`.
-- Cards: subtle border (`{colors.border}`), no shadow. Shadow on hairlines feels SaaS-template.
-- Hairlines between table rows; no zebra striping.
-- Gap between panels: `{spacing.lg}` (24px). Gap inside cards: `{spacing.md}` (16px).
+- Page background warm paper; content sits on white cards with hairline borders, **no drop shadow**.
+- **Top app bar** with the serif "Portside" wordmark + nav: Dashboard · Claims · Vessels · Reports, and search / notifications / settings / profile icons on the right (screen 1).
+- **Breadcrumb row** under the bar: "Vessels / MT Aegean Pioneer / Settled" or "Voyages / MT Aegean Pioneer".
+- Generous max-width content column (~720–960px), centered, not full-bleed — this is what gives the editorial feel.
+- The claim view (screen 2) is **two columns**: the letter (left, ~58%) and the Sources/Calculation/Documents panel (right, ~42%).
 
 ## Elevation & Depth
 
-Portside has **no elevation system**. No drop shadows, no glows, no card stacking. Depth comes from color tinting (paper vs. surface vs. surface-muted), not from shadow. This is the deliberate visual contract: "we are not a SaaS template."
-
-The single exception: the contested-row inline expansion has a 1px left border in `{colors.contested}` to mark its boundary. That is the only depth cue in the product.
+No drop shadows, no glows. Depth comes from the warm-paper-vs-white contrast and hairline borders. The one sanctioned accent stripe: a 3px **green** left border on a settlement/positive timeline item, and a left border on the inline-revise highlight block.
 
 ## Shapes
 
-Rounded corners are restrained. `rounded.sm` (2px) on buttons. `rounded.md` (4px) on cards. Nothing larger. Pills, bubbles, and circles do not appear. The product looks like a document — documents have square corners.
+Rounded corners: `sm` (4px) on buttons/badges/table accents, `md` (8px) on cards and timeline items. Nothing fully pill-shaped except the small status badges. Documents have near-square corners.
 
 ## Components
 
-The `components` block in front-matter defines tokens. Below is rationale.
+- **`button-primary`** — ink fill, white text. "Send to charterer", "Accept", "Send rebuttal". Sparingly: one primary action per view.
+- **`button-ghost`** — text-only secondary actions ("View full letter →", "Export full case file (PDF)", "Reject").
+- **`timeline-item`** — a white card in the dispute correspondence timeline (screen 1). Date in `secondary` on the left, actor + summary on the right. The "Detected from inbox" badge marks auto-assembled correspondence.
+- **`timeline-item-settled`** — same, with the 3px green left border + a green check, for the settlement-accepted row.
+- **`badge-success` / `badge-warning`** — small status chips (recovery rate, "Cleared 67 days early"; time-bar countdown).
+- **`table-row-contested`** — amber-tinted SoF row (the disputed stoppage).
+- **`revise-highlight`** — the amber block that holds the agent's replacement text during inline revision (screen 3), paired with `danger` strikethrough on the text being replaced.
 
-- **`card`** — the document cards (left panel) and the right-panel content blocks. White surface, border, no shadow.
-- **`card-muted`** — the document cards when *not* the focus. Reads as "passive evidence" — there, available, but not asking for attention.
-- **`button-primary`** — burnished brass. Reserved for the two CTAs in the product: **New Voyage Claim** and **Generate Claim Letter**. Do not use brass anywhere else. If a third button feels like it needs to be primary, the screen has too many primaries.
-- **`button-secondary`** — surface with border. Used for `Download PDF`, `Download Word`, `View Excerpt`.
-- **`table-row-contested`** — warm amber tint. Used for the flagged laytime rows that drive the demo.
-- **`table-row-demurrage`** — soft red tint. Used for rows where the vessel is on demurrage.
-- **`badge-timebar-*`** — the top-bar countdown chip. The single most credible UX detail in the product.
+## Confidence display
+
+Show owner position strength as a word — **Strong / Arguable / Weak** — never a numeric percentage. Senior arbitrators read numeric confidence as gimmicky.
+
+## Screens (the three mockups — authoritative reference)
+
+These supersede the old three-panel layout in [notes/06-frontend.md](../../notes/06-frontend.md) wherever they differ. 06-frontend's *content* (laytime table, quantum, dispute narrative, letter) still applies — it just maps onto these layouts.
+
+1. **Case detail / settled** (`screen_1.png`) — top nav + breadcrumb + serif title ("MT Aegean Pioneer — Ras Tanura / Rotterdam", "Settled at USD 79,000 — 21 days from claim submission") + a vertical **dispute correspondence timeline** (claim submitted → charterer response *"Detected from inbox"* → rebuttal sent → revised offer → settlement accepted) + an **Outcome** table (original claim, settled at, recovery %, days to settlement, time-bar status "Cleared 67 days early").
+2. **Claim view** (`screen_2.png`) — breadcrumb + amber time-bar countdown + ink "Send to charterer". Two columns: the **formal letter** (left, "TO: CHARTERERS", serif hero figure "Demurrage due to owners: USD 84,375.00", letter body) and a right panel with **Sources / Calculation / Documents** tabs showing the laytime summary block + the **SoF timeline table** (TIMESTAMP / DESCRIPTION / CATEGORY / CUM. HRS, contested row amber).
+3. **Inline highlight-and-revise** (`screen_3.png`) — full-width letter; a floating quick-prompt ("Make the weather argument stronger and cite The Mexico 1"); the old sentence struck through in `danger`; the replacement paragraph in a `revise-highlight` amber block (citing The Mexico 1 [1990] 1 Lloyd's Rep 507 + Rotterdam Port Authority precipitation data); an **Accept / Reject** control. See [notes/13-inline-revision.md](../../notes/13-inline-revision.md).
+
+## Demo content (align to the mockups)
+
+Use the mockup voyage, not the old Piraeus one: **MT Aegean Pioneer, Ras Tanura → Rotterdam**, CP dated 12 Feb 2026, demurrage USD 45,000/day, laytime 72h allowed / 117h used, **claim USD 84,375.00**, contested 4-hour weather stoppage on 17 May, weather clause on a **precipitation threshold (0.5 mm/hr)**, authority **The Mexico 1 [1990] 1 Lloyd's Rep 507**. Rotterdam keeps us consistent with the "Europe, starting in Greece" positioning.
 
 ## Do's and Don'ts
 
 ### Do
-
-- Tint every neutral. Black is `{colors.primary}` (#0A1929), not `#000000`. Gray is `{colors.secondary}` (#475569), not `#808080`.
-- Right-align every number column. The eye lines up dollars and timestamps vertically; left-aligned numbers are unreadable in a maritime context.
-- Set every monetary value with two decimals and thousands separators: `USD 38,400.00`.
-- Set every timestamp in port-local time with the suffix `LT`: `08 May 13:00 LT`.
-- Use `label-caps` for panel titles and column headers — short, tracked, uppercase.
-- Keep the brass accent rare. One per screen, ideally one per viewport.
+- Tint every neutral (ink is `#1B1C18`, gray is `#6F6E66`, never pure `#000`/`#808080`).
+- Set the hero demurrage figure and the letter body in **Fraunces serif**.
+- Use mono **only** in the SoF calculation table.
+- One ink primary button per view; everything else is ghost/text.
+- Use green only for won/settled/positive, amber only for warning/contested/revise.
+- Right-align numeric table columns.
 
 ### Don't
-
-- Don't use Inter. The product is not a SaaS template.
-- Don't use gray text on a colored background; readability dies and contrast usually fails.
-- Don't use pure black or pure gray. Always tint.
-- Don't wrap cards inside cards. The left-panel document cards live directly on the warm paper, no parent card.
-- Don't use bounce / elastic / spring easing. The product is formal. Use linear or ease-out for everything; reserve motion for state changes only.
-- Don't use gradients. None. The product reads as a printed document, and printed documents do not gradient.
-- Don't use purple, teal, or any unearned accent color. The palette has one accent (brass). Adding a second weakens the first.
-- Don't use circular avatars, decorative icons, or status dots for anything informational. The status chip carries the status; a redundant dot is just SaaS reflex.
-- Don't animate on scroll. Don't animate on hover (except a subtle color shift on buttons). Motion is a state-change tool, not a decoration tool.
+- Don't use Inter or a generic geometric sans.
+- Don't use the old burnished-brass CTA — CTAs are ink now.
+- Don't set the hero figure in monospace.
+- Don't add drop shadows, gradients, or nested cards.
+- Don't show numeric confidence percentages.
+- Don't use more than the three accent colours (green, amber, the single warm dot).
