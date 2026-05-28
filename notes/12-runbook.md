@@ -10,26 +10,48 @@ The shape of the day: three engineers, each with two terminals open (one for `cl
 
 Every engineer's laptop must pass this before going to sleep on May 27.
 
-### Windows machine — read this first
+### Device split for our two machines
 
-We have two devices: one macOS, one Windows. For the Windows box:
+| Machine        | Owner         | Role        | Container/Linux tooling                                              |
+| -------------- | ------------- | ----------- | -------------------------------------------------------------------- |
+| macOS          | you           | **Backend** (`apps/api`) | **OrbStack** (optional — only to test the App Runner Docker image). Day-to-day dev is just `uv run uvicorn`, no container. |
+| Windows        | your friend   | **Frontend** (`apps/web`) | **Nothing** — native Windows + Node + pnpm. No WSL, no Docker, no OrbStack needed for frontend. |
 
-- **Git only (clone / commit / push):** native Windows is fine. Install [Git for Windows](https://git-scm.com/download/win) and you're done.
-- **Frontend dev (Track C — Next.js / pnpm / Node):** native Windows is fine.
-- **Backend dev (Python / FastAPI):** **install WSL2** — `wsl --install` in an admin PowerShell, reboot, pick Ubuntu. Then run all the prerequisites below *inside* the Ubuntu shell, and clone the repo inside WSL (`~/code/...`, not `/mnt/c/...`, for speed). This makes the Windows box behave exactly like the Macs.
+**Why no WSL/containers are required anymore:** the backend has **zero native dependencies** now (FastAPI + uv + `pdfplumber` + anthropic SDK are all pure Python — PDF export moved to the browser, so weasyprint/cairo/pango are gone from the runtime). The backend runs natively on macOS *and* native Windows.
 
-Why WSL2 for backend: it removes the whole class of "works on Mac, breaks on Windows" issues and matches the Claude Code experience. **Note:** since PDF export is now client-side (`html2pdf.js`), we no longer have the painful cairo/pango/weasyprint dependency in the product — so if the Windows box is *only* doing frontend, you can skip WSL. If in doubt, install WSL2; it's ~10 minutes and free.
+- **OrbStack (macOS only):** it does **not** exist on Windows. On your Mac it's optional — use it *only* to test the App Runner deploy container (`docker build` + `docker run` the backend image) before pushing. You do not need it to develop.
+- **If the Windows box ever has to run the backend:** since there are no native deps, native Windows + `uv` works. WSL2 is still nice for toolchain parity (and is where you'd run Docker, since OrbStack is Mac-only) — but it is no longer required. `wsl --install` in an admin PowerShell if you want it.
 
-### Software prerequisites
+### What each agent must check is installed
 
-(Run inside WSL2 Ubuntu on the Windows box; run natively on macOS.)
+**Backend agent (macOS) — check before starting:**
+```bash
+python3 --version     # expect 3.12+
+uv --version          # expect >= 0.5   (install: curl -LsSf https://astral.sh/uv/install.sh | sh)
+git --version
+claude --version      # Claude Code CLI
+jq --version          # nice to have for poking JSON   (brew install jq)
+# OrbStack only if you want to test the deploy container — not required for dev
+cat apps/api/.env     # confirm ANTHROPIC_API_KEY is set (see Environment below)
+```
+
+**Frontend agent (Windows) — check before starting:**
+```powershell
+node --version        # expect v22.x   (install Node 22 LTS)
+pnpm --version        # expect >= 9     (install: corepack enable)
+git --version         # Git for Windows
+claude --version      # Claude Code CLI
+# No Python, no WSL, no Docker needed for frontend
+```
+
+### Full software prerequisites (reference)
 
 ```bash
-# Python 3.12+ via uv
+# Python 3.12+ via uv  (backend machine only)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv --version              # expect >= 0.5
 
-# Node 22+ via fnm or nvm
+# Node 22+ via fnm or nvm  (both machines; Windows can use the Node MSI installer)
 fnm install 22 && fnm use 22
 node --version            # expect v22.x
 
@@ -76,6 +98,66 @@ curl https://api.anthropic.com/v1/messages \
   -H "content-type: application/json" \
   -d '{"model":"claude-sonnet-4-6","max_tokens":50,"messages":[{"role":"user","content":"say hi"}]}'
 ```
+
+---
+
+## 1b. Two-agent parallel kickoff (backend + frontend → two PRs)
+
+Two Claude Code sessions work the same repo at the same time with **zero conflict**, because backend (`apps/api/`) and frontend (`apps/web/`) are different directories. Each agent works on its own branch and opens its own PR.
+
+### The contract between them
+The only shared thing is **[04-schemas.md](04-schemas.md)** (the `VoyageState` shape) and the **mock `GET /voyages/{id}` endpoint**. The backend agent ships these *first* so the frontend agent has something real to render against.
+
+### The handoff sequence
+```
+Backend agent  ──PR #1 (schemas + mock endpoint)──►  main
+                                                       │
+Frontend agent ──pulls main, wires API client─────────┘
+       │
+       └── both continue in parallel on their own branches / PRs
+```
+The frontend agent does **not** have to wait to *start* — it scaffolds Next.js and renders against the example `VoyageState` JSON copied from [04-schemas.md §8](04-schemas.md) as a local fixture, then swaps to the live endpoint once PR #1 lands on `main`.
+
+### Branches
+- Backend: `track-a/api-skeleton`, then `track-a/agent1-extractor`, etc.
+- Frontend: `track-c/web-skeleton`, then `track-c/laytime-table`, etc.
+
+Follow the merge rules in [09-pre-merge-protocol.md](09-pre-merge-protocol.md).
+
+---
+
+### Kickoff brief — BACKEND agent (macOS, you)
+
+Paste this into your `claude` session:
+
+> You are building the backend for Portside (`apps/api/`). Read `notes/02-architecture.md`, `notes/03-agents.md`, and `notes/04-schemas.md` first.
+>
+> **PR #1 — `track-a/api-skeleton` (do this first and push to main so the frontend agent can start):**
+> 1. Scaffold `apps/api` with `uv` (Python 3.12, FastAPI, uvicorn, pydantic v2, anthropic, pdfplumber).
+> 2. Create `portside_api/schemas.py` with the Pydantic models exactly as defined in `notes/04-schemas.md` (`VoyageState`, `ExtractionResult`, `LaytimeResult`, `DisputeAnalysis`, `ClaimPacket`, etc.).
+> 3. Create `portside_api/main.py`: `POST /voyages` (multipart cp/nor/sof/perspective → returns `{voyage_id}`), `GET /voyages/{id}` (returns a hard-coded mock `VoyageState` matching the worked example in 04-schemas.md §8), and `GET /healthz`. Enable CORS for `http://localhost:3000`.
+> 4. Confirm `uv run uvicorn portside_api.main:app --reload --port 8000` serves and `curl localhost:8000/voyages/test` returns the mock. Open PR, merge to main.
+>
+> **PR #2+ (your own branches, after #1 is on main):** implement the real pipeline — `pdfplumber` text extraction helper, then Agent 1 (extractor), Agent 2a (classifier) + 2b (deterministic Python calculator with a `tests/test_calculator.py`), Agent 3 (dispute analyst), Agent 4 (drafter). The orchestrator runs Agent 2 + Agent 3 in parallel via `asyncio.gather`. Use `claude-sonnet-4-6` for all agents. No server-side PDF — the letter content goes into `ClaimPacket` and the frontend renders/exports it.
+>
+> Check in with me after PR #1 is pushed.
+
+### Kickoff brief — FRONTEND agent (Windows, your friend)
+
+Paste this into the `claude` session on the Windows machine:
+
+> You are building the frontend for Portside (`apps/web/`). Read `notes/06-frontend.md` (especially §0 — the mandatory `/impeccable` + `apps/web/DESIGN.md` workflow), `apps/web/DESIGN.md`, and `notes/04-schemas.md` first.
+>
+> **PR — `track-c/web-skeleton`:**
+> 1. Scaffold `apps/web` with Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui. Load the fonts and tokens from `apps/web/DESIGN.md` (Fraunces / IBM Plex Sans / JetBrains Mono).
+> 2. Build the three-panel layout (Documents | Laytime Timeline | Claim Packet) per `notes/06-frontend.md`, rendering against a **local fixture** — copy the example `VoyageState` JSON from `notes/04-schemas.md §8` into `apps/web/lib/fixture.ts`. This lets you build the whole UI without waiting for the backend.
+> 3. Create `apps/web/lib/types.ts` (zod schemas mirroring the Pydantic models) and `apps/web/lib/api.ts` (typed fetch client pointed at `NEXT_PUBLIC_API_URL`).
+> 4. Run `/impeccable shape` before building each surface and `/impeccable audit` after. Run `npx @google/design.md lint apps/web/DESIGN.md`.
+> 5. Once the backend's PR #1 is on `main` (it exposes `GET /voyages/{id}`), `git pull`, then swap the local fixture for a live `react-query` poll of the endpoint.
+>
+> The claim-letter PDF export is **client-side** (`html2pdf.js`) — there is no backend PDF endpoint.
+>
+> Check in with me when the three panels render against the fixture.
 
 If you don't get back a 200 with a response, fix it tonight. Not tomorrow.
 
