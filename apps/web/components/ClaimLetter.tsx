@@ -5,11 +5,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { demoVoyage } from "@/lib/demo";
 import { formatUsd } from "@/lib/format";
+import type { ClaimPacket } from "@/lib/types";
 
 export const LETTER_DOM_ID = "claim-letter-sheet";
 
-export default function ClaimLetter() {
-  const packet = demoVoyage.packet;
+export default function ClaimLetter({
+  packet = demoVoyage.packet,
+}: {
+  packet?: ClaimPacket | null;
+}) {
   if (!packet) return null;
 
   return (
