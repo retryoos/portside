@@ -24,6 +24,11 @@ venv/
 .mypy_cache/
 .ruff_cache/
 
+# SQLite (local dev DB)
+*.db
+*.db-shm
+*.db-wal
+
 # Node
 node_modules/
 .next/

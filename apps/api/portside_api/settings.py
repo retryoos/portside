@@ -20,6 +20,11 @@ _DEFAULT_MODEL_PRIMARY = "claude-sonnet-4-6"
 _DEFAULT_MODEL_ESCAPE = "claude-opus-4-7"
 _DEFAULT_REQUEST_TIMEOUT_S = "30"
 _DEFAULT_CORS_ORIGINS = "http://localhost:3000"
+# Local-dev default: a SQLite file next to the package. Production sets
+# DATABASE_URL to the Aurora Postgres URL (postgresql+asyncpg://...).
+_DEFAULT_DATABASE_URL = (
+    f"sqlite+aiosqlite:///{Path(__file__).resolve().parent.parent / 'portside.db'}"
+)
 
 _LOADED = False
 
@@ -31,6 +36,7 @@ class Settings:
     model_escape: str
     request_timeout_s: float
     cors_origins: list[str]
+    database_url: str
 
     @classmethod
     def load(cls) -> "Settings":
@@ -47,6 +53,7 @@ class Settings:
             ),
             request_timeout_s=float(timeout_raw),
             cors_origins=_parse_cors_origins(cors_raw),
+            database_url=os.environ.get("DATABASE_URL") or _DEFAULT_DATABASE_URL,
         )
 
 

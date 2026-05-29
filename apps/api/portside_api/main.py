@@ -26,6 +26,7 @@ from fastapi import FastAPI, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import pipeline, reviser
+from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
 from .reviser import ReviseRequest, ReviseResponse
 from .schemas import (
@@ -36,12 +37,15 @@ from .schemas import (
     VoyageSummary,
 )
 from .settings import settings
-from .storage import InMemoryStore, VoyageStore
+from .storage import SqlVoyageStore, VoyageStore
 
 logger = logging.getLogger("portside_api")
 
-# In-memory store, shared for the process lifetime.
-store: VoyageStore = InMemoryStore()
+# Relational store, shared for the process lifetime. The engine is lazy
+# (no connection until first use), so constructing it at import is side-effect
+# free; tests monkeypatch ``store`` with an InMemoryStore before startup.
+_engine = make_engine(settings.database_url)
+store: VoyageStore = SqlVoyageStore(make_sessionmaker(_engine))
 
 # Hold strong references to in-flight background tasks. asyncio.create_task only
 # weakly references its task, so without this the pipeline task can be GC'd /
@@ -51,12 +55,17 @@ _BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Seed the in-memory store with demo cases on startup so the dashboard is
-    never empty on a fresh process (notes: in-memory + startup seed; restart
-    resets)."""
-    for state in seed_voyages():
-        await store.save(state)
+    """On startup: migrate the schema (SQL backend only) and seed the demo cases
+    if the store is empty. Seeding only-when-empty means a restart preserves real
+    voyages instead of clobbering them (the point of persistence). Alembic spins
+    up its own event loop, so run it off-thread to avoid nesting loops."""
+    if isinstance(store, SqlVoyageStore):
+        await asyncio.to_thread(run_migrations, settings.database_url)
+    if not await store.list():
+        for state in seed_voyages():
+            await store.save(state)
     yield
+    await _engine.dispose()
 
 
 app = FastAPI(title="Portside API", version="0.1.0", lifespan=lifespan)
