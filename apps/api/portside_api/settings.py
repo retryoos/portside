@@ -37,12 +37,20 @@ class Settings:
     request_timeout_s: float
     cors_origins: list[str]
     database_url: str
+    # Auth (A2). dev_auth bypasses JWT verification and returns a fixed dev user
+    # — the non-blocking path until Cognito is provisioned. The Cognito fields
+    # drive real verification once dev_auth is off.
+    dev_auth: bool
+    cognito_region: str | None
+    cognito_user_pool_id: str | None
+    cognito_client_id: str | None
 
     @classmethod
     def load(cls) -> "Settings":
         _load_dotenv_files_once()
         cors_raw = os.environ.get("CORS_ORIGINS") or _DEFAULT_CORS_ORIGINS
         timeout_raw = os.environ.get("REQUEST_TIMEOUT_S") or _DEFAULT_REQUEST_TIMEOUT_S
+        pool_id = os.environ.get("COGNITO_USER_POOL_ID") or None
         return cls(
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
             model_primary=os.environ.get(
@@ -54,7 +62,34 @@ class Settings:
             request_timeout_s=float(timeout_raw),
             cors_origins=_parse_cors_origins(cors_raw),
             database_url=os.environ.get("DATABASE_URL") or _DEFAULT_DATABASE_URL,
+            dev_auth=_parse_dev_auth(os.environ.get("DEV_AUTH"), pool_id),
+            cognito_region=os.environ.get("COGNITO_REGION") or None,
+            cognito_user_pool_id=pool_id,
+            cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
         )
+
+    @property
+    def cognito_issuer(self) -> str | None:
+        if not (self.cognito_region and self.cognito_user_pool_id):
+            return None
+        return (
+            f"https://cognito-idp.{self.cognito_region}.amazonaws.com/"
+            f"{self.cognito_user_pool_id}"
+        )
+
+    @property
+    def cognito_jwks_url(self) -> str | None:
+        issuer = self.cognito_issuer
+        return f"{issuer}/.well-known/jwks.json" if issuer else None
+
+
+def _parse_dev_auth(raw: str | None, pool_id: str | None) -> bool:
+    """DEV_AUTH explicit wins; otherwise default to dev auth when no Cognito
+    pool is configured (so local dev works with no token, prod with a pool
+    enforces real auth unless explicitly overridden)."""
+    if raw is not None:
+        return raw.strip().lower() in {"1", "true", "yes", "on"}
+    return pool_id is None
 
 
 def _parse_cors_origins(raw: str) -> list[str]:

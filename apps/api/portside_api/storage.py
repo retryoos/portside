@@ -96,6 +96,12 @@ class VoyageStore(Protocol):
         self, owner_user_id: str | None = None
     ) -> list[VesselSummary]: ...
 
+    async def ensure_user(self, user_id: str, email: str | None = None) -> None: ...
+
+    async def delete(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> bool: ...
+
 
 class InMemoryStore:
     """In-process dict implementation. No persistence (process restart clears it)."""
@@ -131,6 +137,13 @@ class InMemoryStore:
         self, owner_user_id: str | None = None
     ) -> list[VesselSummary]:
         return vessels_from_summaries(await self.list())
+
+    async def ensure_user(self, user_id: str, email: str | None = None) -> None:
+        return None  # no user table in the in-memory store
+
+    async def delete(self, voyage_id: str, owner_user_id: str | None = None) -> bool:
+        async with self._lock:
+            return self._voyages.pop(voyage_id, None) is not None
 
 
 class SqlVoyageStore:
@@ -221,3 +234,26 @@ class SqlVoyageStore:
         self, owner_user_id: str | None = None
     ) -> list[VesselSummary]:
         return vessels_from_summaries(await self.list(owner_user_id))
+
+    async def ensure_user(self, user_id: str, email: str | None = None) -> None:
+        async with self._sm() as session:
+            async with session.begin():
+                existing = await session.get(m.User, user_id)
+                if existing is None:
+                    session.add(m.User(id=user_id, email=email))
+                elif email and existing.email != email:
+                    existing.email = email
+
+    async def delete(self, voyage_id: str, owner_user_id: str | None = None) -> bool:
+        async with self._sm() as session:
+            async with session.begin():
+                voyage = await session.get(m.Voyage, voyage_id)
+                if voyage is None:
+                    return False
+                if (
+                    owner_user_id is not None
+                    and voyage.owner_user_id != owner_user_id
+                ):
+                    return False
+                await session.delete(voyage)
+                return True
