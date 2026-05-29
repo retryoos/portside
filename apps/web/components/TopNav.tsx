@@ -26,10 +26,10 @@ export default function TopNav() {
               src="/logo.png"
               alt=""
               aria-hidden
-              width={28}
-              height={28}
+              width={31}
+              height={31}
               priority
-              className="h-7 w-7"
+              className="h-[31px] w-[31px]"
             />
             Portside
           </Link>
