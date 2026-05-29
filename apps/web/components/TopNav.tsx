@@ -22,16 +22,16 @@ export default function TopNav() {
             href="/"
             className="flex items-center gap-2 text-h2 tracking-tight text-primary"
           >
+            Portside
             <Image
               src="/logo.png"
               alt=""
               aria-hidden
-              width={28}
-              height={28}
+              width={31}
+              height={31}
               priority
-              className="h-7 w-7"
+              className="h-[31px] w-[31px]"
             />
-            Portside
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {
