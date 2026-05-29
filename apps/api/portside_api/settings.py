@@ -20,6 +20,14 @@ _DEFAULT_MODEL_PRIMARY = "claude-sonnet-4-6"
 _DEFAULT_MODEL_ESCAPE = "claude-opus-4-7"
 _DEFAULT_REQUEST_TIMEOUT_S = "30"
 _DEFAULT_CORS_ORIGINS = "http://localhost:3000"
+# Local-dev default: a SQLite file next to the package. Production sets
+# DATABASE_URL to the Aurora Postgres URL (postgresql+asyncpg://...).
+_DEFAULT_DATABASE_URL = (
+    f"sqlite+aiosqlite:///{Path(__file__).resolve().parent.parent / 'portside.db'}"
+)
+# Local-dev object storage: a directory next to the package. Production sets
+# S3_BUCKET (uploaded PDFs go to S3 instead).
+_DEFAULT_OBJECTS_DIR = str(Path(__file__).resolve().parent.parent / "_objects")
 
 _LOADED = False
 
@@ -31,12 +39,33 @@ class Settings:
     model_escape: str
     request_timeout_s: float
     cors_origins: list[str]
+    database_url: str
+    # Auth (A2). dev_auth bypasses JWT verification and returns a fixed dev user
+    # — the non-blocking path until Cognito is provisioned. The Cognito fields
+    # drive real verification once dev_auth is off.
+    dev_auth: bool
+    cognito_region: str | None
+    cognito_user_pool_id: str | None
+    cognito_client_id: str | None
+    # Object storage (A3). S3 in production; a local directory otherwise.
+    s3_bucket: str | None
+    s3_region: str | None
+    s3_prefix: str
+    objects_dir: str
+    # A4: a voyage left in a non-terminal pipeline stage with no progress for
+    # this many seconds is treated as an interrupted run (its driving task died
+    # with a previous instance) and reaped to "error" on startup.
+    stale_run_seconds: int
+    # A7: when off, the research tools serve a committed offline fixture; when
+    # on, they may attempt a live API (seam for a real weather/calendar feed).
+    research_live: bool
 
     @classmethod
     def load(cls) -> "Settings":
         _load_dotenv_files_once()
         cors_raw = os.environ.get("CORS_ORIGINS") or _DEFAULT_CORS_ORIGINS
         timeout_raw = os.environ.get("REQUEST_TIMEOUT_S") or _DEFAULT_REQUEST_TIMEOUT_S
+        pool_id = os.environ.get("COGNITO_USER_POOL_ID") or None
         return cls(
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
             model_primary=os.environ.get(
@@ -47,7 +76,42 @@ class Settings:
             ),
             request_timeout_s=float(timeout_raw),
             cors_origins=_parse_cors_origins(cors_raw),
+            database_url=os.environ.get("DATABASE_URL") or _DEFAULT_DATABASE_URL,
+            dev_auth=_parse_dev_auth(os.environ.get("DEV_AUTH"), pool_id),
+            cognito_region=os.environ.get("COGNITO_REGION") or None,
+            cognito_user_pool_id=pool_id,
+            cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
+            s3_bucket=os.environ.get("S3_BUCKET") or None,
+            s3_region=os.environ.get("S3_REGION") or None,
+            s3_prefix=os.environ.get("S3_PREFIX") or "",
+            objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
+            stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),
+            research_live=(os.environ.get("RESEARCH_LIVE") or "").strip().lower()
+            in {"1", "true", "yes", "on"},
         )
+
+    @property
+    def cognito_issuer(self) -> str | None:
+        if not (self.cognito_region and self.cognito_user_pool_id):
+            return None
+        return (
+            f"https://cognito-idp.{self.cognito_region}.amazonaws.com/"
+            f"{self.cognito_user_pool_id}"
+        )
+
+    @property
+    def cognito_jwks_url(self) -> str | None:
+        issuer = self.cognito_issuer
+        return f"{issuer}/.well-known/jwks.json" if issuer else None
+
+
+def _parse_dev_auth(raw: str | None, pool_id: str | None) -> bool:
+    """DEV_AUTH explicit wins; otherwise default to dev auth when no Cognito
+    pool is configured (so local dev works with no token, prod with a pool
+    enforces real auth unless explicitly overridden)."""
+    if raw is not None:
+        return raw.strip().lower() in {"1", "true", "yes", "on"}
+    return pool_id is None
 
 
 def _parse_cors_origins(raw: str) -> list[str]:

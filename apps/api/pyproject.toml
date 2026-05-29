@@ -10,6 +10,12 @@ dependencies = [
     "anthropic",
     "pdfplumber",
     "python-multipart",
+    "sqlalchemy>=2",
+    "alembic",
+    "aiosqlite",
+    "asyncpg",
+    "pyjwt[crypto]>=2",
+    "boto3",
 ]
 
 [project.optional-dependencies]

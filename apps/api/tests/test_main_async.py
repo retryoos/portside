@@ -17,6 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from portside_api import main as main_mod
+from portside_api.objects import LocalObjectStore
 from portside_api.schemas import Perspective, VoyageState
 from portside_api.storage import InMemoryStore, VoyageStore
 
@@ -24,11 +25,15 @@ _VOYAGE_ID_RE = re.compile(r"^v_[0-9a-f]{12}$")
 
 
 @pytest.fixture(autouse=True)
-def fresh_store(monkeypatch: pytest.MonkeyPatch) -> Iterator[InMemoryStore]:
-    """Swap a fresh InMemoryStore in for every test (the module-level store
-    otherwise persists across tests and leaks state)."""
+def fresh_store(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> Iterator[InMemoryStore]:
+    """Swap a fresh InMemoryStore + a temp object store in for every test (the
+    module-level singletons otherwise persist across tests and leak state /
+    write PDFs into the package dir)."""
     store = InMemoryStore()
     monkeypatch.setattr(main_mod, "store", store)
+    monkeypatch.setattr(main_mod, "object_store", LocalObjectStore(tmp_path))  # type: ignore[arg-type]
     yield store
 
 
