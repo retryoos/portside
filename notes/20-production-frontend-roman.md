@@ -20,10 +20,10 @@ never wait on a backend merge.
 
 ## Your subphase PRs (each → `main`, disjoint files)
 - **C0 — Ops setup (FIRST; unblocks Panos).** Create the free **GitHub Education / Student Developer Pack** account; claim **Doppler free for 1 year** (+ other useful free tiers); share the Doppler workspace with the team. Record claims + expiry in a short note. *Accept:* team has a Doppler project + access.
-- **C1 — Edit with AI.** Add `revise()` to `lib/api.ts` (`POST /voyages/{id}/revise`; `ReviseRequest{segment_ids, segments}`/`ReviseResponse` already exist). Wire the existing `ReviseActions/ReviseLetter/RevisePrompt` into the **live** `ClaimScreen`, and call dkall's accept-persist endpoint (A5). *Accept:* live select → refine → accept → persists across reload + in the exported PDF.
+- **C1 — Edit with AI.** Add `revise()` to `lib/api.ts` (`POST /voyages/{id}/revise`; `ReviseRequest{segment_ids, segments}`/`ReviseResponse` already exist). Wire the existing `ReviseActions/ReviseLetter/RevisePrompt` into the **live** `ClaimScreen`, and call dkall's accept-persist endpoint (A5). *Accept:* live select → refine → accept → persists across reload + in the exported PDF. **Deep spec:** [new_features/01 — Edit with AI](new_features/01-edit-with-ai.md) (you own Phases 0, 1, 3).
 - **C2 — Auth UI.** `aws-amplify` Cognito sign-in/up/session; protect routes; account menu; attach JWT. Build vs the mock token until Panos publishes the pool. *Accept:* unauthed → redirect; authed sees only their voyages.
-- **C3 — Evidence tab (pairs A7).** Render `FlaggedEvent.evidence_required` + sourced evidence; fixture first.
-- **C4 — Both-sides toggle (pairs A6).** `Perspective` owner|charterer toggle in the case header; calls `/rebut`; shows the swing **84,375.00 → 76,875.00**.
+- **C3 — Evidence tab (pairs A7).** Add an Evidence panel to `SourcesTabs.tsx` listing each evidence item (source, observed value, who it supports, link); fixture first. **Deep spec:** [new_features/02 — Research agents](new_features/02-research-agents.md) (Phase 4).
+- **C4 — Both-sides toggle (pairs A6).** A "Defend / rebut" action on a completed case; calls `/rebut`; renders the `RebuttalPacket` (reduced quantum, conceded vs contested, points) reusing `ClaimLetter`/`OutcomeTable`; shows the swing **84,375.00 → 76,875.00**. **Deep spec:** [new_features/03 — Both sides](new_features/03-both-sides-defense.md) (Phase 4).
 - **C5 — Dashboards.** Real multi-user lists with loading / empty / error states + pagination on `/cases` and `/vessels`.
 - **C6 — Web tests (first in repo).** Playwright golden path (upload → done → letter) + Vitest components + an a11y / Lighthouse budget.
 - **C7 — Greek i18n toggle.** String-table extraction + a language toggle.
