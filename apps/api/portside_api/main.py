@@ -28,8 +28,10 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import pipeline, reviser
+from . import defense, pipeline, researcher, reviser
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
+from .defense import RebuttalPacket
+from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
 from .objects import (
@@ -323,6 +325,50 @@ async def apply_revision(
     updated = await store.patch(voyage_id, packet=new_packet)
     assert updated is not None  # load() above proved it exists
     return updated
+
+
+@app.post("/voyages/{voyage_id}/rebut")
+async def rebut_voyage(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> RebuttalPacket:
+    """Produce the charterer's rebuttal packet for one of the caller's voyages.
+
+    Numbers are deterministic — winning the contested rows drops the quantum
+    by ``contested_eur`` (e.g. the Rotterdam demo: 84,375.00 -> 76,875.00).
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.extraction is None or state.laytime is None or state.dispute is None:
+        raise HTTPException(
+            status_code=409, detail="voyage is not ready for rebuttal"
+        )
+    return await defense.build_rebuttal_packet(state)
+
+
+@app.get("/voyages/{voyage_id}/evidence")
+async def list_voyage_evidence(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> list[EvidenceItem]:
+    """Externally-sourced evidence for the caller's flagged events (lazy-gathered
+    on first read and cached). Currently weather observations for weather-
+    stoppage events; other tools plug in behind the same endpoint."""
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    cached = await store.list_evidence(voyage_id, user.id)
+    if cached:
+        return cached
+    if state.extraction is None or state.dispute is None:
+        raise HTTPException(
+            status_code=409, detail="voyage is not ready for evidence gathering"
+        )
+    bundle = await researcher.gather_evidence(state.extraction, state.dispute)
+    if bundle.items:
+        await store.record_evidence(voyage_id, bundle.items)
+    return bundle.items
 
 
 async def _run_pipeline_bg(

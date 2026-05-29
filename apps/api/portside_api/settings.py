@@ -56,6 +56,9 @@ class Settings:
     # this many seconds is treated as an interrupted run (its driving task died
     # with a previous instance) and reaped to "error" on startup.
     stale_run_seconds: int
+    # A7: when off, the research tools serve a committed offline fixture; when
+    # on, they may attempt a live API (seam for a real weather/calendar feed).
+    research_live: bool
 
     @classmethod
     def load(cls) -> "Settings":
@@ -83,6 +86,8 @@ class Settings:
             s3_prefix=os.environ.get("S3_PREFIX") or "",
             objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
             stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),
+            research_live=(os.environ.get("RESEARCH_LIVE") or "").strip().lower()
+            in {"1", "true", "yes", "on"},
         )
 
     @property

@@ -42,6 +42,7 @@ from .db.mapping import (
     update_orm_from_state,
 )
 from .objects import StoredDocument
+from .researcher import EvidenceItem
 from .schemas import VesselSummary, VoyageState, VoyageSummary
 
 
@@ -126,6 +127,14 @@ class VoyageStore(Protocol):
 
     async def reap_stale_processing(self, older_than_seconds: int) -> int: ...
 
+    async def record_evidence(
+        self, voyage_id: str, items: list[EvidenceItem]
+    ) -> None: ...
+
+    async def list_evidence(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[EvidenceItem]: ...
+
 
 class InMemoryStore:
     """In-process dict implementation. No persistence (process restart clears it)."""
@@ -133,6 +142,7 @@ class InMemoryStore:
     def __init__(self) -> None:
         self._voyages: dict[str, VoyageState] = {}
         self._documents: dict[str, list[StoredDocument]] = {}
+        self._evidence: dict[str, list[EvidenceItem]] = {}
         self._lock = asyncio.Lock()
 
     async def save(
@@ -169,6 +179,7 @@ class InMemoryStore:
     async def delete(self, voyage_id: str, owner_user_id: str | None = None) -> bool:
         async with self._lock:
             self._documents.pop(voyage_id, None)
+            self._evidence.pop(voyage_id, None)
             return self._voyages.pop(voyage_id, None) is not None
 
     async def record_documents(
@@ -184,6 +195,17 @@ class InMemoryStore:
 
     async def reap_stale_processing(self, older_than_seconds: int) -> int:
         return 0  # single-process, ephemeral: nothing to recover
+
+    async def record_evidence(
+        self, voyage_id: str, items: list[EvidenceItem]
+    ) -> None:
+        async with self._lock:
+            self._evidence.setdefault(voyage_id, []).extend(items)
+
+    async def list_evidence(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[EvidenceItem]:
+        return list(self._evidence.get(voyage_id, []))
 
 
 class SqlVoyageStore:
@@ -339,6 +361,51 @@ class SqlVoyageStore:
                 object_key=r.object_key,
                 content_type=r.content_type,
                 size_bytes=r.size_bytes,
+            )
+            for r in rows
+        ]
+
+    async def record_evidence(
+        self, voyage_id: str, items: list[EvidenceItem]
+    ) -> None:
+        async with self._sm() as session:
+            async with session.begin():
+                for it in items:
+                    session.add(
+                        m.VoyageEvidenceRow(
+                            voyage_id=voyage_id,
+                            event_id=it.event_id,
+                            source=it.source,
+                            observed_value=it.observed_value,
+                            supports=it.supports,
+                            citation=it.citation,
+                            summary=it.summary,
+                        )
+                    )
+
+    async def list_evidence(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[EvidenceItem]:
+        async with self._sm() as session:
+            if owner_user_id is not None:
+                voyage = await session.get(m.Voyage, voyage_id)
+                if voyage is None or voyage.owner_user_id != owner_user_id:
+                    return []
+            rows = (
+                await session.execute(
+                    select(m.VoyageEvidenceRow)
+                    .where(m.VoyageEvidenceRow.voyage_id == voyage_id)
+                    .order_by(m.VoyageEvidenceRow.id)
+                )
+            ).scalars().all()
+        return [
+            EvidenceItem(
+                event_id=r.event_id,
+                source=r.source,
+                observed_value=r.observed_value,
+                supports=r.supports,
+                citation=r.citation,
+                summary=r.summary,
             )
             for r in rows
         ]

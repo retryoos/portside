@@ -104,6 +104,13 @@ class Voyage(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    # External evidence gathered by the researcher (A7). Also off the rewrite
+    # path: gathered once, persisted, and returned on subsequent reads.
+    evidence: Mapped[list[VoyageEvidenceRow]] = relationship(
+        back_populates="voyage",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
 
 # --- extraction branch -----------------------------------------------------
@@ -506,6 +513,28 @@ class VoyageDocumentRow(Base):
     object_key: Mapped[str] = mapped_column(String)
     content_type: Mapped[str] = mapped_column(String)
     size_bytes: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+# --- gathered external evidence (A7) ---------------------------------------
+
+
+class VoyageEvidenceRow(Base):
+    __tablename__ = "voyage_evidence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    voyage_id: Mapped[str] = mapped_column(
+        ForeignKey("voyages.voyage_id", ondelete="CASCADE"), index=True
+    )
+    voyage: Mapped[Voyage] = relationship(back_populates="evidence")
+    event_id: Mapped[str] = mapped_column(String)
+    source: Mapped[str] = mapped_column(String)
+    observed_value: Mapped[str] = mapped_column(String)
+    supports: Mapped[str] = mapped_column(String)
+    citation: Mapped[str] = mapped_column(Text)
+    summary: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
