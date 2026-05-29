@@ -28,9 +28,10 @@ one transaction) so concurrent pipeline tasks never interleave field updates.
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol, runtime_checkable
 
-from sqlalchemy import select
+from sqlalchemy import exists, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .db import models as m
@@ -42,6 +43,13 @@ from .db.mapping import (
 )
 from .objects import StoredDocument
 from .schemas import VesselSummary, VoyageState, VoyageSummary
+
+
+# Non-terminal pipeline stages: a voyage here is mid-run. Past these it sits in
+# a human-driven lifecycle (done/pending/...) and no longer advances on its own.
+PROCESSING_STAGES: frozenset[str] = frozenset(
+    {"uploaded", "extracting", "calculating", "analyzing", "drafting"}
+)
 
 
 # --- shared projection helpers ---------------------------------------------
@@ -116,6 +124,8 @@ class VoyageStore(Protocol):
         self, voyage_id: str, owner_user_id: str | None = None
     ) -> list[StoredDocument]: ...
 
+    async def reap_stale_processing(self, older_than_seconds: int) -> int: ...
+
 
 class InMemoryStore:
     """In-process dict implementation. No persistence (process restart clears it)."""
@@ -172,6 +182,9 @@ class InMemoryStore:
     ) -> list[StoredDocument]:
         return list(self._documents.get(voyage_id, []))
 
+    async def reap_stale_processing(self, older_than_seconds: int) -> int:
+        return 0  # single-process, ephemeral: nothing to recover
+
 
 class SqlVoyageStore:
     """SQLAlchemy-async implementation of ``VoyageStore`` (SQLite or Postgres)."""
@@ -208,7 +221,12 @@ class SqlVoyageStore:
     async def patch(self, voyage_id: str, /, **fields: Any) -> VoyageState | None:
         async with self._sm() as session:
             async with session.begin():
-                existing = await session.get(m.Voyage, voyage_id)
+                # Lock the row for the read-modify-write so concurrent staged
+                # writers (across instances) can't lose updates. FOR UPDATE is a
+                # no-op on SQLite, which already serialises writes.
+                existing = await session.get(
+                    m.Voyage, voyage_id, with_for_update=True
+                )
                 if existing is None:
                     return None
                 updated = orm_to_state(existing).model_copy(update=fields)
@@ -324,3 +342,31 @@ class SqlVoyageStore:
             )
             for r in rows
         ]
+
+    async def reap_stale_processing(self, older_than_seconds: int) -> int:
+        """Mark interrupted real uploads as errored.
+
+        A voyage stuck in a non-terminal pipeline stage whose ``updated_at`` is
+        older than the threshold had its driving task die with a prior instance.
+        We only reap voyages that have uploaded documents, so the demo seeds
+        (which carry processing-like stages but no documents) are never touched,
+        and the threshold means an active run on another live instance — which
+        keeps advancing ``updated_at`` — is safe.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(seconds=older_than_seconds)
+        has_docs = exists().where(
+            m.VoyageDocumentRow.voyage_id == m.Voyage.voyage_id
+        )
+        stmt = (
+            update(m.Voyage)
+            .where(
+                m.Voyage.stage.in_(PROCESSING_STAGES),
+                m.Voyage.updated_at < cutoff,
+                has_docs,
+            )
+            .values(stage="error", error="processing interrupted")
+        )
+        async with self._sm() as session:
+            async with session.begin():
+                result = await session.execute(stmt)
+        return result.rowcount or 0

@@ -75,6 +75,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     up its own event loop, so run it off-thread to avoid nesting loops."""
     if isinstance(store, SqlVoyageStore):
         await asyncio.to_thread(run_migrations, settings.database_url)
+        # Recover runs interrupted by a prior instance/deploy (stuck in a
+        # non-terminal stage) so the UI doesn't poll them forever.
+        reaped = await store.reap_stale_processing(settings.stale_run_seconds)
+        if reaped:
+            logger.info("reaped %d interrupted voyage run(s) on startup", reaped)
         # The seeded demo voyages are owned by the dev user so they remain
         # visible under owner-scoping in dev (DEV_AUTH) mode.
         await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)

@@ -52,6 +52,10 @@ class Settings:
     s3_region: str | None
     s3_prefix: str
     objects_dir: str
+    # A4: a voyage left in a non-terminal pipeline stage with no progress for
+    # this many seconds is treated as an interrupted run (its driving task died
+    # with a previous instance) and reaped to "error" on startup.
+    stale_run_seconds: int
 
     @classmethod
     def load(cls) -> "Settings":
@@ -78,6 +82,7 @@ class Settings:
             s3_region=os.environ.get("S3_REGION") or None,
             s3_prefix=os.environ.get("S3_PREFIX") or "",
             objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
+            stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),
         )
 
     @property
