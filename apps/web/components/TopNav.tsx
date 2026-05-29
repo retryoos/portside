@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,7 +18,19 @@ export default function TopNav() {
     <header className="sticky top-0 z-20 border-b border-border bg-neutral/85 px-6 py-3.5 backdrop-blur-md md:px-8">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6">
         <div className="flex items-center gap-8">
-          <Link href="/" className="text-h2 tracking-tight text-primary">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-h2 tracking-tight text-primary"
+          >
+            <Image
+              src="/logo.png"
+              alt=""
+              aria-hidden
+              width={28}
+              height={28}
+              priority
+              className="h-7 w-7"
+            />
             Portside
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
