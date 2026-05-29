@@ -38,7 +38,7 @@ from .objects import (
     build_key,
     make_object_store,
 )
-from .reviser import ReviseRequest, ReviseResponse
+from .reviser import ApplyRevisionRequest, ReviseRequest, ReviseResponse
 from .schemas import (
     Perspective,
     StatusUpdate,
@@ -294,6 +294,35 @@ async def revise_voyage(
     if blocked:
         raise HTTPException(status_code=422, detail=response.model_dump())
     return response
+
+
+@app.post("/voyages/{voyage_id}/revise/apply")
+async def apply_revision(
+    voyage_id: str,
+    body: ApplyRevisionRequest,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> VoyageState:
+    """Persist accepted revisions into the stored packet so they survive a
+    reload and flow into the PDF export. The safety gate runs again here: a
+    rewrite that changed a monetary value or dropped a clause/event reference is
+    rejected (422) and never reaches the store.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None or state.packet is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+
+    new_packet, report, error = reviser.apply_revisions(
+        state.packet, body.surface, body.edits
+    )
+    if new_packet is None:
+        raise HTTPException(
+            status_code=422,
+            detail={"safety": report.model_dump(), "error": error},
+        )
+
+    updated = await store.patch(voyage_id, packet=new_packet)
+    assert updated is not None  # load() above proved it exists
+    return updated
 
 
 async def _run_pipeline_bg(
