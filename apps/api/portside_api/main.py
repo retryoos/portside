@@ -25,13 +25,19 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import pipeline, reviser
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
+from .objects import (
+    StoredDocument,
+    VoyageDocumentInfo,
+    build_key,
+    make_object_store,
+)
 from .reviser import ReviseRequest, ReviseResponse
 from .schemas import (
     Perspective,
@@ -50,6 +56,10 @@ logger = logging.getLogger("portside_api")
 # free; tests monkeypatch ``store`` with an InMemoryStore before startup.
 _engine = make_engine(settings.database_url)
 store: VoyageStore = SqlVoyageStore(make_sessionmaker(_engine))
+
+# Object storage for uploaded PDFs (S3 in prod, local dir otherwise). Tests
+# monkeypatch this with a LocalObjectStore pointed at a temp dir.
+object_store = make_object_store()
 
 # Hold strong references to in-flight background tasks. asyncio.create_task only
 # weakly references its task, so without this the pipeline task can be GC'd /
@@ -142,6 +152,20 @@ async def create_voyage(
         VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded"),
         owner_user_id=user.id,
     )
+    # Persist the uploaded PDFs to object storage and record their metadata.
+    documents: list[StoredDocument] = []
+    for role, data in files.items():
+        key = build_key(voyage_id, role, settings.s3_prefix)
+        await object_store.put(key, data, "application/pdf")
+        documents.append(
+            StoredDocument(
+                role=role,
+                object_key=key,
+                content_type="application/pdf",
+                size_bytes=len(data),
+            )
+        )
+    await store.record_documents(voyage_id, documents)
     # Fire-and-forget the pipeline; hold a strong reference until it completes.
     task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
     _BACKGROUND_TASKS.add(task)
@@ -170,6 +194,40 @@ async def delete_voyage(
     """Delete one of the caller's voyages. 404 if it is missing or not theirs."""
     if not await store.delete(voyage_id, user.id):
         raise HTTPException(status_code=404, detail="voyage not found")
+
+
+@app.get("/voyages/{voyage_id}/documents")
+async def list_voyage_documents(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> list[VoyageDocumentInfo]:
+    """Metadata for the caller's uploaded source PDFs (role, type, size)."""
+    if await store.load(voyage_id, user.id) is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    docs = await store.list_documents(voyage_id, user.id)
+    return [
+        VoyageDocumentInfo(
+            role=d.role, content_type=d.content_type, size_bytes=d.size_bytes
+        )
+        for d in docs
+    ]
+
+
+@app.get("/voyages/{voyage_id}/documents/{role}")
+async def download_voyage_document(
+    voyage_id: str,
+    role: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> Response:
+    """Stream one of the caller's uploaded PDFs back from object storage."""
+    docs = await store.list_documents(voyage_id, user.id)
+    match = next((d for d in docs if d.role == role), None)
+    if match is None:
+        raise HTTPException(status_code=404, detail="document not found")
+    data = await object_store.get(match.object_key)
+    if data is None:
+        raise HTTPException(status_code=404, detail="document bytes not found")
+    return Response(content=data, media_type=match.content_type)
 
 
 # Allowed human-driven lifecycle transitions once the pipeline is done. The

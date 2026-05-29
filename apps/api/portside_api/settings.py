@@ -25,6 +25,9 @@ _DEFAULT_CORS_ORIGINS = "http://localhost:3000"
 _DEFAULT_DATABASE_URL = (
     f"sqlite+aiosqlite:///{Path(__file__).resolve().parent.parent / 'portside.db'}"
 )
+# Local-dev object storage: a directory next to the package. Production sets
+# S3_BUCKET (uploaded PDFs go to S3 instead).
+_DEFAULT_OBJECTS_DIR = str(Path(__file__).resolve().parent.parent / "_objects")
 
 _LOADED = False
 
@@ -44,6 +47,11 @@ class Settings:
     cognito_region: str | None
     cognito_user_pool_id: str | None
     cognito_client_id: str | None
+    # Object storage (A3). S3 in production; a local directory otherwise.
+    s3_bucket: str | None
+    s3_region: str | None
+    s3_prefix: str
+    objects_dir: str
 
     @classmethod
     def load(cls) -> "Settings":
@@ -66,6 +74,10 @@ class Settings:
             cognito_region=os.environ.get("COGNITO_REGION") or None,
             cognito_user_pool_id=pool_id,
             cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
+            s3_bucket=os.environ.get("S3_BUCKET") or None,
+            s3_region=os.environ.get("S3_REGION") or None,
+            s3_prefix=os.environ.get("S3_PREFIX") or "",
+            objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
         )
 
     @property

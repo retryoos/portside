@@ -15,6 +15,7 @@ dependencies = [
     "aiosqlite",
     "asyncpg",
     "pyjwt[crypto]>=2",
+    "boto3",
 ]
 
 [project.optional-dependencies]

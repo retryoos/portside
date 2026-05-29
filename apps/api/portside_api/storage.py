@@ -34,7 +34,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from .db import models as m
-from .db.mapping import _ensure_utc, orm_to_state, state_to_orm
+from .db.mapping import (
+    _ensure_utc,
+    orm_to_state,
+    state_to_orm,
+    update_orm_from_state,
+)
+from .objects import StoredDocument
 from .schemas import VesselSummary, VoyageState, VoyageSummary
 
 
@@ -102,12 +108,21 @@ class VoyageStore(Protocol):
         self, voyage_id: str, owner_user_id: str | None = None
     ) -> bool: ...
 
+    async def record_documents(
+        self, voyage_id: str, documents: list[StoredDocument]
+    ) -> None: ...
+
+    async def list_documents(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[StoredDocument]: ...
+
 
 class InMemoryStore:
     """In-process dict implementation. No persistence (process restart clears it)."""
 
     def __init__(self) -> None:
         self._voyages: dict[str, VoyageState] = {}
+        self._documents: dict[str, list[StoredDocument]] = {}
         self._lock = asyncio.Lock()
 
     async def save(
@@ -143,7 +158,19 @@ class InMemoryStore:
 
     async def delete(self, voyage_id: str, owner_user_id: str | None = None) -> bool:
         async with self._lock:
+            self._documents.pop(voyage_id, None)
             return self._voyages.pop(voyage_id, None) is not None
+
+    async def record_documents(
+        self, voyage_id: str, documents: list[StoredDocument]
+    ) -> None:
+        async with self._lock:
+            self._documents.setdefault(voyage_id, []).extend(documents)
+
+    async def list_documents(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[StoredDocument]:
+        return list(self._documents.get(voyage_id, []))
 
 
 class SqlVoyageStore:
@@ -158,13 +185,14 @@ class SqlVoyageStore:
         async with self._sm() as session:
             async with session.begin():
                 existing = await session.get(m.Voyage, state.voyage_id)
-                owner = owner_user_id
-                if owner is None and existing is not None:
-                    owner = existing.owner_user_id
-                if existing is not None:
-                    await session.delete(existing)
-                    await session.flush()
-                session.add(state_to_orm(state, owner))
+                if existing is None:
+                    session.add(state_to_orm(state, owner_user_id))
+                else:
+                    # In-place update: replace the analysis branches, but keep
+                    # owner (unless explicitly set) and the uploaded documents.
+                    if owner_user_id is not None:
+                        existing.owner_user_id = owner_user_id
+                    update_orm_from_state(existing, state)
 
     async def load(
         self, voyage_id: str, owner_user_id: str | None = None
@@ -183,11 +211,9 @@ class SqlVoyageStore:
                 existing = await session.get(m.Voyage, voyage_id)
                 if existing is None:
                     return None
-                owner = existing.owner_user_id
                 updated = orm_to_state(existing).model_copy(update=fields)
-                await session.delete(existing)
-                await session.flush()
-                session.add(state_to_orm(updated, owner))
+                # In-place update preserves owner + documents (not in VoyageState).
+                update_orm_from_state(existing, updated)
             return updated
 
     async def list(self, owner_user_id: str | None = None) -> list[VoyageSummary]:
@@ -257,3 +283,44 @@ class SqlVoyageStore:
                     return False
                 await session.delete(voyage)
                 return True
+
+    async def record_documents(
+        self, voyage_id: str, documents: list[StoredDocument]
+    ) -> None:
+        async with self._sm() as session:
+            async with session.begin():
+                for d in documents:
+                    session.add(
+                        m.VoyageDocumentRow(
+                            voyage_id=voyage_id,
+                            role=d.role,
+                            object_key=d.object_key,
+                            content_type=d.content_type,
+                            size_bytes=d.size_bytes,
+                        )
+                    )
+
+    async def list_documents(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[StoredDocument]:
+        async with self._sm() as session:
+            if owner_user_id is not None:
+                voyage = await session.get(m.Voyage, voyage_id)
+                if voyage is None or voyage.owner_user_id != owner_user_id:
+                    return []
+            rows = (
+                await session.execute(
+                    select(m.VoyageDocumentRow)
+                    .where(m.VoyageDocumentRow.voyage_id == voyage_id)
+                    .order_by(m.VoyageDocumentRow.role)
+                )
+            ).scalars().all()
+        return [
+            StoredDocument(
+                role=r.role,
+                object_key=r.object_key,
+                content_type=r.content_type,
+                size_bytes=r.size_bytes,
+            )
+            for r in rows
+        ]

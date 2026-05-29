@@ -209,6 +209,29 @@ def state_to_orm(state: VoyageState, owner_user_id: str | None = None) -> m.Voya
     return voyage
 
 
+def update_orm_from_state(voyage: m.Voyage, state: VoyageState) -> None:
+    """Update an existing Voyage row in place: scalar fields + the four analysis
+    branches (replacing each via delete-orphan). Deliberately does NOT touch
+    ``owner_user_id`` or ``documents`` — those are preserved across the staged
+    pipeline saves/patches that rewrite the analysis tree."""
+    voyage.perspective = state.perspective
+    voyage.stage = state.stage
+    voyage.error = state.error
+    voyage.created_at = _ensure_utc(state.created_at)
+    voyage.extraction = (
+        _extraction_to_orm(state.extraction) if state.extraction is not None else None
+    )
+    voyage.laytime = (
+        _laytime_to_orm(state.laytime) if state.laytime is not None else None
+    )
+    voyage.dispute = (
+        _dispute_to_orm(state.dispute) if state.dispute is not None else None
+    )
+    voyage.packet = (
+        _packet_to_orm(state.packet) if state.packet is not None else None
+    )
+
+
 # --- ORM -> Pydantic -------------------------------------------------------
 
 

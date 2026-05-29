@@ -29,6 +29,9 @@ venv/
 *.db-shm
 *.db-wal
 
+# Local object storage (uploaded PDFs in dev)
+apps/api/_objects/
+
 # Node
 node_modules/
 .next/

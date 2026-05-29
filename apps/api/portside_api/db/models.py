@@ -96,6 +96,14 @@ class Voyage(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    # Uploaded source PDFs (A3). Kept off the content-rewrite path: save/patch
+    # only replace the four analysis branches, never the documents.
+    documents: Mapped[list[VoyageDocumentRow]] = relationship(
+        back_populates="voyage",
+        order_by="VoyageDocumentRow.role",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
 
 # --- extraction branch -----------------------------------------------------
@@ -481,3 +489,23 @@ class ClaimPacketDocumentRow(Base):
     )
     ord: Mapped[int] = mapped_column(Integer)
     value: Mapped[str] = mapped_column(Text)
+
+
+# --- uploaded source PDFs (A3) ---------------------------------------------
+
+
+class VoyageDocumentRow(Base):
+    __tablename__ = "voyage_documents"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    voyage_id: Mapped[str] = mapped_column(
+        ForeignKey("voyages.voyage_id", ondelete="CASCADE"), index=True
+    )
+    voyage: Mapped[Voyage] = relationship(back_populates="documents")
+    role: Mapped[str] = mapped_column(String)
+    object_key: Mapped[str] = mapped_column(String)
+    content_type: Mapped[str] = mapped_column(String)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
