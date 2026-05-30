@@ -18,11 +18,53 @@
 | --- | --- | --- |
 | AWS account with billing + IAM admin | Cognito, RDS, S3, App Runner, SES, CloudWatch | Panos |
 | AWS credits (sponsor or Activate Founders) | Aurora v2 is not free | Panos |
-| Domain (e.g. `papership.ai`) | Custom domain on Amplify + SES sender | Panos |
+| Domain (e.g. `papership.ai`) | Custom domain on the chosen frontend host + SES sender | Panos |
 | Doppler workspace | Single source of truth for secrets | Roman (via GitHub Education) |
 | GitHub admin on `retryoos/portside` | Service tokens, branch protections | Roman |
 | Sentry org (free tier OK) | API + web error reporting | Panos |
 | ANTHROPIC_API_KEY for prod | Already in use locally; cycle for prod | Panos |
+| Vercel account (free Hobby tier) | Pre-customer demo frontend | Roman |
+
+---
+
+## 0.5 Phasing: pre-customer demo vs first customer
+
+Two distinct deploys, two different toolchains. The product code is the same;
+the surrounding infrastructure differs.
+
+### Pre-customer demo (now)
+
+- **Frontend:** Vercel Hobby tier. Free, instant GitHub deploys, ~/.vercel/project
+  for env vars. Connect `apps/web`, set `NEXT_PUBLIC_API_URL` to the App Runner
+  URL, done.
+- **Backend:** AWS App Runner (Panos **P3**). Build from `apps/api/Dockerfile`
+  via `apprunner.yaml`. Public `/healthz`.
+- **Auth:** keep the `admin / admin` stub. `DEV_AUTH=1` on the backend. No
+  Cognito provisioned yet.
+- **Database:** SQLite (current default) is enough for a demo. If we want the
+  demo data to survive backend restarts, provision a small RDS instance early
+  and point `DATABASE_URL` at it; otherwise stay on SQLite.
+- **Object storage:** filesystem on App Runner's ephemeral disk is fine for a
+  demo. Voyage PDFs are not durable across restarts; that is acceptable until
+  a real customer arrives.
+- **Secrets:** raw env vars in App Runner + Vercel are acceptable for the demo.
+  Doppler is preferable but not blocking.
+- **Goal:** a public URL good enough to send to an investor or a prospect.
+
+### First paying customer (later)
+
+- **Frontend:** decide: stay on Vercel and attach the custom domain, or migrate
+  to AWS Amplify (Panos **P4**) for AWS-native ops. Vercel works long-term; the
+  Amplify migration is only worth doing if AWS-native is a hard requirement
+  (compliance, single-bill, VPC integration).
+- **Backend:** same App Runner service. Flip `DEV_AUTH=0`.
+- **Auth:** Cognito User Pool (**P1**). Frontend auth swap (Section 4 below).
+- **Database:** Aurora Serverless v2 (**P1**). `alembic upgrade head`.
+- **Object storage:** S3 (**P1**).
+- **Secrets:** Doppler (**P2**) is mandatory before any real keys touch
+  production.
+- **Hardening, CI/CD, observability:** required before billing (**P9**,
+  **P5**, **P6**).
 
 ---
 
@@ -200,23 +242,66 @@ These are not optional once a customer is paying:
 
 ---
 
-## 10. Order of operations summary
+## 10. Ranked subphase order
+
+Ordered by what we need NOW versus what waits for a paying customer. Items in
+each tier can be parallelised; tiers are sequential.
+
+### Tier 0 — Pre-customer demo (this week)
+
+1. **Vercel frontend deploy.** Hobby tier, connect `apps/web`, point
+   `NEXT_PUBLIC_API_URL` at the App Runner URL. Half a day.
+2. **P3 — App Runner backend deploy.** Build from the existing `Dockerfile`
+   and `apprunner.yaml`. Env vars set in App Runner directly. `DEV_AUTH=1`,
+   admin/admin auth stays on. Half a day.
+3. **P9 (minimum slice) — basic upload limits.** Cap upload size, restrict to
+   `application/pdf`. The full hardening waits for Tier 2. Half a day.
+4. **P6 (minimum slice) — basic Sentry on both apps.** So we see the demo
+   crashing in front of an investor before they tell us. Half a day.
+
+### Tier 1 — Right before / on first customer
+
+5. **P1 — Provision Cognito.** Pool + app client + JWKS. Half a day.
+6. **P1 — Provision RDS Aurora Serverless v2.** Cluster + DB. Half a day,
+   plus a couple of hours waiting for AWS.
+7. **P1 — Provision S3.** Bucket + IAM role for App Runner. Half a day.
+8. **P2 — Doppler.** Project + integrations for App Runner, Vercel (or
+   Amplify), GitHub Actions. Move every secret. Half a day.
+9. **Frontend auth swap.** Replace `credentials.ts` + `session.ts` with the
+   Cognito + JWKS variants per Section 4. Half a day of code + review.
+10. **Database migration on RDS.** `doppler run -- alembic upgrade head` once.
+    Five minutes.
+11. **Flip `DEV_AUTH=0`** on App Runner. Five minutes.
+12. **Customer onboarding.** Admin-create the customer in Cognito, walk them
+    through their first real voyage. One founder call.
+
+### Tier 2 — Must ship before any billing
+
+13. **P9 (full) — hardening.** Rate limits on login + voyages, pipeline
+    timeout audit, error taxonomy, DB backup policy. One day.
+14. **P5 — CI/CD.** GitHub Actions for lint + pytest + tsc on PR, deploy on
+    merge. Half a day.
+15. **P6 (full) — observability.** CloudWatch 5xx alarm to ops email,
+    structured logging, strip stray `print`/`console.log`. Half a day.
+
+### Tier 3 — First-customer-driven
+
+16. **P4 — Amplify migration (optional).** Only if AWS-native frontend is a
+    real requirement; Vercel is a fine permanent home otherwise. Half a day.
+17. **P7 — SES email send.** Only if the customer wants to mail filed claims
+    from the app. Half a day plus SES domain verification.
+18. **P8 — Excel export.** Only if the customer asks for spreadsheets. Half
+    a day.
+
+### End-to-end timing
 
 ```
-Cognito + RDS + S3      (Panos, 1 day)
-Doppler                 (Roman C0 + Panos P2, half a day)
-alembic upgrade head    (5 minutes)
-App Runner deploy       (Panos P3, half a day)
-Frontend auth swap      (Roman, half a day of code + review)
-Amplify deploy          (Panos P4, half a day)
-Customer onboarding     (founder call, 1 hour)
-CI/CD                   (Panos P5, half a day, can land after first customer)
-Observability           (Panos P6, half a day, MUST be before billing)
-Hardening               (Panos P9, 1 day, MUST be before billing)
-SES + Excel             (Panos P7/P8, 1 day, only if customer asks)
+Tier 0 (demo live)              ≈ 1.5 days
+Tier 1 (first customer ready)   ≈ 3 days
+Tier 2 (safe to bill)           ≈ 2 days
+Tier 3 (per customer ask)       ≈ 1-2 days each
 ```
 
-End-to-end minimum: about 4 working days if Cognito + RDS provision in
-parallel with the auth-swap code. The auth-swap PR can be drafted and
-reviewed against the dev Cognito pool before the prod pool exists, then
-re-pointed via env at cutover.
+The Tier 1 auth-swap PR can be drafted against the dev Cognito pool before the
+prod pool exists, then re-pointed via env at cutover. That keeps it off the
+critical path.
