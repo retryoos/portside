@@ -34,6 +34,7 @@ from .defense import RebuttalPacket
 from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
+from .limits import validate_and_read
 from .objects import (
     StoredDocument,
     VoyageDocumentInfo,
@@ -146,9 +147,9 @@ async def create_voyage(
     so the frontend's GET poll sees progress (uploaded -> ... -> done | error).
     """
     files = {
-        "cp": await cp.read(),
-        "nor": await nor.read(),
-        "sof": await sof.read(),
+        "cp": await validate_and_read(cp, role="cp"),
+        "nor": await validate_and_read(nor, role="nor"),
+        "sof": await validate_and_read(sof, role="sof"),
     }
 
     voyage_id = f"v_{uuid.uuid4().hex[:12]}"
