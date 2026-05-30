@@ -6,10 +6,8 @@ import ReviseActions from "@/components/ReviseActions";
 
 // Inline highlight-and-revise (DESIGN.md "Surfaces"). Self-contained CLIENT MOCK,
 // no backend revise endpoint. Renders the formal letter with ONE target sentence
-// (the weather argument). A floating quick-prompt is pre-filled; the original
-// sentence shows struck-through in danger; the replacement paragraph sits in an
-// amber-tinted block (full tint, no side stripe), citing The Mexico 1 + Rotterdam
-// Port Authority precipitation data. Accept / Reject toggles which version is live.
+// (the weather argument). The replacement sits in a white card with a hairline
+// ink border (no amber tint). Accept / Reject toggles which version is live.
 
 const ORIGINAL_SENTENCE =
   "The charterer claims a 4-hour weather stoppage on 17 May 2026; we consider that this time should count.";
@@ -26,10 +24,10 @@ export default function ReviseLetter() {
   const [state, setState] = useState<RevisionState>("pending");
 
   return (
-    <article className="rounded-xl border border-border bg-surface p-8 text-letter-body text-primary md:p-12">
-      <p className="text-label-caps text-secondary">To: Charterers</p>
+    <article className="rounded-card border border-border bg-surface px-8 py-10 text-letter-body text-primary md:px-14 md:py-14">
+      <p className="text-eyebrow text-secondary">To: Charterers</p>
 
-      <p className="mt-6">Dear Sirs,</p>
+      <p className="mt-10">Dear Sirs,</p>
 
       <p className="mt-4 font-semibold">
         Re: Demurrage Claim, MT Aegean Pioneer, Ras Tanura / Rotterdam, CP dated
@@ -50,10 +48,10 @@ export default function ReviseLetter() {
         <p className="mt-4">{REPLACEMENT_PARAGRAPH}</p>
       ) : (
         <div className="mt-4">
-          <p className="text-danger line-through">{ORIGINAL_SENTENCE}</p>
-          <div className="mt-3 rounded-lg bg-contested-container p-4">
-            <p className="text-label-caps text-contested">Suggested revision</p>
-            <p className="mt-2 text-primary">{REPLACEMENT_PARAGRAPH}</p>
+          <p className="text-secondary line-through">{ORIGINAL_SENTENCE}</p>
+          <div className="mt-4 rounded-md border border-border-strong bg-surface p-5">
+            <p className="text-eyebrow text-secondary">Suggested revision</p>
+            <p className="mt-3 text-primary">{REPLACEMENT_PARAGRAPH}</p>
           </div>
         </div>
       )}
@@ -71,11 +69,12 @@ export default function ReviseLetter() {
 
       {/* Floating quick-prompt + accept/reject, only while a revision is pending. */}
       {state === "pending" && (
-        <div className="sticky bottom-6 mt-10 rounded-xl border border-border bg-surface-muted p-4">
+        <div className="card-glass sticky bottom-6 mt-12 px-5 py-5">
           <RevisePrompt defaultValue={PROMPT_DEFAULT} />
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
             <p className="text-body-sm text-secondary">
-              The agent rewrote one sentence. Quantum and citations are preserved.
+              The agent rewrote one sentence. Quantum and citations are
+              preserved.
             </p>
             <ReviseActions
               onAccept={() => setState("accepted")}
@@ -86,7 +85,7 @@ export default function ReviseLetter() {
       )}
 
       {state !== "pending" && (
-        <div className="mt-10 flex items-center justify-between gap-4 rounded-xl bg-surface-muted p-4">
+        <div className="mt-12 flex items-center justify-between gap-4 rounded-md border border-border bg-surface-muted px-5 py-4">
           <p className="text-body-sm text-secondary">
             {state === "accepted"
               ? "Revision accepted. The letter now uses the strengthened weather argument."
@@ -95,7 +94,7 @@ export default function ReviseLetter() {
           <button
             type="button"
             onClick={() => setState("pending")}
-            className="rounded-full px-3.5 py-2 text-body-sm font-medium text-secondary transition-colors hover:text-primary"
+            className="rounded-pill px-4 py-2 text-body-sm font-semibold text-secondary transition-colors hover:text-primary"
           >
             Undo
           </button>
