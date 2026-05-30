@@ -1,4 +1,4 @@
-// Typed client for the Papership.Ai API (notes/04-schemas.md §6).
+// Typed client for the Laytimely API (notes/04-schemas.md §6).
 
 import type {
   Perspective,

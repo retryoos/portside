@@ -8,24 +8,29 @@ import { useState } from "react";
 // html2canvas (bundled in html2pdf.js) cannot parse oklch() colors and throws.
 // Our design tokens (app/theme.css) are oklch, so we redefine them as the sRGB
 // hex equivalents on the *cloned* capture document only. The on-screen UI keeps
-// its oklch colors; only the rasterized PDF sees rgb. Gradients are flattened to
-// a solid since they also carry oklch and never sit under the letter text.
-// `!important` defeats Tailwind v4's @theme cascade layer, which would otherwise
-// re-resolve the tokens to oklch even with our :root override appended later.
+// its oklch colors; only the rasterized PDF sees rgb. `!important` defeats
+// Tailwind v4's @theme cascade layer, which would otherwise re-resolve the
+// tokens to oklch even with our :root override appended later. Hex values are
+// the sRGB approximations of the new editorial palette in apps/web/DESIGN.md.
 const PDF_SAFE_TOKENS = `:root{
-  --color-primary:#1b1d20 !important;--color-on-primary:#f9fafb !important;
-  --color-secondary:#717378 !important;--color-neutral:#f8f9fa !important;
-  --color-surface:#fefeff !important;--color-surface-muted:#f3f4f6 !important;
-  --color-border:#e4e5e8 !important;--color-cta:#1b1d20 !important;
-  --color-on-cta:#f9fafb !important;--color-cta-hover:#313336 !important;
-  --color-accent:#4767d3 !important;--color-accent-container:#e6eeff !important;
-  --color-success:#318454 !important;--color-on-success:#f7fef9 !important;
-  --color-success-container:#e0f5e6 !important;--color-warning:#a36d24 !important;
-  --color-on-warning:#fffbf5 !important;--color-warning-container:#ffebce !important;
-  --color-contested:#a36d24 !important;--color-contested-container:#ffebce !important;
-  --color-danger:#c13c3b !important;--color-on-danger:#fff9f8 !important;
-  --color-danger-container:#ffe3df !important;
-  --gradient-warm:#e4e5e8 !important;--gradient-cool:#e4e5e8 !important;
+  --color-primary:#1f1f1f !important;--color-on-primary:#fbfbfb !important;
+  --color-secondary:#6d6e72 !important;--color-neutral:#fbfbfb !important;
+  --color-surface:#ffffff !important;--color-surface-muted:#f3f4f5 !important;
+  --color-border:#e5e5e8 !important;--color-border-strong:#cdcdd1 !important;
+  --color-cta:#1f1f1f !important;--color-on-cta:#fbfbfb !important;
+  --color-cta-hover:#404040 !important;
+  --color-cta-inverse:#ffffff !important;--color-on-cta-inverse:#1f1f1f !important;
+  --color-cta-inverse-hover:#ededee !important;
+  --color-accent:#585fcc !important;--color-accent-container:#edeffb !important;
+  --color-success:#258066 !important;--color-on-success:#f7fef9 !important;
+  --color-success-container:#dff1e1 !important;
+  --color-warning:#97640f !important;--color-on-warning:#fffbf5 !important;
+  --color-warning-container:#ffecd1 !important;
+  --color-contested:#97640f !important;--color-contested-container:#ffecd1 !important;
+  --color-danger:#c5371f !important;--color-on-danger:#fff9f8 !important;
+  --color-danger-container:#ffe2dd !important;
+  --color-glass-tint:#ffffff !important;--color-glass-tint-strong:#ffffff !important;
+  --color-glass-stroke:#e5e5e8 !important;
 }`;
 
 // Recursively walk every CSS rule in every same-origin stylesheet (including

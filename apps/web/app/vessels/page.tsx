@@ -2,8 +2,8 @@
 
 // SCREEN: Vessels dashboard. Lists every vessel from GET /vessels (voyages
 // grouped by vessel_name), newest activity first, each row linking to the
-// filtered detail at /vessels/<encoded name>. Loading/empty/error states mirror
-// the /cases dashboard.
+// filtered detail at /vessels/<encoded name>. Editorial header mirrors
+// /cases.
 import { useEffect, useState } from "react";
 import TopNav from "@/components/TopNav";
 import VesselsTable from "@/components/VesselsTable";
@@ -26,57 +26,57 @@ export default function VesselsDashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <TopNav />
-      <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
-        <div>
-          <h1 className="text-h1 text-primary">Vessels</h1>
-          <p className="mt-2 text-body text-secondary">
+      <main className="mx-auto max-w-[1100px] px-6 pb-24 md:px-8">
+        <section className="flex flex-col gap-6 pb-12 pt-8 md:pt-12">
+          <p className="text-eyebrow text-secondary">Fleet</p>
+          <h1 className="text-hero text-primary">Vessels.</h1>
+          <p className="max-w-xl text-body-lg text-secondary">
             Every vessel with a claim on file, most recent activity first.
           </p>
-        </div>
+        </section>
 
         {error && (
-          <p className="mt-6 rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
+          <p className="mb-8 rounded-card border border-danger/20 bg-danger-container px-5 py-4 text-body-sm text-danger">
             {error}
           </p>
         )}
 
-        <div className="mt-8">
-          {vessels === null && !error && (
-            <div
-              className="overflow-hidden rounded-xl border border-border bg-surface"
-              aria-busy="true"
-              aria-label="Loading vessels"
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 last:border-b-0"
-                >
-                  <div className="space-y-2">
-                    <div className="h-3.5 w-44 animate-pulse rounded-full bg-surface-muted" />
-                    <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-muted" />
-                  </div>
-                  <div className="h-3.5 w-24 animate-pulse rounded-full bg-surface-muted" />
+        {vessels === null && !error && (
+          <div
+            className="overflow-hidden rounded-card border border-border bg-surface"
+            aria-busy="true"
+            aria-label="Loading vessels"
+          >
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between gap-4 border-b border-border px-6 py-5 last:border-b-0"
+              >
+                <div className="space-y-2">
+                  <div className="h-3.5 w-44 animate-pulse rounded-full bg-surface-muted" />
+                  <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-muted" />
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="h-3.5 w-24 animate-pulse rounded-full bg-surface-muted" />
+              </div>
+            ))}
+          </div>
+        )}
 
-          {vessels !== null && vessels.length === 0 && (
-            <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center">
-              <p className="text-h2 text-primary">No vessels yet</p>
-              <p className="mx-auto mt-2 max-w-sm text-body-sm text-secondary">
-                Vessels appear here once a voyage claim has been started.
-              </p>
-            </div>
-          )}
+        {vessels !== null && vessels.length === 0 && (
+          <div className="rounded-card border border-border bg-surface px-8 py-20 text-center">
+            <p className="text-eyebrow text-secondary">Empty fleet</p>
+            <h2 className="text-h1 mt-4 text-primary">No vessels yet.</h2>
+            <p className="mx-auto mt-4 max-w-md text-body text-secondary">
+              Vessels appear here once a voyage claim has been started.
+            </p>
+          </div>
+        )}
 
-          {vessels !== null && vessels.length > 0 && (
-            <VesselsTable vessels={vessels} />
-          )}
-        </div>
+        {vessels !== null && vessels.length > 0 && (
+          <VesselsTable vessels={vessels} />
+        )}
       </main>
     </div>
   );

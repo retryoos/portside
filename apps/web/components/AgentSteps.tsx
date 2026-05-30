@@ -74,7 +74,7 @@ export default function AgentSteps({
 
   if (stage === "error") {
     return (
-      <div className="rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
+      <div className="rounded-card border border-danger/20 bg-danger-container px-5 py-4 text-body-sm text-danger">
         Pipeline error{error ? `: ${error}` : "."} Please retry the upload.
       </div>
     );
@@ -84,8 +84,8 @@ export default function AgentSteps({
   const activeFill = trickle.stage === stage ? trickle.value : 0;
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-6">
-      <p className="text-label-caps text-secondary">Drafting your claim</p>
+    <div className="rounded-card border border-border bg-surface px-7 py-7">
+      <p className="text-eyebrow text-secondary">Drafting your claim</p>
       <ol
         className="mt-5 flex flex-col gap-3 sm:grid sm:grid-cols-5 sm:gap-0"
         aria-label="Pipeline progress"
@@ -109,10 +109,10 @@ export default function AgentSteps({
               {!last && (
                 <span
                   aria-hidden="true"
-                  className="absolute top-[13px] hidden h-0.5 overflow-hidden bg-border sm:block"
+                  className="absolute top-[15px] hidden h-0.5 overflow-hidden bg-border sm:block"
                   style={{
-                    left: "calc(50% + 18px)",
-                    right: "calc(-50% + 18px)",
+                    left: "calc(50% + 22px)",
+                    right: "calc(-50% + 22px)",
                   }}
                 >
                   <span
@@ -123,12 +123,12 @@ export default function AgentSteps({
               )}
 
               <span
-                className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-body-sm font-semibold ${
+                className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-body-sm font-semibold ${
                   done
                     ? "bg-primary text-on-primary"
                     : active
-                      ? "bg-primary text-on-primary ring-4 ring-accent-container"
-                      : "border border-border bg-surface text-secondary"
+                      ? "bg-primary text-on-primary"
+                      : "border border-border-strong bg-surface text-secondary"
                 }`}
               >
                 {done ? "✓" : i + 1}

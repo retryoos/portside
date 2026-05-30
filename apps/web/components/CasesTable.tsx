@@ -33,10 +33,10 @@ export default function CasesTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      <div className="hidden grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 border-b border-border px-5 py-3 text-label-caps text-secondary md:grid">
+    <div className="overflow-hidden rounded-card border border-border bg-surface">
+      <div className="hidden grid-cols-[1.4fr_1.6fr_1fr_1fr_auto] gap-4 border-b border-border bg-surface-muted px-6 py-4 text-label-caps text-secondary md:grid">
         <span>Vessel</span>
-        <div className="flex justify-center">Route</div>
+        <span>Route</span>
         <span className="text-right">Quantum</span>
         <span className="text-right">Created</span>
         <span className="w-8" aria-hidden />
@@ -59,21 +59,21 @@ export default function CasesTable({
               className="relative border-b border-border last:border-b-0"
             >
               {/* Desktop ledger row */}
-              <div className="hidden grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-muted md:grid">
+              <div className="hidden grid-cols-[1.4fr_1.6fr_1fr_1fr_auto] items-center gap-4 px-6 py-5 transition-colors hover:bg-surface-muted md:grid">
                 <Link
                   href={`/cases/${v.id}`}
                   className="contents focus-visible:outline-none"
                   aria-label={`Open claim ${vessel}`}
                 >
                   <div>
-                    <div className="text-body text-primary">{vessel}</div>
-                    <div className="mt-0.5 text-label-caps capitalize text-secondary">
+                    <div className="text-body font-semibold text-primary">
+                      {vessel}
+                    </div>
+                    <div className="mt-1 text-label-caps capitalize text-secondary">
                       {v.perspective}
                     </div>
                   </div>
-                  <div className="flex justify-center text-body-sm text-secondary">
-                    {route}
-                  </div>
+                  <div className="text-body-sm text-secondary">{route}</div>
                   <span className="text-right text-body tabular-nums text-primary">
                     {quantum}
                   </span>
@@ -88,15 +88,17 @@ export default function CasesTable({
               </div>
 
               {/* Mobile stacked card */}
-              <div className="px-5 py-4 transition-colors hover:bg-surface-muted md:hidden">
+              <div className="px-5 py-5 transition-colors hover:bg-surface-muted md:hidden">
                 <div className="flex items-start justify-between gap-3">
                   <Link
                     href={`/cases/${v.id}`}
                     className="min-w-0 flex-1"
                     aria-label={`Open claim ${vessel}`}
                   >
-                    <div className="text-body text-primary">{vessel}</div>
-                    <div className="mt-0.5 text-label-caps capitalize text-secondary">
+                    <div className="text-body font-semibold text-primary">
+                      {vessel}
+                    </div>
+                    <div className="mt-1 text-label-caps capitalize text-secondary">
                       {v.perspective}
                     </div>
                   </Link>

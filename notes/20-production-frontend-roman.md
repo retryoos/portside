@@ -12,7 +12,7 @@ never wait on a backend merge.
 - **Build against contracts/mocks, never another track's running code.** Seams: `VoyageStore` Protocol, JWT claim contract (`sub` = user_id), `DATABASE_URL`, S3 bucket env, demo fixtures.
 - **`schemas.py` / `web/lib/types.ts` are FROZEN.** New field = single author, announce first, mirror both sides.
 - **Two gates never break:** owner `== 84375.0`; charterer `== 76875.0`. Offline `web/public/demo-fixture.json` always works.
-- **Stack (AWS credits + sponsor):** Cognito · Aurora Serverless v2 Postgres · S3 · Doppler. Not Supabase/Clerk. Deploy owned by Panos.
+- **Stack (AWS credits + sponsor):** Cognito · Aurora Serverless v2 Postgres · S3 · Doppler. Not Supabase/Clerk. Deploy owned by Panos. **Pre-customer frontend host is Vercel Hobby**, not Amplify; the `aws-amplify` JS SDK used in C2 is the Cognito client and is host-agnostic, so this is purely a hosting choice. AWS Amplify hosting is Tier 3 / optional, see [first_customer_checklist.md](first_customer_checklist.md).
 
 ## Contracts you consume
 - **JWT:** attach the token to API calls; build against a **DEV mock token** until Panos publishes the Cognito client ID / Amplify config.

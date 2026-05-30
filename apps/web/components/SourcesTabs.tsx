@@ -38,11 +38,11 @@ export default function SourcesTabs({
   const documents = voyage.packet?.supporting_documents ?? [];
 
   return (
-    <section className="rounded-xl border border-border bg-surface p-5">
+    <section className="rounded-card border border-border bg-surface p-6">
       <div
         role="tablist"
         aria-label="Claim evidence"
-        className="flex gap-1 rounded-full bg-surface-muted p-1"
+        className="flex gap-1 rounded-pill bg-surface-muted p-1"
       >
         {TABS.map((t) => {
           const selected = active === t.id;
@@ -53,9 +53,9 @@ export default function SourcesTabs({
               type="button"
               aria-selected={selected}
               onClick={() => setActive(t.id)}
-              className={`flex-1 rounded-full px-4 py-1.5 text-label-caps transition-colors ${
+              className={`flex-1 rounded-pill px-4 py-2 text-label-caps transition-colors ${
                 selected
-                  ? "bg-surface text-primary"
+                  ? "bg-primary text-on-primary"
                   : "text-secondary hover:text-primary"
               }`}
             >
@@ -65,7 +65,7 @@ export default function SourcesTabs({
         })}
       </div>
 
-      <div className="mt-5">
+      <div className="mt-6">
         {active === "calculation" && (
           <div className="space-y-5">
             <LaytimeSummary laytime={voyage.laytime} loading={!readyLaytime} />

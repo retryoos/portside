@@ -1,15 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Wordmark from "@/components/Wordmark";
 
-// Top app bar (DESIGN.md "Layout"): "Papership.Ai" wordmark + pill nav tabs, active
-// tab a soft-gray pill. Shared chrome across every screen. The right-side chip
-// is the account menu (display name + Sign out); it fetches the current user
-// from /api/auth/me on mount. Back navigation on detail pages is handled by
-// the floating BackArrowButton component placed in the page content, not here.
+// Top app bar (DESIGN.md "Layout"): Laytimely wordmark on the left, pill nav
+// tabs centred, account chip on the right. Shared chrome across every screen.
+// Back navigation on detail pages is handled by BackArrowButton in the page
+// content, not here.
 const NAV = [
   { label: "Demurrage claim", href: "/cases" },
   { label: "Doc 2", href: "/doc-2" },
@@ -26,23 +25,11 @@ export default function TopNav() {
   const pathname = usePathname() ?? "";
 
   return (
-    <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-surface px-6 py-3.5 md:px-8">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6">
-        <div className="flex items-center gap-6 md:gap-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-h2 tracking-tight text-primary"
-          >
-            <Image
-              src="/logo.png"
-              alt=""
-              aria-hidden
-              width={36}
-              height={36}
-              priority
-              className="h-[36px] w-[36px]"
-            />
-            Papership.Ai
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-neutral/85 px-6 py-4 backdrop-blur md:px-8">
+      <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6">
+        <div className="flex items-center gap-8 md:gap-10">
+          <Link href="/" className="text-primary" aria-label="Laytimely home">
+            <Wordmark size="sm" />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {
@@ -53,10 +40,10 @@ export default function TopNav() {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-full px-3.5 py-1.5 text-body-sm font-medium transition-colors ${
+                  className={`rounded-pill px-4 py-2 text-body-sm font-semibold transition-colors ${
                     active
-                      ? "bg-surface-muted text-primary"
-                      : "text-secondary hover:bg-surface-muted/70 hover:text-primary"
+                      ? "bg-primary text-on-primary"
+                      : "text-secondary hover:bg-surface-muted hover:text-primary"
                   }`}
                 >
                   {item.label}
@@ -126,8 +113,10 @@ function AccountMenu() {
 
   // No user yet. Render an empty same-size slot so the header doesn't reflow.
   if (!user) {
-    return <div aria-hidden className="h-9 w-9" />;
+    return <div aria-hidden className="h-10 w-10" />;
   }
+
+  const initial = user.name.slice(0, 1).toUpperCase();
 
   return (
     <div ref={containerRef} className="relative">
@@ -137,30 +126,36 @@ function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className={`flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors ${
+        className={`flex h-10 items-center gap-2.5 rounded-pill border border-border-strong bg-surface px-3 text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted ${
           open ? "bg-surface-muted" : ""
         }`}
       >
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[0.75rem] font-semibold text-on-primary">
+          {initial}
+        </span>
+        <span className="hidden md:inline">{user.name}</span>
         <svg
           aria-hidden
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3.5 w-3.5 text-secondary"
         >
-          {/* Head + shoulders silhouette. Single rounded path, fills with
-              currentColor so it inherits the button's text-primary (near-black). */}
-          <path d="M12 12.5a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5zm0 1.75c-3.4 0-8.5 1.7-8.5 5.1V21h17v-1.65c0-3.4-5.1-5.1-8.5-5.1z" />
+          <path d="m4 6 4 4 4-4" />
         </svg>
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-xl border border-border bg-surface py-1.5 shadow-[0_4px_24px_rgba(0,0,0,0.06)]"
+          className="absolute right-0 z-30 mt-2 w-60 overflow-hidden rounded-card border border-border bg-surface py-2 shadow-card"
         >
-          <div className="px-3 py-2">
-            <p className="text-label-caps text-secondary">Signed in as</p>
-            <p className="mt-0.5 truncate text-body-sm font-medium text-primary">
+          <div className="px-4 py-2">
+            <p className="text-eyebrow text-secondary">Signed in as</p>
+            <p className="mt-1 truncate text-body-sm font-semibold text-primary">
               {user.name}
             </p>
           </div>
@@ -170,7 +165,7 @@ function AccountMenu() {
             role="menuitem"
             onClick={handleSignOut}
             disabled={signingOut}
-            className="block w-full px-3 py-2 text-left text-body-sm text-primary transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
+            className="block w-full px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
           >
             {signingOut ? "Signing out…" : "Sign out"}
           </button>

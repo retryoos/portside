@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import LiquidBackground from "@/components/LiquidBackground";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://laytimely.com";
+
 export const metadata: Metadata = {
-  title: "Papership.Ai: Demurrage & Laytime Resolution",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Laytimely · Recover the demurrage you're owed",
+    template: "%s · Laytimely",
+  },
   description:
-    "One voyage document bundle in. One legally-structured demurrage claim packet out.",
+    "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
 };
 
 export default function RootLayout({
@@ -19,14 +24,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body>
-        <LiquidBackground />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

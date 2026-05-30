@@ -26,18 +26,20 @@ export default function LaytimeSummary({
 
   return (
     <Reveal ready>
-      <div className="rounded-lg bg-surface-muted p-5">
-        <p className="text-label-caps text-secondary">Calculation summary</p>
-        <dl className="mt-4 divide-y divide-border">
+      <div className="rounded-md bg-surface-muted p-5">
+        <p className="text-eyebrow text-secondary">Calculation summary</p>
+        <dl className="mt-5 divide-y divide-border">
           {rows.map((r) => (
-            <div key={r.label} className="flex items-baseline justify-between py-2">
+            <div key={r.label} className="flex items-baseline justify-between py-2.5">
               <dt className="text-body-sm text-secondary">{r.label}</dt>
-              <dd className="text-body-sm text-primary">{r.value}</dd>
+              <dd className="text-body-sm tabular-nums text-primary">{r.value}</dd>
             </div>
           ))}
-          <div className="flex items-baseline justify-between pt-3">
+          <div className="flex items-baseline justify-between pt-4">
             <dt className="text-h3 text-primary">Demurrage due</dt>
-            <dd className="text-h3 text-primary">{formatEur(lt.demurrage_due_eur)}</dd>
+            <dd className="text-h3 tabular-nums text-primary">
+              {formatEur(lt.demurrage_due_eur)}
+            </dd>
           </div>
         </dl>
       </div>
@@ -47,7 +49,7 @@ export default function LaytimeSummary({
 
 function LaytimeSummarySkeleton() {
   return (
-    <div className="rounded-lg bg-surface-muted p-5">
+    <div className="rounded-md bg-surface-muted p-5">
       <div className="h-3 w-32 rounded animate-shimmer" />
       <div className="mt-4 divide-y divide-border">
         {[0, 1, 2, 3].map((i) => (

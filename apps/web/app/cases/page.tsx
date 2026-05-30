@@ -2,8 +2,8 @@
 
 // SCREEN 0: Cases dashboard (the app's home; / redirects here). Lists every
 // voyage from GET /voyages newest-first, each row linking to /cases/<id>. The
-// "New claim" button reveals the shared <Dropzone/> (live upload +
-// "Try the demo voyage"); empty and error states are handled inline.
+// "New voyage claim" button reveals the shared <Dropzone/>. Empty and error
+// states render inline.
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TopNav from "@/components/TopNav";
@@ -35,7 +35,6 @@ export default function CasesDashboardPage() {
       setError(null);
       setCreateBusy(true);
       try {
-        // Single-perspective product: every claim is filed from the owner's side.
         const id = await createVoyage(files, "owner");
         router.push(`/cases/${id}`);
       } catch (e) {
@@ -47,98 +46,93 @@ export default function CasesDashboardPage() {
   );
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <TopNav />
-      <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
-        {/* Hero */}
-        <section className="relative overflow-hidden rounded-xl border border-border bg-surface px-7 py-9 md:px-10">
-          <div className="relative flex flex-wrap items-end justify-between gap-5">
-            <div className="max-w-xl">
-              <h1 className="text-display text-primary">Demurrage claim</h1>
-              <p className="mt-3 text-body text-secondary">
-                Drop in your voyage bundle and generate your demurrage
-                claim within a minute.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowUpload((s) => !s)}
-                aria-expanded={showUpload}
-                className="rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover"
-              >
-                {showUpload ? "Close" : "New claim"}
-              </button>
-            </div>
+      <main className="mx-auto max-w-[1100px] px-6 pb-24 md:px-8">
+        {/* Editorial header: eyebrow + hero headline + body + primary CTA.
+            No card, no shader, no orb. The headline carries the page. */}
+        <section className="flex flex-col gap-10 pb-12 pt-8 md:flex-row md:items-end md:justify-between md:gap-16 md:pt-12">
+          <div className="max-w-2xl">
+            <p className="text-eyebrow text-secondary">Demurrage workspace</p>
+            <h1 className="text-hero mt-4 text-primary">Voyage cases.</h1>
+            <p className="mt-6 max-w-xl text-body-lg text-secondary">
+              Drop in your three voyage documents and Laytimely drafts a
+              cited, defensible demurrage claim in under a minute.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center">
+            <button
+              type="button"
+              onClick={() => setShowUpload((s) => !s)}
+              aria-expanded={showUpload}
+              className="btn-lift rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
+            >
+              {showUpload ? "Close upload" : "New voyage claim"}
+            </button>
           </div>
         </section>
 
         {showUpload && (
-          <div className="mt-5">
+          <div className="pb-8">
             <Dropzone onSubmit={handleSubmit} busy={createBusy} />
           </div>
         )}
 
         {error && (
-          <p className="mt-5 rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
+          <p className="mb-8 rounded-card border border-danger/20 bg-danger-container px-5 py-4 text-body-sm text-danger">
             {error}
           </p>
         )}
 
-        <div className="mt-6">
-          {voyages === null && !error && (
-            <div
-              className="overflow-hidden rounded-xl border border-border bg-surface"
-              aria-busy="true"
-              aria-label="Loading voyages"
-            >
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 last:border-b-0"
-                >
-                  <div className="space-y-2">
-                    <div className="h-3.5 w-44 animate-pulse rounded-full bg-surface-muted" />
-                    <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-muted" />
-                  </div>
-                  <div className="h-3.5 w-24 animate-pulse rounded-full bg-surface-muted" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {voyages !== null && voyages.length === 0 && (
-            <div className="relative overflow-hidden rounded-xl border border-border bg-surface px-6 py-16 text-center">
+        {voyages === null && !error && (
+          <div
+            className="overflow-hidden rounded-card border border-border bg-surface"
+            aria-busy="true"
+            aria-label="Loading voyages"
+          >
+            {[0, 1, 2].map((i) => (
               <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-1/2 top-0 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-cool opacity-50 blur-3xl"
-              />
-              <div className="relative">
-                <p className="text-h2 text-primary">No voyage cases yet</p>
-                <p className="mx-auto mt-2 max-w-sm text-body-sm text-secondary">
-                  Start a new claim from your three voyage documents, or try the
-                  demo voyage to see a finished claim end to end.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowUpload(true)}
-                  className="mt-6 rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover"
-                >
-                  New claim
-                </button>
+                key={i}
+                className="flex items-center justify-between gap-4 border-b border-border px-6 py-5 last:border-b-0"
+              >
+                <div className="space-y-2">
+                  <div className="h-3.5 w-44 animate-pulse rounded-full bg-surface-muted" />
+                  <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-muted" />
+                </div>
+                <div className="h-3.5 w-24 animate-pulse rounded-full bg-surface-muted" />
               </div>
-            </div>
-          )}
+            ))}
+          </div>
+        )}
 
-          {voyages !== null && voyages.length > 0 && (
-            <CasesTable
-              voyages={voyages}
-              onDeleted={(id) =>
-                setVoyages((prev) => (prev ? prev.filter((v) => v.id !== id) : prev))
-              }
-            />
-          )}
-        </div>
+        {voyages !== null && voyages.length === 0 && (
+          <div className="rounded-card border border-border bg-surface px-8 py-20 text-center">
+            <p className="text-eyebrow text-secondary">No cases yet</p>
+            <h2 className="text-h1 mt-4 text-primary">
+              Three documents in. A finished claim out.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-body text-secondary">
+              Start a new claim from your three voyage documents, or try the
+              demo voyage to see a finished claim end to end.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowUpload(true)}
+              className="btn-lift mt-8 rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
+            >
+              New voyage claim
+            </button>
+          </div>
+        )}
+
+        {voyages !== null && voyages.length > 0 && (
+          <CasesTable
+            voyages={voyages}
+            onDeleted={(id) =>
+              setVoyages((prev) => (prev ? prev.filter((v) => v.id !== id) : prev))
+            }
+          />
+        )}
       </main>
     </div>
   );

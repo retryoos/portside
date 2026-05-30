@@ -1,7 +1,5 @@
-// Floating circular back button for detail pages. Glass-styled (bg-surface
-// picks up the global frosted-glass treatment from globals.css), with a
-// centred chevron-left icon. Placed in the page content top-left area, not
-// inside the TopNav.
+// Floating circular back button for detail pages. Pure white surface with a
+// thin border-strong hairline; the global focus-visible ring covers focus.
 
 import Link from "next/link";
 
@@ -15,7 +13,7 @@ export default function BackArrowButton({ href }: BackArrowButtonProps) {
     <Link
       href={href}
       aria-label="Back"
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-[0_1px_3px_rgba(0,0,0,0.04)] transition-colors hover:bg-surface-muted"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-pill border border-border-strong bg-surface text-primary transition-colors hover:bg-surface-muted"
     >
       <svg
         aria-hidden="true"

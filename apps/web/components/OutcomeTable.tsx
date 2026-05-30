@@ -31,7 +31,7 @@ export default function OutcomeTable({ outcome }: { outcome: CaseOutcome }) {
   return (
     <section>
       <h2 className="text-label-caps text-secondary">Outcome</h2>
-      <div className="mt-4 rounded-xl border border-border bg-surface px-6 py-2">
+      <div className="mt-4 rounded-card border border-border bg-surface px-6 py-2">
         <Row label="Original claim" value={formatEur(outcome.original_claim_eur)} />
         <Row label="Settled at" value={formatEur(outcome.settled_eur)} />
         <Row

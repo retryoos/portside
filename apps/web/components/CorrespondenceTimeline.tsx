@@ -20,9 +20,9 @@ export default function CorrespondenceTimeline({
               {formatDate(item.date)}
             </time>
             <div
-              className={`flex-1 rounded-xl border p-5 ${
+              className={`flex-1 rounded-card border p-5 ${
                 item.settled
-                  ? "border-transparent bg-success-container"
+                  ? "border-success/20 bg-success-container"
                   : "border-border bg-surface"
               }`}
             >

@@ -1,65 +1,72 @@
-/* Papership.Ai design tokens -> Tailwind v4 theme.
-   Source of truth: apps/web/DESIGN.md (ElevenLabs-derived clean-product palette).
-   Every Tailwind class in components must map to a token here, no raw hex.
-   Colours are OKLCH and tinted toward a faint cool hue, never pure black/white. */
+/* Laytimely design tokens -> Tailwind v4 theme.
+   Source of truth: apps/web/DESIGN.md.
+
+   Direction: editorial Revolut-grade. Un-tinted neutrals, pure ink + pure
+   off-white, indigo retired to focus-ring-only. No alpha on surface tokens
+   anymore: the frosted-glass effect is reserved for the card-glass component
+   (over photography), not for every card. Gradient orbs removed entirely. */
 
 @theme {
-  /* Neutrals: cool-tinted, near-monochrome */
-  --color-primary: oklch(0.23 0.006 265); /* ink near-black: text + CTA fill */
-  --color-on-primary: oklch(0.985 0.002 265);
-  --color-secondary: oklch(0.556 0.008 265); /* muted gray: metadata, labels */
-  --color-neutral: oklch(0.981 0.002 265); /* page background, soft cool white */
-  /* Surface tokens carry alpha so cards read as glass over the LiquidBackground
-     water. globals.css adds a backdrop-filter on .bg-surface / .bg-surface-muted
-     so the water behind is blurred -> frosted-glass effect. */
-  --color-surface: oklch(0.997 0.001 265 / 0.65); /* white glass: cards / sheets */
-  --color-surface-muted: oklch(0.966 0.003 265 / 0.65); /* soft-gray glass panels */
-  --color-border: oklch(0.922 0.004 265); /* hairlines, dividers */
+  /* Neutrals: un-tinted near-monochrome */
+  --color-primary: oklch(0.15 0 0); /* near-black ink: text + CTA fill */
+  --color-on-primary: oklch(0.99 0 0);
+  --color-secondary: oklch(0.46 0.005 265); /* muted gray: metadata, labels */
+  --color-neutral: oklch(0.985 0 0); /* page background, stark off-white */
+  --color-surface: oklch(1 0 0); /* pure white cards / sheets */
+  --color-surface-muted: oklch(0.965 0.003 265); /* very faint gray panels */
+  --color-border: oklch(0.91 0.004 265); /* hairlines, dividers */
+  --color-border-strong: oklch(0.82 0.005 265); /* outline buttons */
 
-  /* Action */
-  --color-cta: oklch(0.23 0.006 265);
-  --color-on-cta: oklch(0.985 0.002 265);
-  --color-cta-hover: oklch(0.32 0.006 265);
+  /* CTA palette: ink-on-white and its inverse for over-photo / over-dark */
+  --color-cta: oklch(0.15 0 0);
+  --color-on-cta: oklch(0.99 0 0);
+  --color-cta-hover: oklch(0.28 0 0);
+  --color-cta-inverse: oklch(1 0 0);
+  --color-on-cta-inverse: oklch(0.15 0 0);
+  --color-cta-inverse-hover: oklch(0.93 0.003 265);
 
-  /* Accent: a single restrained indigo, used sparingly (links, focus, one dot) */
+  /* Accent: indigo. Focus rings ONLY. Never on a CTA, link, or dot. */
   --color-accent: oklch(0.55 0.17 268);
   --color-accent-container: oklch(0.95 0.03 268);
 
-  /* Semantic status (claim lifecycle), tuned calm and slightly desaturated */
-  --color-success: oklch(0.55 0.11 155);
+  /* Semantic status (claim lifecycle), calm */
+  --color-success: oklch(0.5 0.12 155);
   --color-on-success: oklch(0.99 0.01 155);
-  --color-success-container: oklch(0.95 0.03 155);
-  --color-warning: oklch(0.58 0.11 70);
+  --color-success-container: oklch(0.94 0.04 155);
+  --color-warning: oklch(0.55 0.13 70);
   --color-on-warning: oklch(0.99 0.01 70);
-  --color-warning-container: oklch(0.95 0.045 75);
-  --color-contested: oklch(0.58 0.11 70);
-  --color-contested-container: oklch(0.95 0.045 75);
-  --color-danger: oklch(0.55 0.17 25);
+  --color-warning-container: oklch(0.94 0.05 75);
+  --color-contested: oklch(0.55 0.13 70);
+  --color-contested-container: oklch(0.94 0.05 75);
+  --color-danger: oklch(0.52 0.18 25);
   --color-on-danger: oklch(0.99 0.01 25);
-  --color-danger-container: oklch(0.94 0.035 25);
+  --color-danger-container: oklch(0.94 0.045 25);
+
+  /* Glass tints: ONLY for card-glass over photography. No bg-surface alpha. */
+  --color-glass-tint: oklch(1 0 0 / 0.55);
+  --color-glass-tint-strong: oklch(1 0 0 / 0.78);
+  --color-glass-stroke: oklch(1 0 0 / 0.32);
 
   /* Fonts: Inter carries display + UI; JetBrains Mono only for dense numerics */
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Radii: pill chrome (full) + large soft cards */
+  /* Radii: pill chrome, large soft cards, dramatic glass corners */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-card: 20px;
+  --radius-glass: 24px;
+  --radius-pill: 9999px;
 
-  /* Decorative gradients (ElevenLabs orbs). Used as media/accents, never on text. */
-  --gradient-warm: linear-gradient(
-    135deg,
-    oklch(0.84 0.12 70),
-    oklch(0.72 0.16 25),
-    oklch(0.63 0.16 305)
-  );
-  --gradient-cool: linear-gradient(
-    135deg,
-    oklch(0.8 0.12 250),
-    oklch(0.82 0.09 200),
-    oklch(0.84 0.1 150)
-  );
+  /* Shadows: barely-there card, one dramatic glass, indigo focus ring */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px -16px rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 24px 80px -24px rgba(0, 0, 0, 0.28);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.1, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 320ms;
 }

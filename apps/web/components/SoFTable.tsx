@@ -40,20 +40,20 @@ export default function SoFTable({
     flagged.find((f) => f.event_id === eventId);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div className="overflow-hidden rounded-md border border-border">
       <table className="w-full border-collapse text-mono">
         <thead>
           <tr className="border-b border-border bg-surface-muted">
-            <th className="px-3 py-2.5 text-left text-label-caps text-secondary">
+            <th className="px-3 py-3 text-left text-label-caps text-secondary">
               Timestamp
             </th>
-            <th className="px-3 py-2.5 text-left text-label-caps text-secondary">
+            <th className="px-3 py-3 text-left text-label-caps text-secondary">
               Description
             </th>
-            <th className="px-3 py-2.5 text-left text-label-caps text-secondary">
+            <th className="px-3 py-3 text-left text-label-caps text-secondary">
               Category
             </th>
-            <th className="px-3 py-2.5 text-right text-label-caps text-secondary">
+            <th className="px-3 py-3 text-right text-label-caps text-secondary">
               Cum. Hrs
             </th>
           </tr>
@@ -146,7 +146,7 @@ function RowFragment({
           <span className="flex items-start gap-2">
             <span>{description}</span>
             {contestable && (
-              <span className="shrink-0 rounded-full bg-contested px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-on-warning">
+              <span className="shrink-0 rounded-pill border border-warning/30 bg-warning-container px-2.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-warning">
                 Contested
               </span>
             )}
@@ -160,7 +160,7 @@ function RowFragment({
       {contestable && isOpen && flag && (
         <tr className="bg-contested-container">
           <td colSpan={4} className="px-3 pb-4 pt-1">
-            <div className="rounded-lg border border-border bg-surface p-4">
+            <div className="rounded-md border border-border bg-surface p-5">
               <p className="text-h3 text-primary">{flag.title}</p>
               <p className="mt-2 text-body-sm text-secondary">{flag.summary}</p>
               <p className="mt-3 text-body-sm text-primary">{flag.owner_argument}</p>
