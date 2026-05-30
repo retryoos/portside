@@ -1,13 +1,13 @@
-// Sign-in screen. Public (the middleware allowlists /login). Layout mirrors
-// the dashboard hero: gradient orb behind a soft white card, Papership.Ai wordmark
-// above. Form interaction lives in the client component `LoginForm`.
+// Sign-in screen. Public (the middleware allowlists /login). Photographic
+// hero with a frosted-glass card overlaid asymmetrically (Revolut-style),
+// falling back to a deep-ink surface when no hero photo is committed.
 
 import Image from "next/image";
 import LoginForm from "./LoginForm";
 
-// `next` is a post-login destination forwarded by the middleware. We
-// sanitise it here so an attacker can't craft `/login?next=//evil.com` and
-// hijack the redirect. Only same-origin paths are honoured.
+// `next` is a post-login destination forwarded by the middleware. Sanitised
+// here so an attacker can't craft `/login?next=//evil.com` and hijack the
+// redirect. Only same-origin paths are honoured.
 function sanitiseNext(raw: string | undefined): string | null {
   if (!raw) return null;
   if (!raw.startsWith("/") || raw.startsWith("//")) return null;
@@ -23,32 +23,47 @@ export default async function LoginPage({
   const safeNext = sanitiseNext(next);
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-        <div className="mb-10 flex flex-col items-center text-center text-primary">
-          <div className="flex items-center gap-3 text-display tracking-tight">
+    <div className="relative min-h-screen overflow-hidden bg-primary">
+      {/* Hero photograph layer. Falls back transparently to bg-primary if the
+          asset is not yet committed (DESIGN.md photography section). */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/photography/hero-login.jpg')",
+        }}
+      />
+      {/* Subtle ink scrim so the glass card always reads, even on a bright photo. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.05) 45%, rgba(0,0,0,0) 70%)",
+        }}
+      />
+
+      <main className="relative flex min-h-screen flex-col justify-center px-6 py-16 md:items-end md:px-16 md:py-20 lg:px-24">
+        <section className="card-glass w-full max-w-md px-8 py-10 md:px-10 md:py-12">
+          <div className="mb-10 flex items-center gap-3">
             <Image
               src="/logo.png"
               alt=""
               aria-hidden
-              width={56}
-              height={56}
+              width={40}
+              height={40}
               priority
-              className="h-[56px] w-[56px]"
+              className="h-10 w-10"
             />
-            Papership.Ai
+            <span className="text-h3 text-primary">Papership.Ai</span>
           </div>
-          <div className="mt-3 text-[1.25rem] leading-snug text-primary">
-            automated maritime paperwork
+
+          <p className="text-eyebrow text-secondary">Welcome back</p>
+          <h1 className="text-display mt-3 text-primary">Sign in.</h1>
+
+          <div className="mt-10">
+            <LoginForm next={safeNext} />
           </div>
-        </div>
-
-        <section className="rounded-xl border border-border bg-surface px-7 py-8 shadow-[0_1px_2px_rgba(0,0,0,0.02)] md:px-8">
-          <header className="mb-6">
-            <h1 className="text-h1 text-primary">Sign in</h1>
-          </header>
-
-          <LoginForm next={safeNext} />
         </section>
       </main>
     </div>

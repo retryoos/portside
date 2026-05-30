@@ -1,16 +1,17 @@
 "use client";
 
 // Sign-in form. Submits to /api/auth/login, surfaces the server's error
-// message inline, and on success routes to `next` (or /cases). `router.refresh()`
-// flushes server-component caches so the layout picks up the new session.
+// message inline, and on success routes to `next` (or /cases).
+// `router.refresh()` flushes server-component caches so the layout picks up
+// the new session.
 
 import { useRouter } from "next/navigation";
 import { useId, useState, type FormEvent } from "react";
 
 const FIELD_CLASSES =
-  "w-full rounded-md border border-border bg-surface px-3.5 py-2.5 text-body text-primary " +
+  "w-full rounded-md border border-border bg-surface px-4 py-3 text-body text-primary " +
   "placeholder:text-secondary/70 transition-colors " +
-  "focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 " +
+  "focus:border-primary focus:outline-none " +
   "disabled:cursor-not-allowed disabled:opacity-60";
 
 export default function LoginForm({ next }: { next: string | null }) {
@@ -54,11 +55,11 @@ export default function LoginForm({ next }: { next: string | null }) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="space-y-4">
+    <form noValidate onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label
           htmlFor={usernameId}
-          className="mb-1.5 block text-body-sm font-medium text-primary"
+          className="mb-2 block text-body-sm font-semibold text-primary"
         >
           Username
         </label>
@@ -84,7 +85,7 @@ export default function LoginForm({ next }: { next: string | null }) {
       <div>
         <label
           htmlFor={passwordId}
-          className="mb-1.5 block text-body-sm font-medium text-primary"
+          className="mb-2 block text-body-sm font-semibold text-primary"
         >
           Password
         </label>
@@ -116,7 +117,7 @@ export default function LoginForm({ next }: { next: string | null }) {
       <button
         type="submit"
         disabled={busy}
-        className="mt-2 w-full rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-70"
+        className="btn-lift mt-2 w-full rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-70"
       >
         {busy ? "Signing in…" : "Sign in"}
       </button>
@@ -131,18 +132,18 @@ export default function LoginForm({ next }: { next: string | null }) {
         <button
           type="button"
           disabled={busy}
-          className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-70"
+          className="btn-lift flex w-full items-center justify-center gap-3 rounded-pill border border-border-strong bg-transparent px-6 py-3 text-body-sm font-semibold text-primary hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
         >
           <GoogleIcon />
-          Sign in with Google
+          Continue with Google
         </button>
         <button
           type="button"
           disabled={busy}
-          className="flex w-full items-center justify-center gap-2.5 rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-70"
+          className="btn-lift flex w-full items-center justify-center gap-3 rounded-pill border border-border-strong bg-transparent px-6 py-3 text-body-sm font-semibold text-primary hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-70"
         >
           <MicrosoftIcon />
-          Sign in with Microsoft
+          Continue with Microsoft
         </button>
       </div>
     </form>
@@ -151,11 +152,7 @@ export default function LoginForm({ next }: { next: string | null }) {
 
 function GoogleIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-4 w-4"
-    >
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09Z"
