@@ -1,34 +1,58 @@
 import type { PipelineStage } from "@/lib/types";
 
 // Status chip for a voyage's claim lifecycle, mapped from the pipeline stage.
-// The lifecycle a claims desk actually works through:
+// Lifecycle:
 //   In progress -> Draft -> Pending -> (Rejected -> back to Draft) -> Settled
-// In progress: the pipeline is still extracting/calculating/drafting.
-// Draft:       the claim packet is drafted, ready to send to the charterer.
-// Pending:     sent, awaiting the charterer's negotiation feedback.
-// Rejected:    the charterer pushed back; review and revise, then resend.
-// Settled:     resolved, money in.
-// Error:       the pipeline itself failed (technical), distinct from Rejected.
-// Colors group by meaning: amber = working, ink = on our desk (draft/awaiting),
-// green = resolved, red = needs attention (rejected or failed).
+// Every chip is a pill with a hairline border (no decorative dots, per
+// DESIGN.md), the semantic colour set lives in container/text token pairs.
 const STAGE: Record<PipelineStage, { label: string; className: string }> = {
-  uploaded: { label: "In progress", className: "bg-warning-container text-warning" },
-  extracting: { label: "In progress", className: "bg-warning-container text-warning" },
-  calculating: { label: "In progress", className: "bg-warning-container text-warning" },
-  analyzing: { label: "In progress", className: "bg-warning-container text-warning" },
-  drafting: { label: "In progress", className: "bg-warning-container text-warning" },
-  done: { label: "Draft", className: "bg-surface-muted text-secondary" },
-  pending: { label: "Pending", className: "bg-surface-muted text-primary" },
-  rejected: { label: "Rejected", className: "bg-danger-container text-danger" },
-  settled: { label: "Settled", className: "bg-success-container text-success" },
-  error: { label: "Error", className: "bg-danger-container text-danger" },
+  uploaded: {
+    label: "In progress",
+    className: "border-warning/30 bg-warning-container text-warning",
+  },
+  extracting: {
+    label: "In progress",
+    className: "border-warning/30 bg-warning-container text-warning",
+  },
+  calculating: {
+    label: "In progress",
+    className: "border-warning/30 bg-warning-container text-warning",
+  },
+  analyzing: {
+    label: "In progress",
+    className: "border-warning/30 bg-warning-container text-warning",
+  },
+  drafting: {
+    label: "In progress",
+    className: "border-warning/30 bg-warning-container text-warning",
+  },
+  done: {
+    label: "Draft",
+    className: "border-border bg-surface-muted text-primary",
+  },
+  pending: {
+    label: "Pending",
+    className: "border-border bg-surface-muted text-primary",
+  },
+  rejected: {
+    label: "Rejected",
+    className: "border-danger/30 bg-danger-container text-danger",
+  },
+  settled: {
+    label: "Settled",
+    className: "border-success/30 bg-success-container text-success",
+  },
+  error: {
+    label: "Error",
+    className: "border-danger/30 bg-danger-container text-danger",
+  },
 };
 
 export default function StageChip({ stage }: { stage: PipelineStage }) {
   const { label, className } = STAGE[stage];
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-label-caps ${className}`}
+      className={`inline-flex items-center rounded-pill border px-3 py-1 text-label-caps ${className}`}
     >
       {label}
     </span>

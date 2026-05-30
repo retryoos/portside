@@ -146,7 +146,7 @@ function RowFragment({
           <span className="flex items-start gap-2">
             <span>{description}</span>
             {contestable && (
-              <span className="shrink-0 rounded-full bg-contested px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-on-warning">
+              <span className="shrink-0 rounded-pill border border-warning/30 bg-warning-container px-2.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wider text-warning">
                 Contested
               </span>
             )}

@@ -10,14 +10,14 @@ export default function TimebarBadge({
 
   const tone =
     days > 30
-      ? "bg-success-container text-success"
+      ? "border-success/30 bg-success-container text-success"
       : days > 0
-        ? "bg-warning-container text-warning"
-        : "bg-danger-container text-danger";
+        ? "border-warning/30 bg-warning-container text-warning"
+        : "border-danger/30 bg-danger-container text-danger";
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-3 py-1 text-label-caps ${tone}`}
+      className={`inline-flex items-center rounded-pill border px-3 py-1 text-label-caps ${tone}`}
     >
       Time bar: {days} {days === 1 ? "day" : "days"}
     </span>
