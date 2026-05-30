@@ -6,7 +6,7 @@
 // the voyage list reuses the shared <CasesTable/>.
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import Breadcrumb from "@/components/Breadcrumb";
+import BackArrowButton from "@/components/BackArrowButton";
 import TopNav from "@/components/TopNav";
 import CasesTable from "@/components/CasesTable";
 import StageChip from "@/components/StageChip";
@@ -55,9 +55,11 @@ export default function VesselDetailPage() {
   }, [voyages]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-16">
       <TopNav />
-      <Breadcrumb segments={["Vessels", name || "Vessel"]} />
+      <div className="mx-auto max-w-[1100px] px-6 pt-6 md:px-8">
+        <BackArrowButton href="/vessels" />
+      </div>
       <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
         {error && (
           <p className="rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">

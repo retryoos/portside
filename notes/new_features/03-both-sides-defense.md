@@ -2,7 +2,7 @@
 
 ## Goal
 
-Today Portside files a claim from the owner's side. Add the defense side: take a completed
+Today Papership.Ai files a claim from the owner's side. Add the defense side: take a completed
 owner claim and produce a charterer rebuttal that concedes the indisputable hours,
 contests the weak ones with clause and event citations, and recomputes a reduced quantum.
 The reduced number must be derived in deterministic Python, never by the model.

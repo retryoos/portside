@@ -1,4 +1,4 @@
-// Typed client for the Portside API (notes/04-schemas.md §6).
+// Typed client for the Papership.Ai API (notes/04-schemas.md §6).
 
 import type {
   Perspective,
@@ -51,6 +51,13 @@ export async function getVoyage(
   const res = await fetch(`${API_BASE}/voyages/${voyageId}`, { signal });
   if (!res.ok) throw new Error(`getVoyage failed: ${res.status}`);
   return (await res.json()) as VoyageState;
+}
+
+export async function deleteVoyage(voyageId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/voyages/${voyageId}`, { method: "DELETE" });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`deleteVoyage failed: ${res.status}`);
+  }
 }
 
 /** Advance a voyage through the negotiation lifecycle (send/settle/reject/revise). */

@@ -1,4 +1,4 @@
-# App Runner config for the Portside API.
+# App Runner config for the Papership.Ai API.
 # Repo source: GitHub. Source dir: apps/api. Runtime: docker (uses the
 # Dockerfile sibling). See notes/16-aws-deploy.md for the step-by-step.
 #

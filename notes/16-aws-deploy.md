@@ -6,7 +6,7 @@
 
 ## 1. Why
 
-AWS sponsors this hackathon (see `notes/02-architecture.md §12`). Putting Portside on AWS Amplify + App Runner earns sponsor credit and gives the judges a real public URL to click during the pitch. But the demo runs locally — no DNS, no TLS, no env-var failure modes on stage. The cloud deploy is gravy, never the meal.
+AWS sponsors this hackathon (see `notes/02-architecture.md §12`). Putting Papership.Ai on AWS Amplify + App Runner earns sponsor credit and gives the judges a real public URL to click during the pitch. But the demo runs locally — no DNS, no TLS, no env-var failure modes on stage. The cloud deploy is gravy, never the meal.
 
 ## 2. Architecture
 

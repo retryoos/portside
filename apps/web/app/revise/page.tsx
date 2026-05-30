@@ -1,4 +1,4 @@
-import Breadcrumb from "@/components/Breadcrumb";
+import BackArrowButton from "@/components/BackArrowButton";
 import TopNav from "@/components/TopNav";
 import ReviseLetter from "@/components/ReviseLetter";
 
@@ -7,9 +7,11 @@ import ReviseLetter from "@/components/ReviseLetter";
 // the highlight-and-revise interaction. No backend revise endpoint in scope.
 export default function RevisePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-16">
       <TopNav />
-      <Breadcrumb segments={["Voyages", "MT Aegean Pioneer", "Claim", "Refine"]} />
+      <div className="mx-auto max-w-[820px] px-8 pt-6">
+        <BackArrowButton href="/cases" />
+      </div>
       <main className="mx-auto max-w-[820px] px-8 py-10">
         <ReviseLetter />
       </main>

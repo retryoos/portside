@@ -1,4 +1,4 @@
-/* Portside design tokens -> Tailwind v4 theme.
+/* Papership.Ai design tokens -> Tailwind v4 theme.
    Source of truth: apps/web/DESIGN.md (ElevenLabs-derived clean-product palette).
    Every Tailwind class in components must map to a token here, no raw hex.
    Colours are OKLCH and tinted toward a faint cool hue, never pure black/white. */
@@ -9,8 +9,11 @@
   --color-on-primary: oklch(0.985 0.002 265);
   --color-secondary: oklch(0.556 0.008 265); /* muted gray: metadata, labels */
   --color-neutral: oklch(0.981 0.002 265); /* page background, soft cool white */
-  --color-surface: oklch(0.997 0.001 265); /* white cards / sheets */
-  --color-surface-muted: oklch(0.966 0.003 265); /* soft gray cards / panels */
+  /* Surface tokens carry alpha so cards read as glass over the LiquidBackground
+     water. globals.css adds a backdrop-filter on .bg-surface / .bg-surface-muted
+     so the water behind is blurred -> frosted-glass effect. */
+  --color-surface: oklch(0.997 0.001 265 / 0.65); /* white glass: cards / sheets */
+  --color-surface-muted: oklch(0.966 0.003 265 / 0.65); /* soft-gray glass panels */
   --color-border: oklch(0.922 0.004 265); /* hairlines, dividers */
 
   /* Action */

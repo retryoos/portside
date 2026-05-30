@@ -1,4 +1,4 @@
-# Portside
+# Papership.Ai
 
 **Maritime Demurrage and Laytime Resolution Agent.** Built at the Florent x Panathēnea Hackathon, Athens, 28 May 2026.
 
@@ -12,9 +12,9 @@ When a vessel finishes a port call and laytime is disputed, a claims team spends
 
 This is revenue recovery and legal defense, the highest value workflow an agent can take on.
 
-## What Portside does
+## What Papership.Ai does
 
-Upload three documents (Charter Party excerpt, Notice of Readiness, Statement of Facts) and choose the owner or charterer perspective. Portside runs a four step agent pipeline and returns:
+Upload three documents (Charter Party excerpt, Notice of Readiness, Statement of Facts) and choose the owner or charterer perspective. Papership.Ai runs a four step agent pipeline and returns:
 
 - a per event **laytime calculation table** with a running total and the demurrage crossover,
 - the **contested events** flagged with a plain English argument and a strength rating,
@@ -39,11 +39,11 @@ This run is real: feeding the three demo PDFs through the live pipeline produces
 
 ## Why it is defensible
 
-These are the points a shipping professional will check, and what Portside does about each:
+These are the points a shipping professional will check, and what Papership.Ai does about each:
 
 1. **The arithmetic is deterministic Python, not an LLM.** The model classifies each Statement of Facts event (does this time count, which exception applies); a plain Python function then walks the timeline, sums the hours, splits the row where the allowance is exhausted, and multiplies by the rate. The number on screen is reproducible and auditable. A test (`tests/test_calculator.py`) locks it to EUR 84,375.00.
 2. **Every line cites its basis.** Laytime rows reference the clause; dispute findings reference the CP clause number and the SoF event id. Output reads like a junior maritime associate wrote it.
-3. **It scales to real, long documents.** Real Statements of Facts are long event logs. Portside distills the long text into a compact structured timeline once (Agent 1), then the downstream agents reason over that small object instead of re-reading raw text. This is why the split into specialized agents is a feature, not over engineering.
+3. **It scales to real, long documents.** Real Statements of Facts are long event logs. Papership.Ai distills the long text into a compact structured timeline once (Agent 1), then the downstream agents reason over that small object instead of re-reading raw text. This is why the split into specialized agents is a feature, not over engineering.
 4. **Confidence is a word, not a gimmick.** Owner position strength shows as Strong, Arguable, or Weak, never a fake percentage.
 5. **Time bar awareness.** The 90 day contractual deadline is surfaced on every claim. Missing it forfeits the claim, the single biggest avoidable mistake in the industry.
 
@@ -168,4 +168,4 @@ Out of scope for the demo: multi port voyages, time charters, bunker and cargo d
 
 ## How it was built
 
-Portside was built by a fleet of Claude agents working in parallel on isolated branches that merged into one trunk: an ingestion and calculation track (Agent 1), a reasoning, drafting, and live frontend track (Agent 2), a foundation, async plumbing, and deploy track (Agent 3), and a vessels track. Agent sessions were captured with the Entire CLI for the judging dispatch.
+Papership.Ai was built by a fleet of Claude agents working in parallel on isolated branches that merged into one trunk: an ingestion and calculation track (Agent 1), a reasoning, drafting, and live frontend track (Agent 2), a foundation, async plumbing, and deploy track (Agent 3), and a vessels track. Agent sessions were captured with the Entire CLI for the judging dispatch.

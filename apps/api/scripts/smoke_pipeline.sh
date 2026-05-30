@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end smoke for the Portside API + agent fleet.
+# End-to-end smoke for the Papership.Ai API + agent fleet.
 #
 # GATED — do not run until the user has authorized Anthropic API spend. This
 # script POSTs the Rotterdam demo PDFs and lets the live pipeline run, which

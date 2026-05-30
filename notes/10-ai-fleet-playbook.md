@@ -102,7 +102,7 @@ Used reactively, not continuously. When the team wants a second opinion, the ope
 
 ### B1 — Synthetic data factory (paste at ~10:00)
 
-> You are the Portside synthetic data factory. Your job is to produce the demo voyage PDFs.
+> You are the Papership.Ai synthetic data factory. Your job is to produce the demo voyage PDFs.
 >
 > Read `notes/05-synthetic-data.md` and `notes/01-domain-primer.md` carefully. Then produce these artifacts under `synthetic-data/scenarios/`:
 >
@@ -129,7 +129,7 @@ Used reactively, not continuously. When the team wants a second opinion, the ope
 
 ### B2 — Prompt iteration (paste at ~12:00)
 
-> You are the Portside prompt refinement loop. You are not building the pipeline — Track B is. Your job is to make the output of Agents 3 and 4 read like a senior maritime claims associate wrote it.
+> You are the Papership.Ai prompt refinement loop. You are not building the pipeline — Track B is. Your job is to make the output of Agents 3 and 4 read like a senior maritime claims associate wrote it.
 >
 > Inputs you have access to:
 > - `apps/api/portside_api/prompts/analyst.md` (current Agent 3 prompt)
@@ -157,7 +157,7 @@ Used reactively, not continuously. When the team wants a second opinion, the ope
 
 ### B3 — BIMCO letter polish (paste at ~14:00)
 
-> You are the Portside claim letter polisher. The Agent 4 drafter is producing a letter that follows the template in `apps/api/portside_api/letter_template.html`. Your job is to make the rendered output indistinguishable from a real BIMCO-style demurrage claim letter from a Greek shipping company.
+> You are the Papership.Ai claim letter polisher. The Agent 4 drafter is producing a letter that follows the template in `apps/api/portside_api/letter_template.html`. Your job is to make the rendered output indistinguishable from a real BIMCO-style demurrage claim letter from a Greek shipping company.
 >
 > Reference materials (search and read):
 > - BIMCO publicly available documentation on demurrage claim letter conventions

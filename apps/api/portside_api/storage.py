@@ -39,6 +39,8 @@ class VoyageStore(Protocol):
 
     async def patch(self, voyage_id: str, /, **fields: Any) -> VoyageState | None: ...
 
+    async def delete(self, voyage_id: str) -> bool: ...
+
     async def list(self) -> list[VoyageSummary]: ...
 
     async def list_vessels(self) -> list[VesselSummary]: ...
@@ -76,6 +78,11 @@ class InMemoryStore:
             updated = existing.model_copy(update=fields)
             self._voyages[voyage_id] = updated
             return updated
+
+    async def delete(self, voyage_id: str) -> bool:
+        """Remove a voyage by id. Returns True if it existed, False otherwise."""
+        async with self._lock:
+            return self._voyages.pop(voyage_id, None) is not None
 
     async def list(self) -> list[VoyageSummary]:
         """Return all voyages as summaries, newest-first by ``created_at``."""

@@ -1,6 +1,6 @@
 ---
 version: beta
-name: Portside
+name: Papership.Ai
 register: product
 description: |
   A maritime demurrage claims tool for ship owners. The visual language is taken
@@ -157,7 +157,7 @@ components:
 
 ## Overview
 
-Portside is read by owners' claims executives and maritime lawyers. The mockups in
+Papership.Ai is read by owners' claims executives and maritime lawyers. The mockups in
 [`../../mockup to design like/`](../../mockup%20to%20design%20like/) set the visual
 contract: an ElevenLabs-style product surface. Clean, near-monochrome, a single
 geometric sans (Inter), lots of air, large-radius soft cards, and pill chrome.
@@ -167,7 +167,7 @@ calm, modern, and trustworthy. The tool disappears into the task.
 
 Style register: **product**, clean and modern.
 
-> **Pivot note (this is a deliberate departure).** Earlier Portside used a
+> **Pivot note (this is a deliberate departure).** Earlier Papership.Ai used a
 > Fraunces serif / warm-paper "barrister's letter" identity. The team mockups are
 > ElevenLabs product screens, and the direction is to adopt that aesthetic in full,
 > so the serif/warm-paper identity is retired. The hero quantum and claim letter
@@ -214,7 +214,7 @@ Web fonts:
 
 - Page background soft cool white; content sits on white or soft-gray cards with
   hairline borders or no border, **no drop shadow**. Depth is fill contrast + radius.
-- **Top app bar** with the "Portside" wordmark + pill nav tabs (Claims, Vessels),
+- **Top app bar** with the "Papership.Ai" wordmark + pill nav tabs (Claims, Vessels),
   active tab a soft-gray pill. Primary actions on the right are pills.
 - **Breadcrumb row** under the bar.
 - Generous max-width content column (720–1200px), centered, not full-bleed.

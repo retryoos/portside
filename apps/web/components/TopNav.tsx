@@ -5,13 +5,16 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-// Top app bar (DESIGN.md "Layout"): "Portside" wordmark + pill nav tabs, active
+// Top app bar (DESIGN.md "Layout"): "Papership.Ai" wordmark + pill nav tabs, active
 // tab a soft-gray pill. Shared chrome across every screen. The right-side chip
 // is the account menu (display name + Sign out); it fetches the current user
-// from /api/auth/me on mount.
+// from /api/auth/me on mount. Back navigation on detail pages is handled by
+// the floating BackArrowButton component placed in the page content, not here.
 const NAV = [
-  { label: "Claims", href: "/cases" },
-  { label: "Vessels", href: "/vessels" },
+  { label: "Demurrage claim", href: "/cases" },
+  { label: "Doc 2", href: "/doc-2" },
+  { label: "Doc 3", href: "/doc-3" },
+  { label: "Doc 4", href: "/doc-4" },
 ];
 
 interface CurrentUser {
@@ -23,23 +26,23 @@ export default function TopNav() {
   const pathname = usePathname() ?? "";
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-neutral/85 px-6 py-3.5 backdrop-blur-md md:px-8">
+    <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-surface px-6 py-3.5 md:px-8">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between gap-6">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6 md:gap-8">
           <Link
             href="/"
             className="flex items-center gap-2 text-h2 tracking-tight text-primary"
           >
-            Portside
             <Image
               src="/logo.png"
               alt=""
               aria-hidden
-              width={31}
-              height={31}
+              width={36}
+              height={36}
               priority
-              className="h-[31px] w-[31px]"
+              className="h-[36px] w-[36px]"
             />
+            Papership.Ai
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {
@@ -123,15 +126,8 @@ function AccountMenu() {
 
   // No user yet. Render an empty same-size slot so the header doesn't reflow.
   if (!user) {
-    return <div aria-hidden className="h-8 w-32" />;
+    return <div aria-hidden className="h-9 w-9" />;
   }
-
-  const initials = user.name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 
   return (
     <div ref={containerRef} className="relative">
@@ -140,15 +136,21 @@ function AccountMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1 text-body-sm font-medium text-primary transition-colors hover:bg-surface-muted"
+        aria-label="Account menu"
+        className={`flex h-9 w-9 items-center justify-center rounded-full text-primary transition-colors ${
+          open ? "bg-surface-muted" : ""
+        }`}
       >
-        <span
+        <svg
           aria-hidden
-          className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-label-caps text-primary"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="h-5 w-5"
         >
-          {initials || "?"}
-        </span>
-        <span className="hidden pr-1 sm:inline">{user.name}</span>
+          {/* Head + shoulders silhouette. Single rounded path, fills with
+              currentColor so it inherits the button's text-primary (near-black). */}
+          <path d="M12 12.5a4.25 4.25 0 1 0 0-8.5 4.25 4.25 0 0 0 0 8.5zm0 1.75c-3.4 0-8.5 1.7-8.5 5.1V21h17v-1.65c0-3.4-5.1-5.1-8.5-5.1z" />
+        </svg>
       </button>
 
       {open && (

@@ -83,13 +83,200 @@
   .bg-gradient-cool {
     background-image: var(--gradient-cool);
   }
+
+  /* Skeleton placeholder. Muted base + a soft white gradient sliding L→R so
+     long-running bars feel like data is streaming in (used during pipeline
+     processing on /cases/[id]). */
+  .animate-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-surface-muted);
+  }
+  .animate-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* LiquidBackground (components/LiquidBackground.tsx). Animated decorative
+   layer that sits inside any positioned container with `overflow-hidden`.
+   Three softly drifting orbs plus a cursor-tracking pool, all blending with
+   the static gradient orbs below via `mix-blend-mode: soft-light`. Calm by
+   design: long eased keyframes, low saturation, heavy blur. */
+@layer components {
+  .liquid-bg {
+    /* Global fallback layer for LiquidBackground. Fixed behind every page;
+       used only when the primary WebGL canvas can't initialise (see
+       LiquidBackgroundFallback.tsx). */
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    overflow: hidden;
+    pointer-events: none;
+    /* Default cursor position before JS attaches a mousemove handler, so the
+       pool is in a sensible place on first paint. */
+    --lx: 50%;
+    --ly: 50%;
+  }
+
+  .liquid-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(56px);
+    will-change: transform;
+    mix-blend-mode: soft-light;
+    opacity: 0.6;
+  }
+  .liquid-orb--warm {
+    background-image: var(--gradient-warm);
+  }
+  .liquid-orb--cool {
+    background-image: var(--gradient-cool);
+  }
+  /* Three instances with different geometry and timelines so the field never
+     looks periodic. Each loop is a different prime-ish length and rotates
+     in a different direction. */
+  .liquid-orb--a {
+    width: 55%;
+    height: 80%;
+    top: -15%;
+    left: -15%;
+    animation: liquid-drift-a 22s ease-in-out infinite;
+  }
+  .liquid-orb--b {
+    width: 60%;
+    height: 85%;
+    bottom: -22%;
+    right: -18%;
+    animation: liquid-drift-b 28s ease-in-out infinite;
+  }
+  .liquid-orb--c {
+    width: 45%;
+    height: 65%;
+    top: 30%;
+    left: 25%;
+    opacity: 0.45;
+    animation: liquid-drift-c 34s ease-in-out infinite;
+  }
+
+  /* Cursor pool: a soft accent-tinted halo whose centre tracks the pointer
+     via custom properties set in LiquidBackground.tsx. Eased `left`/`top`
+     transitions give the pool a viscous, swing-into-place feel. */
+  .liquid-cursor {
+    position: absolute;
+    left: var(--lx);
+    top: var(--ly);
+    width: 26rem;
+    height: 26rem;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      closest-side,
+      var(--color-accent-container) 0%,
+      transparent 100%
+    );
+    border-radius: 9999px;
+    filter: blur(24px);
+    opacity: 0.55;
+    mix-blend-mode: soft-light;
+    transition:
+      left 0.7s cubic-bezier(0.2, 0.7, 0, 1),
+      top 0.7s cubic-bezier(0.2, 0.7, 0, 1);
+    will-change: left, top;
+  }
+}
+
+@keyframes liquid-drift-a {
+  0%,
+  100% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(10%, 8%) rotate(2deg) scale(1.06);
+  }
+  66% {
+    transform: translate(-6%, 5%) rotate(-1deg) scale(0.96);
+  }
+}
+@keyframes liquid-drift-b {
+  0%,
+  100% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1);
+  }
+  33% {
+    transform: translate(-8%, -6%) rotate(-2deg) scale(1.08);
+  }
+  66% {
+    transform: translate(6%, -10%) rotate(1deg) scale(0.94);
+  }
+}
+@keyframes liquid-drift-c {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translate(-46%, -54%) rotate(3deg) scale(1.1);
+  }
+}
+
+/* Respect prefers-reduced-motion: kill the keyframes and the cursor swing,
+   leaving the three orbs as static decorative shapes. */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-orb--a,
+  .liquid-orb--b,
+  .liquid-orb--c {
+    animation: none !important;
+  }
+  .liquid-cursor {
+    transition: none !important;
+  }
+  .animate-shimmer::after {
+    animation: none;
+  }
+}
+
+html {
+  /* Soft sky-blue base. Approximates the water's average tone so reloads
+     don't flash white before the WebGL canvas initialises. The canvas
+     (at z: -10 inside <body>) paints over this; body stays transparent so
+     it isn't covered by body's own background-color paint. */
+  background-color: oklch(0.88 0.06 240);
 }
 
 html,
 body {
-  background-color: var(--color-neutral);
   color: var(--color-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: transparent;
+}
+
+/* Frosted-glass treatment: every card / panel using the surface tokens gets
+   a backdrop blur. Combined with the alpha on --color-surface*, this is what
+   makes "windows" read as translucent glass over the LiquidBackground water.
+   Saturate boost compensates for the perceptual desaturation that strong
+   blur causes. */
+.bg-surface,
+.bg-surface-muted {
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
 }

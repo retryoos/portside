@@ -1,4 +1,4 @@
-# Portside — Master Plan
+# Papership.Ai — Master Plan
 
 > **If you read one doc, read this one.** It's the spine. Everything else is depth.
 
@@ -6,7 +6,7 @@
 
 ## 1. What we are building, in one sentence
 
-**Portside turns a contested port call into a ready-to-send demurrage resolution in minutes.**
+**Papership.Ai turns a contested port call into a ready-to-send demurrage resolution in minutes.**
 
 Three PDFs in (Charter Party excerpt, Statement of Facts, Notice of Readiness). One legally-structured claim packet out (laytime calculation table, dispute narrative, claim quantum, formal claim letter), in under 60 seconds.
 
@@ -37,7 +37,7 @@ The shipping-industry judge will not be impressed by "AI does the calculation." 
 2. **Numerical reliability.** The arithmetic is done in deterministic Python, not by an LLM. The LLM classifies; Python sums. We say this explicitly in the demo because a maritime professional will distrust an LLM doing arithmetic.
 3. **BIMCO conformance.** The output letter uses BIMCO-standard formal language, references the right standard form (ASBATANKVOY / NYPE 93 / GENCON / Shellvoy), and includes the required components: claim quantum, time bar compliance statement, supporting document list.
 4. **Audit trail.** Every figure is traceable back to a specific event in a specific source document. No hidden math.
-5. **Time-bar awareness.** Demurrage claims are typically subject to a strict contractual time bar (often 90 days from completion of discharge, all original supporting documents). Portside surfaces the time-bar clock the moment the voyage is opened. Missing it forfeits the claim — this is the single biggest avoidable mistake in the industry.
+5. **Time-bar awareness.** Demurrage claims are typically subject to a strict contractual time bar (often 90 days from completion of discharge, all original supporting documents). Papership.Ai surfaces the time-bar clock the moment the voyage is opened. Missing it forfeits the claim — this is the single biggest avoidable mistake in the industry.
 
 These five are the deep-domain "tells" that prove we built the right thing.
 
