@@ -22,7 +22,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel
 
 from .agents.llm import cached_system, extract_structured
-from .schemas import VoyageState
+from .schemas import ClaimPacket, VoyageState
 
 SegmentSurface = Literal["letter", "narrative"]
 ReviseMode = Literal["agent", "manual"]
@@ -65,6 +65,20 @@ class RevisedSegment(BaseModel):
 class ReviseResponse(BaseModel):
     segments: list[RevisedSegment]
     safety: SafetyReport
+
+
+class RevisionEdit(BaseModel):
+    """One accepted edit to persist: replace ``original`` with ``revised``."""
+
+    original: str
+    revised: str
+
+
+class ApplyRevisionRequest(BaseModel):
+    """Persist accepted revisions back into the stored packet (A5)."""
+
+    surface: SegmentSurface
+    edits: list[RevisionEdit]
 
 
 class _SegmentRevision(BaseModel):
@@ -248,3 +262,40 @@ async def revise(
     safety = _merge(reports)
     safety.warnings.extend(extra_warnings)
     return blocked, ReviseResponse(segments=revised, safety=safety)
+
+
+def apply_revisions(
+    packet: ClaimPacket, surface: SegmentSurface, edits: list[RevisionEdit]
+) -> tuple[Optional[ClaimPacket], SafetyReport, Optional[str]]:
+    """Persist accepted edits into a copy of the packet's markdown.
+
+    The safety gate runs again here so a rewrite that slipped through the client
+    can never reach the store. Returns ``(new_packet, report, error)``:
+      * new_packet is None with no error  -> a safety block (see report.warnings);
+      * new_packet is None with an error  -> a segment's original text was not
+        found in the current markdown (stale/mismatched selection);
+      * new_packet set                    -> apply this via store.patch(packet=...).
+    """
+    reports: list[SafetyReport] = []
+    blocked = False
+    for edit in edits:
+        ok, report = validate_revision(edit.original, edit.revised)
+        reports.append(report)
+        if not ok:
+            blocked = True
+    merged = _merge(reports)
+    if blocked:
+        return None, merged, None
+
+    field = (
+        "claim_letter_markdown"
+        if surface == "letter"
+        else "dispute_narrative_markdown"
+    )
+    text: str = getattr(packet, field)
+    for edit in edits:
+        if edit.original not in text:
+            return None, merged, "segment text not found in the current document"
+        text = text.replace(edit.original, edit.revised, 1)
+
+    return packet.model_copy(update={field: text}), merged, None
