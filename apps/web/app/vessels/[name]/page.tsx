@@ -1,9 +1,9 @@
 "use client";
 
-// SCREEN: Vessel detail. The vessel has no dedicated endpoint: we fetch the full
-// voyage list and filter client-side by vessel_name (route param is
-// encodeURIComponent'd, decoded here). Header shows the vessel's aggregates;
-// the voyage list reuses the shared <CasesTable/>.
+// SCREEN: Vessel detail. The vessel has no dedicated endpoint: we fetch the
+// full voyage list and filter client-side by vessel_name. Header is the
+// editorial pattern with the vessel name as the hero and a small aggregate
+// strip below it.
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import BackArrowButton from "@/components/BackArrowButton";
@@ -55,66 +55,70 @@ export default function VesselDetailPage() {
   }, [voyages]);
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-20">
       <TopNav />
-      <div className="mx-auto max-w-[1100px] px-6 pt-6 md:px-8">
+      <main className="mx-auto max-w-[1100px] px-6 pb-24 pt-8 md:px-8 md:pt-12">
         <BackArrowButton href="/vessels" />
-      </div>
-      <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
+
         {error && (
-          <p className="rounded-xl bg-danger-container px-4 py-3 text-body-sm text-danger">
+          <p className="mt-6 rounded-card border border-danger/20 bg-danger-container px-5 py-4 text-body-sm text-danger">
             {error}
           </p>
         )}
 
         {voyages === null && !error && (
-          <div className="h-8 w-64 animate-pulse rounded-full bg-surface-muted" aria-busy="true" />
+          <div
+            className="mt-10 h-12 w-72 animate-pulse rounded-pill bg-surface-muted"
+            aria-busy="true"
+          />
         )}
 
         {voyages !== null && voyages.length === 0 && !error && (
-          <div className="rounded-xl border border-border bg-surface px-6 py-16 text-center">
-            <p className="text-h2 text-primary">No claims for {name || "this vessel"}</p>
-            <p className="mt-2 text-body-sm text-secondary">
-              This vessel has no voyage on file yet.
-            </p>
+          <div className="mt-10 rounded-card border border-border bg-surface px-8 py-20 text-center">
+            <p className="text-eyebrow text-secondary">No claims yet</p>
+            <h2 className="text-h1 mt-4 text-primary">
+              {name || "This vessel"} has no voyages on file.
+            </h2>
           </div>
         )}
 
         {aggregates && (
           <>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-h1 text-primary">{name}</h1>
-                  <StageChip stage={aggregates.latestStage} />
-                </div>
-                <p className="mt-1 text-body-sm capitalize text-secondary">
-                  {aggregates.perspectives.join(", ")}
-                </p>
+            <header className="mt-10">
+              <p className="text-eyebrow text-secondary">Vessel</p>
+              <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-3">
+                <h1 className="text-h1 text-primary md:text-display">{name}</h1>
+                <StageChip stage={aggregates.latestStage} />
               </div>
-              <dl className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
-                <div className="text-right">
-                  <dt className="text-label-caps text-secondary">Claims</dt>
-                  <dd className="mt-0.5 text-body tabular-nums text-primary">
+              <p className="mt-3 text-body-lg capitalize text-secondary">
+                {aggregates.perspectives.join(", ")}
+              </p>
+
+              <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-5 border-t border-border pt-6 md:grid-cols-3">
+                <div>
+                  <dt className="text-eyebrow text-secondary">Claims</dt>
+                  <dd className="mt-2 text-h2 tabular-nums text-primary">
                     {aggregates.count}
                   </dd>
                 </div>
-                <div className="text-right">
-                  <dt className="text-label-caps text-secondary">Total quantum</dt>
-                  <dd className="mt-0.5 text-body tabular-nums text-primary">
-                    {aggregates.total != null ? formatEur(aggregates.total) : "Pending"}
+                <div>
+                  <dt className="text-eyebrow text-secondary">Total quantum</dt>
+                  <dd className="mt-2 text-h2 tabular-nums text-primary">
+                    {aggregates.total != null
+                      ? formatEur(aggregates.total)
+                      : "Pending"}
                   </dd>
                 </div>
-                <div className="text-right">
-                  <dt className="text-label-caps text-secondary">Last activity</dt>
-                  <dd className="mt-0.5 text-body-sm tabular-nums text-secondary">
+                <div>
+                  <dt className="text-eyebrow text-secondary">Last activity</dt>
+                  <dd className="mt-2 text-h2 tabular-nums text-primary">
                     {formatDate(aggregates.lastActivity)}
                   </dd>
                 </div>
               </dl>
-            </div>
+            </header>
 
-            <div className="mt-8">
+            <div className="mt-12">
               <CasesTable voyages={voyages ?? []} />
             </div>
           </>
