@@ -1,6 +1,6 @@
 ---
 version: 1.0
-name: Papership.Ai
+name: Laytimely
 register: product
 description: |
   A maritime demurrage and laytime resolution tool for ship owners and the
@@ -225,7 +225,7 @@ components:
 
 ## Overview
 
-Papership.Ai is the demurrage workspace for ship owners and the lawyers who
+Laytimely is the demurrage workspace for ship owners and the lawyers who
 file their claims. The product is read on monitors in claims rooms and on
 laptops in port-agent offices; the surface needs to feel quiet, confident,
 and worth a six-figure decision.

@@ -56,7 +56,7 @@ export default function CasesDashboardPage() {
             <p className="text-eyebrow text-secondary">Demurrage workspace</p>
             <h1 className="text-hero mt-4 text-primary">Voyage cases.</h1>
             <p className="mt-6 max-w-xl text-body-lg text-secondary">
-              Drop in your three voyage documents and Papership.Ai drafts a
+              Drop in your three voyage documents and Laytimely drafts a
               cited, defensible demurrage claim in under a minute.
             </p>
           </div>

@@ -1,14 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import Wordmark from "@/components/Wordmark";
 
-// Top app bar (DESIGN.md "Layout"): compass mark + wordmark on the left, pill
-// nav tabs centred, account chip on the right. Shared chrome across every
-// screen. Back navigation on detail pages is handled by BackArrowButton in
-// the page content, not here.
+// Top app bar (DESIGN.md "Layout"): Laytimely wordmark on the left, pill nav
+// tabs centred, account chip on the right. Shared chrome across every screen.
+// Back navigation on detail pages is handled by BackArrowButton in the page
+// content, not here.
 const NAV = [
   { label: "Demurrage claim", href: "/cases" },
   { label: "Doc 2", href: "/doc-2" },
@@ -28,20 +28,8 @@ export default function TopNav() {
     <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-neutral/85 px-6 py-4 backdrop-blur md:px-8">
       <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6">
         <div className="flex items-center gap-8 md:gap-10">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 text-h3 tracking-tight text-primary"
-          >
-            <Image
-              src="/logo.png"
-              alt=""
-              aria-hidden
-              width={36}
-              height={36}
-              priority
-              className="h-9 w-9"
-            />
-            <span>Papership.Ai</span>
+          <Link href="/" className="text-primary" aria-label="Laytimely home">
+            <Wordmark size="sm" />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {

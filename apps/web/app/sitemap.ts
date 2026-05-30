@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 // Sitemap covers the public marketing routes only. App routes (gated behind
 // auth) are excluded; the robots policy below also blocks them from crawlers.
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://papership.ai";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://laytimely.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

@@ -1,7 +1,7 @@
 // Auth cross-cutting constants. Single source of truth so the cookie name and
 // expiry can't drift between middleware, route handlers, and clients.
 
-export const SESSION_COOKIE = "portside_session";
+export const SESSION_COOKIE = "laytimely_session";
 
 // 8h session is the usual professional default for an internal product surface
 // (long enough for a workday, short enough to limit blast radius if a laptop

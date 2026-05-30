@@ -23,7 +23,7 @@ export interface Session {
 // Dev fallback so a fresh `npm run dev` works without env wiring. In any real
 // deploy AUTH_SECRET MUST be set; we log a single warning so it's obvious in
 // the server console if the fallback is being used.
-const DEV_FALLBACK_SECRET = "portside-dev-secret-change-me";
+const DEV_FALLBACK_SECRET = "laytimely-dev-secret-change-me";
 let warned = false;
 
 function getSecret(): string {

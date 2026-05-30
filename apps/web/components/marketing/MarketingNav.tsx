@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Wordmark from "@/components/Wordmark";
 
 // Top-of-page nav for the marketing surface. Transparent over the hero,
 // solidifies into the neutral surface once the user scrolls past the first
@@ -35,20 +35,10 @@ export default function MarketingNav() {
       <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6 px-6 py-4 md:px-10">
         <Link
           href="/"
-          className={`flex items-center gap-2.5 text-h3 tracking-tight ${
-            scrolled ? "text-primary" : "text-on-primary"
-          }`}
+          aria-label="Laytimely home"
+          className={scrolled ? "text-primary" : "text-on-primary"}
         >
-          <Image
-            src="/logo.png"
-            alt=""
-            aria-hidden
-            width={36}
-            height={36}
-            priority
-            className="h-9 w-9"
-          />
-          <span>Papership.Ai</span>
+          <Wordmark size="sm" />
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
           {NAV.map((item) => (

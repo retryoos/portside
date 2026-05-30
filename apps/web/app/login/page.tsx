@@ -2,8 +2,8 @@
 // hero with a frosted-glass card overlaid asymmetrically (Revolut-style),
 // falling back to a deep-ink surface when no hero photo is committed.
 
-import Image from "next/image";
 import LoginForm from "./LoginForm";
+import Wordmark from "@/components/Wordmark";
 
 // `next` is a post-login destination forwarded by the middleware. Sanitised
 // here so an attacker can't craft `/login?next=//evil.com` and hijack the
@@ -45,17 +45,8 @@ export default async function LoginPage({
 
       <main className="relative flex min-h-screen flex-col justify-center px-6 py-16 md:items-end md:px-16 md:py-20 lg:px-24">
         <section className="card-glass w-full max-w-md px-8 py-10 md:px-10 md:py-12">
-          <div className="mb-10 flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt=""
-              aria-hidden
-              width={40}
-              height={40}
-              priority
-              className="h-10 w-10"
-            />
-            <span className="text-h3 text-primary">Papership.Ai</span>
+          <div className="mb-10">
+            <Wordmark size="lg" />
           </div>
 
           <p className="text-eyebrow text-secondary">Welcome back</p>

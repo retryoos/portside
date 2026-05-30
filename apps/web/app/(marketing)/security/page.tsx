@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Security · Papership.Ai",
+  title: "Security · Laytimely",
   description:
-    "How Papership.Ai handles identity, data at rest, data in transit, access control, audit logging, and incident response.",
+    "How Laytimely handles identity, data at rest, data in transit, access control, audit logging, and incident response.",
 };
 
 export default function SecurityPage() {
@@ -61,10 +61,10 @@ export default function SecurityPage() {
           <p className="text-body-lg text-secondary">
             Suspected vulnerabilities and incident reports go to
             <a
-              href="mailto:security@papership.ai"
+              href="mailto:security@laytimely.com"
               className="ml-1 underline underline-offset-4"
             >
-              security@papership.ai
+              security@laytimely.com
             </a>
             . We acknowledge within one business day and disclose any incident
             that affects customer data to the affected customer within

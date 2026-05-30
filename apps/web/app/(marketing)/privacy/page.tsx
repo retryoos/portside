@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Privacy · Papership.Ai",
+  title: "Privacy · Laytimely",
   description:
-    "What Papership.Ai collects, how we use it, who we share it with, and the rights you retain over your data.",
+    "What Laytimely collects, how we use it, who we share it with, and the rights you retain over your data.",
 };
 
 const SECTIONS: { eyebrow: string; body: string }[] = [
   {
     eyebrow: "Who we are",
-    body: "Papership.Ai is operated by Papership Single-Member P.C. (a Greek IKE), registered in Athens. The data controller for the product is Papership.Ai. Questions about this notice should go to privacy@papership.ai.",
+    body: "Laytimely is a Greek IKE (Ιδιωτική Κεφαλαιουχική Εταιρεία) registered in Athens. The data controller for the product is Laytimely. Questions about this notice should go to privacy@laytimely.com.",
   },
   {
     eyebrow: "What we collect",
@@ -30,7 +30,7 @@ const SECTIONS: { eyebrow: string; body: string }[] = [
   },
   {
     eyebrow: "Your rights",
-    body: "You may access, correct, export, or delete your data at any time. Email privacy@papership.ai with a verifiable request and we will respond within thirty days. EEA and UK users have the rights conferred by GDPR; California users have the rights conferred by the CCPA.",
+    body: "You may access, correct, export, or delete your data at any time. Email privacy@laytimely.com with a verifiable request and we will respond within thirty days. EEA and UK users have the rights conferred by GDPR; California users have the rights conferred by the CCPA.",
   },
   {
     eyebrow: "Cookies",

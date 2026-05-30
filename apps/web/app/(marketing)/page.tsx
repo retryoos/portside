@@ -11,22 +11,22 @@ import Link from "next/link";
 // SEO metadata for the landing surface. Open Graph carries the hero
 // photograph (with the deep-ink fallback if the asset is missing).
 export const metadata: Metadata = {
-  title: "Papership.Ai · Recover the demurrage you're owed",
+  title: "Laytimely · Recover the demurrage you're owed",
   description:
     "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
   openGraph: {
-    title: "Papership.Ai · Recover the demurrage you're owed",
+    title: "Laytimely · Recover the demurrage you're owed",
     description:
       "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
-    url: "https://papership.ai/",
-    siteName: "Papership.Ai",
+    url: "https://laytimely.com/",
+    siteName: "Laytimely",
     images: ["/photography/hero-landing.jpg"],
     locale: "en_GB",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Papership.Ai",
+    title: "Laytimely",
     description:
       "Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
     images: ["/photography/hero-landing.jpg"],

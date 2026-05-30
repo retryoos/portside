@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import Container from "./Container";
+import Wordmark from "@/components/Wordmark";
 
 // Marketing footer. Wordmark on the left, four short sitemap columns, a
 // copyright line at the bottom. Off-white surface, hairline rule above.
@@ -26,19 +26,8 @@ export default function Footer() {
       <Container>
         <div className="grid grid-cols-1 gap-12 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
-            <Link
-              href="/"
-              className="flex items-center gap-2.5 text-h3 tracking-tight text-primary"
-            >
-              <Image
-                src="/logo.png"
-                alt=""
-                aria-hidden
-                width={36}
-                height={36}
-                className="h-9 w-9"
-              />
-              <span>Papership.Ai</span>
+            <Link href="/" className="text-primary" aria-label="Laytimely home">
+              <Wordmark size="sm" />
             </Link>
             <p className="mt-5 max-w-sm text-body text-secondary">
               AI workflows for demurrage, laytime, freight disputes, and beyond.
@@ -54,7 +43,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8 text-body-sm text-secondary">
-          <p>© {new Date().getFullYear()} Papership.Ai. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Laytimely. All rights reserved.</p>
           <p>
             Built in Athens by Dimitris, Panos &amp; Roman at the ACG AI Lab.
           </p>

@@ -3,9 +3,9 @@ import Link from "next/link";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Contact · Papership.Ai",
+  title: "Contact · Laytimely",
   description:
-    "Get in touch with the Papership.Ai team. Sales, support, security, and press.",
+    "Get in touch with the Laytimely team. Sales, support, security, and press.",
 };
 
 const CHANNELS: {
@@ -18,25 +18,25 @@ const CHANNELS: {
     eyebrow: "Sales",
     title: "Book a demo.",
     body: "We will walk you through a live run on real voyage documents and answer questions on the pipeline, the trust model, and pricing.",
-    email: "sales@papership.ai",
+    email: "sales@laytimely.com",
   },
   {
     eyebrow: "Support",
     title: "Talk to a human.",
     body: "Existing customers reach the on-call team here. Most replies within a couple of hours during European business hours.",
-    email: "support@papership.ai",
+    email: "support@laytimely.com",
   },
   {
     eyebrow: "Security",
     title: "Report a vulnerability.",
     body: "Suspected vulnerabilities, abuse, and incident reports. Acknowledged within one business day.",
-    email: "security@papership.ai",
+    email: "security@laytimely.com",
   },
   {
     eyebrow: "Press",
     title: "Talk to the founders.",
     body: "Journalists and analysts: brief notes are welcome and we keep embargoed details in confidence.",
-    email: "press@papership.ai",
+    email: "press@laytimely.com",
   },
 ];
 
