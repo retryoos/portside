@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://papership.ai";
+
 export const metadata: Metadata = {
-  title: "Papership.Ai: Demurrage & Laytime Resolution",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Papership.Ai · Recover the demurrage you're owed",
+    template: "%s · Papership.Ai",
+  },
   description:
-    "One voyage document bundle in. One legally-structured demurrage claim packet out.",
+    "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
 };
 
 export default function RootLayout({
