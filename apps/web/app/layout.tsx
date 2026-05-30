@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import LiquidBackground from "@/components/LiquidBackground";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,10 +22,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <LiquidBackground />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
