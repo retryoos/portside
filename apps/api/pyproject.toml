@@ -11,6 +11,9 @@ dependencies = [
     "pdfplumber",
     "python-multipart",
     "sqlalchemy>=2",
+    # sqlalchemy declares greenlet as optional, but its async engine + Alembic
+    # async migrations both require it. Pin explicitly so a fresh venv works.
+    "greenlet>=3",
     "alembic",
     "aiosqlite",
     "asyncpg",
