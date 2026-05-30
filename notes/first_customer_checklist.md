@@ -249,6 +249,10 @@ each tier can be parallelised; tiers are sequential.
 
 ### Tier 0 — Pre-customer demo (this week)
 
+> Workflow: all Tier 0 work ships on the `docs/first-customer-checklist`
+> branch as a single rolling PR. Per-subphase branches are a Tier 2 (CI/CD)
+> concern; until then we move faster on one branch.
+
 1. **Vercel frontend deploy.** Hobby tier, connect `apps/web`, point
    `NEXT_PUBLIC_API_URL` at the App Runner URL. Half a day.
 2. **P3 — App Runner backend deploy.** Build from the existing `Dockerfile`
@@ -256,8 +260,11 @@ each tier can be parallelised; tiers are sequential.
    admin/admin auth stays on. Half a day.
 3. **P9 (minimum slice) — basic upload limits.** Cap upload size, restrict to
    `application/pdf`. The full hardening waits for Tier 2. Half a day.
-4. **P6 (minimum slice) — basic Sentry on both apps.** So we see the demo
-   crashing in front of an investor before they tell us. Half a day.
+
+P6 (Sentry, minimum slice) is deferred out of Tier 0. The demo does not need
+external error reporting; the local laptop demo remains the primary surface
+and CloudWatch logs are enough triage for the public URL until a paying
+customer arrives. P6 minimum + full now live in Tier 2 together.
 
 ### Tier 1 — Right before / on first customer
 
@@ -281,8 +288,11 @@ each tier can be parallelised; tiers are sequential.
     timeout audit, error taxonomy, DB backup policy. One day.
 14. **P5 — CI/CD.** GitHub Actions for lint + pytest + tsc on PR, deploy on
     merge. Half a day.
-15. **P6 (full) — observability.** CloudWatch 5xx alarm to ops email,
-    structured logging, strip stray `print`/`console.log`. Half a day.
+15. **P6 — observability.** Sentry on API + web (smallest install: `sentry-sdk[fastapi]`
+    and `@sentry/nextjs`, no-op when the DSN is unset) plus CloudWatch 5xx
+    alarm to ops email, structured logging, strip stray
+    `print`/`console.log`. Half a day; combines what was previously split
+    into P6 minimum (Tier 0) and P6 full (Tier 2).
 
 ### Tier 3 — First-customer-driven
 

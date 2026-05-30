@@ -1,34 +1,45 @@
 # Tier 0 deploy plan (Panos's track, taking over)
 
-> Action plan for the four Tier 0 subphases that bring the demo live on a
-> public URL. Source of truth is
+> Action plan for the Tier 0 subphases that bring the demo live on a public
+> URL. Source of truth is
 > [first_customer_checklist.md §10 Tier 0](first_customer_checklist.md#tier-0--pre-customer-demo-this-week);
 > subphase content originates in
 > [19-production-reasoning-panos.md](19-production-reasoning-panos.md). The
 > authentication stub is preserved per
 > [21-authentication-stub.md](21-authentication-stub.md). This plan lists, for
-> each subphase: the branch, the files I will touch, the env vars, the human
-> blockers, the CLI I will run, and the acceptance evidence I will capture.
+> each subphase: the files touched, the env vars, the human blockers, the CLI
+> to run, and the acceptance evidence to capture.
+>
+> Workflow update (per founder direction): all Tier 0 work ships on the
+> `docs/first-customer-checklist` branch as a single rolling PR. The original
+> "one branch per subphase" discipline is a Tier 2 (CI/CD) concern; until
+> then we move faster on one branch.
+>
+> Scope update: P6 minimum (Sentry on both apps) is deferred out of Tier 0
+> and folded into the full P6 in Tier 2. The demo does not need external
+> error reporting; the laptop remains the primary surface and CloudWatch
+> logs are enough triage for the public URL until a paying customer arrives.
+>
+> Remaining Tier 0 subphases: P0 (Vercel frontend deploy), P3 (App Runner
+> backend deploy), P9 minimum (upload size cap + content-type allowlist).
 >
 > Tier 1 (Cognito, RDS, S3, Doppler), Tier 2 (full hardening, CI/CD, full
-> observability), and Tier 3 (Amplify, SES, Excel) are out of scope for this
-> plan.
+> observability including Sentry), and Tier 3 (Amplify, SES, Excel) are out
+> of scope for this plan.
 
 ---
 
 ## 1. Scope and non-goals
 
-In scope, in shipping order:
+In scope, in shipping order, all on the `docs/first-customer-checklist` branch:
 
 1. **P0**, Vercel frontend deploy of `apps/web` on Hobby tier.
 2. **P3**, AWS App Runner backend deploy from `apps/api/Dockerfile` via
    `apps/api/apprunner.yaml`.
 3. **P9 minimum**, upload size cap (25 MB per file) and content-type allowlist
    (`application/pdf` only) on `POST /voyages`.
-4. **P6 minimum**, smallest viable Sentry install on both apps, no-op when the
-   DSN env var is absent.
 
-Out of scope, do not touch in these four PRs:
+Out of scope, do not touch in this PR:
 
 - `apps/api/portside_api/schemas.py` and `apps/web/lib/types.ts` are FROZEN.
   None of P0, P3, P9 min, or P6 min require changes there. If a follow-up
@@ -46,7 +57,6 @@ Hard rules I will not violate:
 - No em dashes anywhere in code, prose, or commit messages. Use commas,
   periods, colons. A previous cleanup commit removed them from the codebase;
   do not reintroduce.
-- One PR per subphase. Small, disjoint file set, self-verifying.
 - Money is never owned by the model. The calculator and its test are
   off-limits.
 - Match the project commit-message style: subject line, blank line, body,
@@ -54,23 +64,24 @@ Hard rules I will not violate:
 
 ---
 
-## 2. Branching and PR layout
+## 2. Branch and PR layout
 
-| # | Subphase | Branch | Base | Files (approx.) | Tests |
-| --- | --- | --- | --- | --- | --- |
-| 0 | This plan | `docs/first-customer-checklist` (current) | `main` | `notes/22-tier-0-deploy-plan.md` only | n/a |
-| 1 | P0 Vercel | `feat/p0-vercel-frontend` | `main` | `apps/web/.env.example`, optional `apps/web/README.md` blurb, optional repo-root `.vercelignore` | none, deploy-time verification |
-| 2 | P3 App Runner | `feat/p3-app-runner-deploy` | `main` | `apps/api/apprunner.yaml`, `apps/api/.env.example`, `notes/16-aws-deploy.md` (Tier 0 click-through update) | existing suite stays green |
-| 3 | P9 minimum | `feat/p9-min-upload-limits` | `main` | `apps/api/portside_api/limits.py` (new), `apps/api/portside_api/main.py` (the `create_voyage` handler only), `apps/api/tests/test_upload_limits.py` (new) | new tests for 413 and 415, plus the existing suite still green |
-| 4 | P6 minimum | `feat/p6-min-sentry` | `main` | `apps/api/pyproject.toml`, `apps/api/uv.lock`, `apps/api/portside_api/sentry.py` (new), `apps/api/portside_api/main.py` (one-line import), `apps/api/apprunner.yaml`, `apps/api/.env.example`, `apps/web/package.json`, `apps/web/package-lock.json`, `apps/web/instrumentation.ts` (new), `apps/web/sentry.client.config.ts` (new), `apps/web/sentry.server.config.ts` (new), `apps/web/sentry.edge.config.ts` (new), `apps/web/.env.example` | new no-op tests asserting `Sentry.init` is safe with an empty DSN |
+Single working branch: `docs/first-customer-checklist`. Single rolling PR
+([#27](https://github.com/retryoos/portside/pull/27)) that absorbs every
+Tier 0 commit. Founder direction: ship, do not litter the repo with
+per-subphase branches at this stage.
 
-Order of merge: the current docs PR first, then P0, then P3, then P9 minimum,
-then P6 minimum. The P0 and P3 PRs are independent at the code level (P0 is
-config-only on the Vercel side, P3 is config-only on the App Runner side);
-the deploys themselves interleave (see §3.3).
+Commits land in this logical order, each one self-contained:
 
-The branches off `main` are short-lived. Each one is rebased on `main` right
-before merge so its diff stays small and reviewable.
+| # | Subphase | Files (approx.) | Tests |
+| --- | --- | --- | --- |
+| 1 | Plan + checklist updates | `notes/22-tier-0-deploy-plan.md`, `notes/first_customer_checklist.md` (this commit) | n/a |
+| 2 | P0 Vercel config | `apps/web/.env.example`, optional `.vercelignore` | none, deploy-time verification |
+| 3 | P3 App Runner config | `apps/api/apprunner.yaml`, `apps/api/.env.example`, `notes/16-aws-deploy.md` (Tier 0 click-through update) | existing suite stays green |
+| 4 | P9 minimum upload limits | `apps/api/portside_api/limits.py` (new), `apps/api/portside_api/main.py` (the `create_voyage` handler only), `apps/api/tests/test_upload_limits.py` (new) | new tests for 413 and 415, existing suite still green |
+
+Each commit message follows the project style and explains the why, not the
+what.
 
 ---
 
@@ -377,137 +388,6 @@ error taxonomy, DB backup policy) is Tier 2 and not in this PR.
 
 ---
 
-### 3.5 P6 minimum, Sentry on both apps
-
-**Goal.** Install Sentry on the API and the web with the smallest viable
-config. Reading `SENTRY_DSN_API` and `SENTRY_DSN_WEB` from env. When the
-DSN is missing the SDK is a no-op so local dev is unaffected.
-
-**API side, files in the PR.**
-
-- `apps/api/pyproject.toml`: add `sentry-sdk[fastapi]` to `dependencies`.
-- `apps/api/uv.lock`: regenerated via `uv lock`.
-- New: `apps/api/portside_api/sentry.py`. Single function:
-  ```
-  def init_sentry() -> None:
-      dsn = os.environ.get("SENTRY_DSN_API")
-      if not dsn:
-          return
-      sentry_sdk.init(
-          dsn=dsn,
-          traces_sample_rate=0.0,  # no perf in Tier 0
-          send_default_pii=False,
-          integrations=[FastApiIntegration()],
-      )
-  ```
-- `apps/api/portside_api/main.py`: one new import and one new call before
-  `app = FastAPI(...)`:
-  ```
-  from .sentry import init_sentry
-
-  init_sentry()
-  ```
-- `apps/api/apprunner.yaml`: declare `SENTRY_DSN_API` in the `env` block,
-  value `"set-via-console"`.
-- `apps/api/.env.example`: add `SENTRY_DSN_API=` (empty by default so local
-  dev stays a no-op).
-
-**Web side, files in the PR.**
-
-- `apps/web/package.json`: add `@sentry/nextjs` to `dependencies`.
-- `apps/web/package-lock.json`: regenerated via `npm install`.
-- New: `apps/web/instrumentation.ts`:
-  ```
-  export async function register() {
-    if (process.env.NEXT_RUNTIME === "nodejs") {
-      await import("./sentry.server.config");
-    }
-    if (process.env.NEXT_RUNTIME === "edge") {
-      await import("./sentry.edge.config");
-    }
-  }
-  ```
-- New: `apps/web/sentry.server.config.ts`, `sentry.edge.config.ts`,
-  `sentry.client.config.ts`. Each one:
-  ```
-  import * as Sentry from "@sentry/nextjs";
-  const dsn = process.env.SENTRY_DSN_WEB;
-  if (dsn) {
-    Sentry.init({
-      dsn,
-      tracesSampleRate: 0,
-      sendDefaultPii: false,
-    });
-  }
-  ```
-  When `SENTRY_DSN_WEB` is unset, `Sentry.init` is never called and the SDK
-  is effectively a no-op.
-- `apps/web/.env.example`: add `SENTRY_DSN_WEB=`.
-- I will deliberately NOT wrap `next.config.mjs` with `withSentryConfig`.
-  Source map upload, release tagging, and tunnel routes are Tier 2 (full P6)
-  and not needed for the minimum slice.
-
-**Env vars.**
-
-| App | Env var | Set where |
-| --- | --- | --- |
-| API | `SENTRY_DSN_API` | App Runner console (secret) |
-| Web | `SENTRY_DSN_WEB` | Vercel project env (production, preview) |
-
-The web DSN is intentionally NOT exposed as `NEXT_PUBLIC_SENTRY_DSN_WEB`;
-client-side Sentry on Next.js 15 reads the DSN at build time from the
-non-public env when configured via the `sentry.client.config.ts` route, then
-inlines it during the build. The user can choose to expose it as a public
-env if they want a separate frontend Sentry org; the minimum slice keeps
-both on a single web DSN.
-
-**Human blockers.**
-
-1. Create or confirm a Sentry org (free tier is enough).
-2. Create two projects: `papership-api` (Python / FastAPI) and
-   `papership-web` (Next.js).
-3. Paste back the two DSN strings. I will type them into the App Runner and
-   Vercel consoles.
-
-**What I will do via CLI.**
-
-- API side: `cd apps/api && uv add 'sentry-sdk[fastapi]' && uv lock`.
-- Web side: `cd apps/web && npm install --save @sentry/nextjs`.
-- Run the existing test suite. The new no-op test verifies an empty DSN does
-  not crash and does not send to a network.
-- Smoke after deploy: a one-shot script `apps/api/scripts/sentry_smoke.py`
-  (and an `apps/web/scripts/sentry-smoke.ts` equivalent) that triggers a
-  captured exception, run once after the DSN env vars land. The scripts are
-  test artifacts, not user-facing routes. I will NOT ship a debug endpoint
-  to production traffic.
-
-**Acceptance.**
-
-- An intentional unhandled exception in the API reaches the Sentry
-  `papership-api` project within 30 seconds.
-- Same for the web in `papership-web`.
-- With both DSN env vars unset, `uv run pytest -q` is green and
-  `npm run build` plus `npx tsc --noEmit` are green.
-
-**Evidence I will capture.**
-
-- Sentry issue links for both apps.
-- Pytest and tsc green output.
-- The smoke scripts removed if we judge them noisy, kept in `scripts/` if we
-  judge them useful for future Tier 2 work.
-
-**Risks.**
-
-- `@sentry/nextjs` major versions sometimes shift the recommended init
-  shape. I will pin to the current stable release line and document the
-  version in `package.json`.
-- The FastAPI integration adds a small import-time cost. With DSN unset we
-  short-circuit before importing, so cold-start is unchanged.
-- A misconfigured `instrumentation.ts` can break `next build`. Verified
-  locally before pushing.
-
----
-
 ## 4. Operational order and timing
 
 Calendar order, with the actual blocking dependencies between subphases:
@@ -515,52 +395,49 @@ Calendar order, with the actual blocking dependencies between subphases:
 ```
 day 1 morning
   [human]    confirm Vercel and AWS accounts, run vercel login + aws configure
-  [human]    paste back: email + aws sts get-caller-identity + ANTHROPIC_API_KEY
-  [me]       open PR0 (this doc), merge after review
-  [me]       open PR1 (P0 Vercel config), keep open until P3 URL exists
-  [me]       open PR2 (P3 App Runner config), merge
+  [human]    paste back: vercel email + aws sts get-caller-identity + ANTHROPIC_API_KEY
+  [me]       commit checklist update, drop P6 minimum out of Tier 0
+  [me]       commit P3 App Runner config (DEV_AUTH=1, CORS placeholder)
   [human]    click through App Runner service creation in console
   [me]       capture App Runner URL, set CORS_ORIGINS placeholder, smoke /healthz
 day 1 afternoon
-  [me]       set NEXT_PUBLIC_API_URL in Vercel, deploy production
-  [me]       capture Vercel URL, update App Runner CORS_ORIGINS to the Vercel URL
+  [me]       commit P0 Vercel config (.env.example), link project, set Vercel env vars
+  [me]       deploy production, capture Vercel URL
+  [me]       update App Runner CORS_ORIGINS to the Vercel URL, redeploy
   [me]       smoke an end-to-end upload through the Vercel frontend
-  [me]       merge PR1 (P0 Vercel config)
 day 2 morning
-  [me]       open PR3 (P9 minimum upload limits), local pytest -q green
-  [me]       merge PR3, App Runner redeploys, repeat the curl smokes for 413/415
-day 2 afternoon
-  [human]    create Sentry org + two projects, paste back the two DSNs
-  [me]       open PR4 (P6 minimum Sentry), local build + pytest -q green
-  [me]       set DSN env vars on App Runner and Vercel, redeploy both
-  [me]       run smoke scripts, capture Sentry issue links, merge PR4
+  [me]       commit P9 minimum upload limits + tests, local pytest -q green
+  [me]       App Runner redeploys, repeat curl smokes for 413 and 415
+  [me]       merge PR #27
 ```
 
-Total wall-clock budget is roughly two engineering days, dominated by AWS
-provisioning latency and AWS console click-throughs. Anthropic API calls are
-incidental.
+Total wall-clock budget is roughly one to one and a half engineering days,
+dominated by AWS provisioning latency and AWS console click-throughs.
+Anthropic API calls are incidental.
 
 ---
 
 ## 5. Human-only blockers (single concise asks)
 
-Below are the messages I will send the user, exactly once per blocker, and
-then wait. No improvising around them.
+Below are the messages I send the user, exactly once per blocker, and then
+wait. No improvising around them.
 
-1. P0 unblock: "I need you to run `vercel login` in your terminal and paste
-   back the email you used. Confirm you are on Hobby tier. Reply when done."
-2. P3 unblock: "I need you to run `aws configure sso` (or `aws configure`)
-   and then paste back the output of `aws sts get-caller-identity` so I can
-   see which account I am pointed at. Also paste the production
-   `ANTHROPIC_API_KEY` value in our private channel."
-3. P3 console step: "I need you to click through the App Runner service
-   creation in the AWS console once, using `apps/api/apprunner.yaml` as the
-   source config and the GitHub connection to `retryoos/portside`. Paste the
-   service URL when the service is `RUNNING`."
-4. P6 unblock: "I need you to create a Sentry org plus two projects
-   (`papership-api`, FastAPI; `papership-web`, Next.js) and paste both DSNs."
+1. P0 unblock: "Run `vercel login` and paste back the email used. Confirm
+   Hobby tier." Status: DONE.
+2. P3 unblock: "Run `aws configure sso` (or `aws configure`) then paste back
+   the output of `aws sts get-caller-identity`. Also paste the production
+   `ANTHROPIC_API_KEY` in our private channel."
+3. P3 console step: "Click through App Runner service creation in the AWS
+   console once, using `apps/api/apprunner.yaml` as the source config and the
+   GitHub connection to `retryoos/portside`. Paste the service URL when the
+   service is `RUNNING`."
 
-If any one of these is missing I stop and wait. I do not invent stand-ins.
+Sentry (was P6 minimum) is deferred to Tier 2; no Sentry blocker exists in
+Tier 0. Doppler is Tier 1; the checklist explicitly notes raw env vars in
+App Runner and Vercel are acceptable for the demo, so we do not provision
+Doppler now.
+
+If any blocker above is missing I stop and wait. I do not invent stand-ins.
 
 ---
 
@@ -572,10 +449,8 @@ If any one of these is missing I stop and wait. I do not invent stand-ins.
   `demurrage_due_eur = 84375.0`.
 - A 30 MB upload returns 413, a `.docx` upload returns 415, and the
   pytest suite (including the 84,375 gate) is green.
-- An intentional unhandled exception on each app surfaces in the
-  corresponding Sentry project within 30 seconds.
 
-When all five lines are green, Tier 0 is shipped. Tier 1 starts.
+When all four lines are green, Tier 0 is shipped. Tier 1 starts.
 
 ---
 
@@ -586,8 +461,8 @@ When all five lines are green, Tier 0 is shipped. Tier 1 starts.
   the second redefines the function without auth and calls
   `store.delete(voyage_id)` without an owner id. Starlette keeps the first
   match, so the auth path wins at runtime, but the dead second route is
-  confusing and should be removed in a separate small PR (not P9 minimum,
-  not P6 minimum). Filed as a follow-up.
+  confusing and should be removed in a separate small commit on this same
+  branch if time permits, or filed as a follow-up otherwise.
 - `apps/api/apprunner.yaml` and several other files contain em dashes
   inherited from before the previous cleanup. They are not in the Tier 0
   diff. I will not regress on this rule: every new line I write here uses
@@ -599,11 +474,11 @@ When all five lines are green, Tier 0 is shipped. Tier 1 starts.
 
 ---
 
-## 8. What I report after each subphase merges
+## 8. What I report after each subphase commit
 
 A short message, every time, with these five lines:
 
-1. What I did (the PR link, the files touched).
+1. What I did (the commit SHA, the files touched).
 2. What is live (the URL).
 3. The acceptance evidence (curl trace, screenshot, or pytest excerpt).
 4. What is left for the human (paste-back asks, if any).

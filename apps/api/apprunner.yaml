@@ -1,9 +1,10 @@
 # App Runner config for the Papership.Ai API.
 # Repo source: GitHub. Source dir: apps/api. Runtime: docker (uses the
-# Dockerfile sibling). See notes/16-aws-deploy.md for the step-by-step.
+# Dockerfile sibling). See notes/16-aws-deploy.md and
+# notes/22-tier-0-deploy-plan.md for the step-by-step.
 #
 # Real env values (ANTHROPIC_API_KEY especially) are bound via the App Runner
-# console as secrets — never committed. Placeholders below exist only so the
+# console as secrets, never committed. Placeholders below exist only so the
 # App Runner parser sees declared names; override every one of them in console.
 
 version: 1.0
@@ -19,7 +20,7 @@ run:
     port: 8000
     env: PORT
   env:
-    # Real value set via App Runner console secret binding — never committed.
+    # Real value set via App Runner console secret binding, never committed.
     - name: ANTHROPIC_API_KEY
       value: "set-via-console"
     - name: ANTHROPIC_MODEL_PRIMARY
@@ -28,6 +29,13 @@ run:
       value: "claude-opus-4-7"
     - name: REQUEST_TIMEOUT_S
       value: "30"
+    # Tier 0 demo: admin / admin stub is the login. DEV_AUTH=1 bypasses JWT
+    # verification (notes/21-authentication-stub.md). Flip to 0 when Cognito
+    # lands in Tier 1.
+    - name: DEV_AUTH
+      value: "1"
     - name: CORS_ORIGINS
-      # Updated to the real Amplify domain at deploy time.
+      # Tier 0: set to the Vercel production URL once it exists, comma-separated
+      # with any additional preview origins. Placeholder kept so the service
+      # can boot before the Vercel URL is known.
       value: "http://localhost:3000"
