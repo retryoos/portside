@@ -2,70 +2,149 @@
 @import "./theme.css";
 
 /* Type scale from DESIGN.md typography tokens. Prefer these over ad-hoc sizing.
-   Inter throughout; mono is reserved for the SoF numeric table. */
+   Inter throughout; mono reserved for the SoF numeric table. The hero scale
+   is editorial Revolut-grade: 5rem at desktop for the dashboard headline,
+   6rem at desktop for the demurrage figure on case detail. */
 @layer components {
-  .text-display {
+  /* The dashboard / vessels marquee headline. */
+  .text-hero {
     font-family: var(--font-display);
-    font-size: 2.5rem;
+    font-size: 3rem;
     font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.05;
+    letter-spacing: -0.035em;
+    line-height: 1;
   }
-  /* The hero demurrage figure: large Inter, tight tracking. */
+  @media (min-width: 768px) {
+    .text-hero {
+      font-size: 5rem;
+      letter-spacing: -0.04em;
+    }
+  }
+
+  /* The demurrage quantum on case detail. Single largest thing in the app. */
   .text-hero-figure {
     font-family: var(--font-display);
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     font-weight: 600;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
+  @media (min-width: 768px) {
+    .text-hero-figure {
+      font-size: 6rem;
+      letter-spacing: -0.045em;
+    }
+  }
+  /* Clamp variant: once the rendered string is > 14 characters, shrink to the
+     display size so a long quantum doesn't overflow. Apply with the parent
+     adding `.text-hero-figure--long` (caller responsibility, see DESIGN.md). */
+  .text-hero-figure--long {
+    font-size: 2.5rem;
+  }
+  @media (min-width: 768px) {
+    .text-hero-figure--long {
+      font-size: 4rem;
+    }
+  }
+
+  /* Intermediate marquee. Login welcome, marketing-style sections. */
+  .text-display {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+  @media (min-width: 768px) {
+    .text-display {
+      font-size: 3.5rem;
+      letter-spacing: -0.035em;
+    }
+  }
+
   .text-h1 {
     font-family: var(--font-display);
     font-size: 1.75rem;
     font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+  @media (min-width: 768px) {
+    .text-h1 {
+      font-size: 2.5rem;
+      letter-spacing: -0.03em;
+    }
+  }
+
+  .text-h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.2;
   }
-  .text-h2 {
-    font-family: var(--font-display);
-    font-size: 1.375rem;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.25;
+  @media (min-width: 768px) {
+    .text-h2 {
+      font-size: 1.75rem;
+    }
   }
+
   .text-h3 {
     font-family: var(--font-sans);
-    font-size: 1rem;
+    font-size: 1.125rem;
     font-weight: 600;
-    line-height: 1.4;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
   }
+
   .text-body {
     font-family: var(--font-sans);
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.55;
   }
-  .text-body-sm {
+  .text-body-lg {
     font-family: var(--font-sans);
-    font-size: 0.8125rem;
+    font-size: 1.125rem;
     font-weight: 400;
     line-height: 1.5;
   }
-  /* The formal claim letter body: clean Inter, generous leading. */
+  .text-body-sm {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  /* The formal claim letter body: generous leading. */
   .text-letter-body {
     font-family: var(--font-sans);
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 400;
     line-height: 1.75;
   }
+
+  /* Eyebrow: the small label above every hero. */
+  .text-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  /* Table column heads, tab pills. */
   .text-label-caps {
     font-family: var(--font-sans);
     font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     line-height: 1.4;
     text-transform: uppercase;
   }
+
   .text-mono {
     font-family: var(--font-mono);
     font-size: 0.8125rem;
@@ -75,18 +154,23 @@
   }
 }
 
-/* Decorative gradient surfaces (ElevenLabs orbs). Never applied to text. */
-@layer utilities {
-  .bg-gradient-warm {
-    background-image: var(--gradient-warm);
+/* The single frosted-glass treatment. Reserved for cards that sit OVER
+   photography (login hero, case-detail hero overlay). Never use on solid
+   surfaces. */
+@layer components {
+  .card-glass {
+    background-color: var(--color-glass-tint-strong);
+    border: 1px solid var(--color-glass-stroke);
+    border-radius: var(--radius-glass);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: var(--shadow-glass);
   }
-  .bg-gradient-cool {
-    background-image: var(--gradient-cool);
-  }
+}
 
-  /* Skeleton placeholder. Muted base + a soft white gradient sliding L→R so
-     long-running bars feel like data is streaming in (used during pipeline
-     processing on /cases/[id]). */
+/* Pipeline skeleton shimmer. Reserved for the live pipeline reveal on
+   /cases/[id]; not for static loading states (use a calm pulse there). */
+@layer utilities {
   .animate-shimmer {
     position: relative;
     overflow: hidden;
@@ -113,149 +197,47 @@
   }
 }
 
-/* LiquidBackground (components/LiquidBackground.tsx). Animated decorative
-   layer that sits inside any positioned container with `overflow-hidden`.
-   Three softly drifting orbs plus a cursor-tracking pool, all blending with
-   the static gradient orbs below via `mix-blend-mode: soft-light`. Calm by
-   design: long eased keyframes, low saturation, heavy blur. */
-@layer components {
-  .liquid-bg {
-    /* Global fallback layer for LiquidBackground. Fixed behind every page;
-       used only when the primary WebGL canvas can't initialise (see
-       LiquidBackgroundFallback.tsx). */
-    position: fixed;
-    inset: 0;
-    z-index: -10;
-    overflow: hidden;
-    pointer-events: none;
-    /* Default cursor position before JS attaches a mousemove handler, so the
-       pool is in a sensible place on first paint. */
-    --lx: 50%;
-    --ly: 50%;
-  }
-
-  .liquid-orb {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(56px);
-    will-change: transform;
-    mix-blend-mode: soft-light;
-    opacity: 0.6;
-  }
-  .liquid-orb--warm {
-    background-image: var(--gradient-warm);
-  }
-  .liquid-orb--cool {
-    background-image: var(--gradient-cool);
-  }
-  /* Three instances with different geometry and timelines so the field never
-     looks periodic. Each loop is a different prime-ish length and rotates
-     in a different direction. */
-  .liquid-orb--a {
-    width: 55%;
-    height: 80%;
-    top: -15%;
-    left: -15%;
-    animation: liquid-drift-a 22s ease-in-out infinite;
-  }
-  .liquid-orb--b {
-    width: 60%;
-    height: 85%;
-    bottom: -22%;
-    right: -18%;
-    animation: liquid-drift-b 28s ease-in-out infinite;
-  }
-  .liquid-orb--c {
-    width: 45%;
-    height: 65%;
-    top: 30%;
-    left: 25%;
-    opacity: 0.45;
-    animation: liquid-drift-c 34s ease-in-out infinite;
-  }
-
-  /* Cursor pool: a soft accent-tinted halo whose centre tracks the pointer
-     via custom properties set in LiquidBackground.tsx. Eased `left`/`top`
-     transitions give the pool a viscous, swing-into-place feel. */
-  .liquid-cursor {
-    position: absolute;
-    left: var(--lx);
-    top: var(--ly);
-    width: 26rem;
-    height: 26rem;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(
-      closest-side,
-      var(--color-accent-container) 0%,
-      transparent 100%
-    );
-    border-radius: 9999px;
-    filter: blur(24px);
-    opacity: 0.55;
-    mix-blend-mode: soft-light;
+/* CTA lift: 1px translate on hover, the only motion on a button. */
+@layer utilities {
+  .btn-lift {
     transition:
-      left 0.7s cubic-bezier(0.2, 0.7, 0, 1),
-      top 0.7s cubic-bezier(0.2, 0.7, 0, 1);
-    will-change: left, top;
+      background-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+  .btn-lift:hover {
+    transform: translateY(-1px);
+  }
+  .btn-lift:active {
+    transform: translateY(0);
   }
 }
 
-@keyframes liquid-drift-a {
-  0%,
-  100% {
-    transform: translate(0%, 0%) rotate(0deg) scale(1);
-  }
-  33% {
-    transform: translate(10%, 8%) rotate(2deg) scale(1.06);
-  }
-  66% {
-    transform: translate(-6%, 5%) rotate(-1deg) scale(0.96);
-  }
-}
-@keyframes liquid-drift-b {
-  0%,
-  100% {
-    transform: translate(0%, 0%) rotate(0deg) scale(1);
-  }
-  33% {
-    transform: translate(-8%, -6%) rotate(-2deg) scale(1.08);
-  }
-  66% {
-    transform: translate(6%, -10%) rotate(1deg) scale(0.94);
-  }
-}
-@keyframes liquid-drift-c {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translate(-46%, -54%) rotate(3deg) scale(1.1);
-  }
+/* Focus rings: the only place indigo appears. */
+:where(button, a, [role="button"], input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 268 / 0.35);
+  border-radius: inherit;
 }
 
-/* Respect prefers-reduced-motion: kill the keyframes and the cursor swing,
-   leaving the three orbs as static decorative shapes. */
 @media (prefers-reduced-motion: reduce) {
-  .liquid-orb--a,
-  .liquid-orb--b,
-  .liquid-orb--c {
-    animation: none !important;
-  }
-  .liquid-cursor {
-    transition: none !important;
-  }
   .animate-shimmer::after {
     animation: none;
+  }
+  .btn-lift {
+    transition: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
 html {
-  /* Soft sky-blue base. Approximates the water's average tone so reloads
-     don't flash white before the WebGL canvas initialises. The canvas
-     (at z: -10 inside <body>) paints over this; body stays transparent so
-     it isn't covered by body's own background-color paint. */
-  background-color: oklch(0.88 0.06 240);
+  background-color: var(--color-neutral);
 }
 
 html,
@@ -267,16 +249,5 @@ body {
 }
 
 body {
-  background-color: transparent;
-}
-
-/* Frosted-glass treatment: every card / panel using the surface tokens gets
-   a backdrop blur. Combined with the alpha on --color-surface*, this is what
-   makes "windows" read as translucent glass over the LiquidBackground water.
-   Saturate boost compensates for the perceptual desaturation that strong
-   blur causes. */
-.bg-surface,
-.bg-surface-muted {
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  background-color: var(--color-neutral);
 }
