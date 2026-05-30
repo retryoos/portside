@@ -1,3 +1,3 @@
-"""Portside API — maritime demurrage claim packet generation."""
+"""Papership.Ai API — maritime demurrage claim packet generation."""
 
 __version__ = "0.1.0"

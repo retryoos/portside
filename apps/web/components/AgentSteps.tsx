@@ -87,7 +87,7 @@ export default function AgentSteps({
     <div className="rounded-xl border border-border bg-surface p-6">
       <p className="text-label-caps text-secondary">Drafting your claim</p>
       <ol
-        className="mt-5 flex flex-col gap-0 sm:flex-row sm:items-start sm:gap-0"
+        className="mt-5 flex flex-col gap-3 sm:grid sm:grid-cols-5 sm:gap-0"
         aria-label="Pipeline progress"
       >
         {STEPS.map((step, i) => {
@@ -99,35 +99,43 @@ export default function AgentSteps({
           return (
             <li
               key={step.stage}
-              className="flex items-center gap-3 sm:flex-1 sm:flex-col sm:items-start sm:gap-2"
+              className="relative flex items-center gap-3 sm:flex-col sm:items-center sm:gap-2"
               aria-current={active ? "step" : undefined}
             >
-              <div className="flex items-center gap-3 sm:w-full">
+              {/* Connector: runs from this circle's right edge to the next
+                  circle's left edge. Circle is h-7/w-7 (28px) and sits at the
+                  column centre, so the line is anchored at 14px past centre
+                  on each side. Hidden on mobile (stacked layout). */}
+              {!last && (
                 <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-body-sm font-semibold ${
-                    done
-                      ? "bg-primary text-on-primary"
-                      : active
-                        ? "bg-primary text-on-primary ring-4 ring-accent-container"
-                        : "border border-border bg-surface text-secondary"
-                  }`}
+                  aria-hidden="true"
+                  className="absolute top-[13px] hidden h-0.5 overflow-hidden bg-border sm:block"
+                  style={{
+                    left: "calc(50% + 18px)",
+                    right: "calc(-50% + 18px)",
+                  }}
                 >
-                  {done ? "✓" : i + 1}
-                </span>
-                {!last && (
                   <span
-                    aria-hidden="true"
-                    className="relative hidden h-px flex-1 overflow-hidden bg-border sm:block"
-                  >
-                    <span
-                      className="absolute inset-y-0 left-0 bg-primary transition-[width] duration-150 ease-linear"
-                      style={{ width: `${fill * 100}%` }}
-                    />
-                  </span>
-                )}
-              </div>
+                    className="absolute inset-y-0 left-0 bg-primary transition-[width] duration-150 ease-linear"
+                    style={{ width: `${fill * 100}%` }}
+                  />
+                </span>
+              )}
+
               <span
-                className={`text-body-sm ${
+                className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-body-sm font-semibold ${
+                  done
+                    ? "bg-primary text-on-primary"
+                    : active
+                      ? "bg-primary text-on-primary ring-4 ring-accent-container"
+                      : "border border-border bg-surface text-secondary"
+                }`}
+              >
+                {done ? "✓" : i + 1}
+              </span>
+
+              <span
+                className={`text-body-sm sm:text-center ${
                   done || active ? "font-medium text-primary" : "text-secondary"
                 }`}
               >

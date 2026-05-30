@@ -1,4 +1,4 @@
-"""FastAPI app + routes for the Portside backend.
+"""FastAPI app + routes for the Papership.Ai backend.
 
 Endpoints:
     POST /voyages                 upload CP/NOR/SoF PDFs, kick off the pipeline in
@@ -92,7 +92,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await _engine.dispose()
 
 
-app = FastAPI(title="Portside API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Papership.Ai API", version="0.1.0", lifespan=lifespan)
 
 # CORS allowlist comes from settings.cors_origins (notes/02-architecture.md §12):
 # local dev defaults to http://localhost:3000; add the Amplify domain on deploy
@@ -274,6 +274,14 @@ async def set_voyage_status(
     updated = await store.patch(voyage_id, stage=body.stage)
     assert updated is not None  # load() above proved it exists
     return updated
+
+
+@app.delete("/voyages/{voyage_id}", status_code=204)
+async def delete_voyage(voyage_id: str) -> None:
+    """Remove a voyage from the in-memory store. 404 if it doesn't exist."""
+    removed = await store.delete(voyage_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="voyage not found")
 
 
 @app.post("/voyages/{voyage_id}/revise")

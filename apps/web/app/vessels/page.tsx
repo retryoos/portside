@@ -5,7 +5,6 @@
 // filtered detail at /vessels/<encoded name>. Loading/empty/error states mirror
 // the /cases dashboard.
 import { useEffect, useState } from "react";
-import Breadcrumb from "@/components/Breadcrumb";
 import TopNav from "@/components/TopNav";
 import VesselsTable from "@/components/VesselsTable";
 import { listVessels } from "@/lib/api";
@@ -27,9 +26,8 @@ export default function VesselsDashboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-16">
       <TopNav />
-      <Breadcrumb segments={["Vessels"]} />
       <main className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
         <div>
           <h1 className="text-h1 text-primary">Vessels</h1>

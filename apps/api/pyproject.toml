@@ -1,7 +1,7 @@
 [project]
 name = "portside-api"
 version = "0.1.0"
-description = "Portside FastAPI backend — turns maritime voyage documents into a demurrage claim packet."
+description = "Papership.Ai FastAPI backend — turns maritime voyage documents into a demurrage claim packet."
 requires-python = ">=3.12"
 dependencies = [
     "fastapi",

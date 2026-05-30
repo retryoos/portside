@@ -252,7 +252,7 @@ Land all of these. They turn a strong demo into a remarkable one.
 ### Tier 2 — if we finish the MVP by 16:30
 Pick two.
 
-4. **A fleet view at `/`.** A list of seeded voyages with status, vessel, port, time-bar countdown. Click into one to see the detail page. We pre-seed 5 voyages from the backup scenarios. Suddenly Portside is "a product" not "a tool."
+4. **A fleet view at `/`.** A list of seeded voyages with status, vessel, port, time-bar countdown. Click into one to see the detail page. We pre-seed 5 voyages from the backup scenarios. Suddenly Papership.Ai is "a product" not "a tool."
 5. **Counterparty pattern insight.** A small inline panel on the right that says: "Mediterranean Crude Trading: 3 prior claims with this counterparty. Weather exception disputes upheld 2/3 times. Average settlement: 78% of claim quantum." Pre-seeded. The judge sees the "company brain" emerging.
 6. **Side-by-side voyage comparison.** Show the current voyage next to a "precedent" voyage where the same dispute type was settled. Reinforces the dataset-moat story.
 
@@ -272,7 +272,7 @@ Pick one.
 
 ---
 
-## 10. Phase C — taking Portside to the startup contest (the week after)
+## 10. Phase C — taking Papership.Ai to the startup contest (the week after)
 
 > **Note:** the hackathon-day deploy (Amplify frontend + App Runner backend, no auth/DB) is already done — see [02-architecture.md §12](02-architecture.md#12-hackathon-day-aws-deployment-parallel-flex-off-the-critical-path). Phase C *adds* persistence, auth, a custom domain, and CI/CD on top of that working deploy.
 

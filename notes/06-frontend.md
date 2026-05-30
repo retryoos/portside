@@ -10,7 +10,7 @@
 
 ### 0.1 `DESIGN.md` — the design tokens contract
 
-The Portside design system lives at [apps/web/DESIGN.md](../apps/web/DESIGN.md). It is a [google-labs-code/design.md](https://github.com/google-labs-code/design.md) spec file: YAML front-matter for tokens (colors, typography, spacing, components) and Markdown for rationale.
+The Papership.Ai design system lives at [apps/web/DESIGN.md](../apps/web/DESIGN.md). It is a [google-labs-code/design.md](https://github.com/google-labs-code/design.md) spec file: YAML front-matter for tokens (colors, typography, spacing, components) and Markdown for rationale.
 
 **Every Tailwind class you write maps to a token in that file.** If you find yourself reaching for `bg-gray-100` or `text-blue-600`, you are doing it wrong — go back to `apps/web/DESIGN.md`, find the right token, and use the corresponding Tailwind v4 CSS variable (`bg-surface-muted`, `text-primary`, etc.). If a token doesn't exist for what you need, the answer is almost always to use an existing one differently, not to add a new color.
 
@@ -106,7 +106,7 @@ A single page, three vertical panels on a 16:9 demo laptop (1920×1080):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  Portside                              MV Anthem of Piraeus / V-2026-114    │  ← top bar (slim, warm paper)
+│  Papership.Ai                              MV Anthem of Piraeus / V-2026-114    │  ← top bar (slim, warm paper)
 ├──────────────────────┬─────────────────────────────┬────────────────────────┤
 │                      │                             │                        │
 │  DOCUMENTS           │  LAYTIME TIMELINE           │  CLAIM PACKET          │
@@ -127,7 +127,7 @@ Background: `{colors.neutral}` (warm paper). Panels sit directly on the backgrou
 
 ## 3. Top bar
 
-- **Left:** "Portside" set in `h2` (Fraunces). No logo.
+- **Left:** "Papership.Ai" set in `h2` (Fraunces). No logo.
 - **Center:** Voyage identifier — vessel name in `h3`, voyage number in `label-caps` `{colors.secondary}` below. Empty before upload.
 - **Right:** Owner | Charterer toggle (`label-caps`, default Owner).
 - **Far right:** Time-bar countdown badge. Uses `badge-timebar-ok` / `badge-timebar-warning` / `badge-timebar-danger` from `DESIGN.md`. Format: "Time bar: 88 days".

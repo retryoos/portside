@@ -18,11 +18,11 @@
 >
 > "Excel and specialist P&I advisors are the state of the art. Neither is a product."
 >
-> "Portside is the product."
+> "Papership.Ai is the product."
 
 ### Beat 2 — Show the upload (30s)
 
-> "Owner's team gets the voyage docs from the port agent and the master. They drop them on Portside."
+> "Owner's team gets the voyage docs from the port agent and the master. They drop them on Papership.Ai."
 
 Drag the three PDFs onto the dropzone. Documents appear in the left panel. Vessel name and voyage ID appear in the top bar. Time-bar badge appears: **88 days remaining**.
 
@@ -77,7 +77,7 @@ Click **Generate Claim Letter** in the right panel. The BIMCO-style letter strea
 
 Highlight the second paragraph of the letter — the one describing the weather dispute. The **Refine** toolbar appears anchored to the selection.
 
-> "Portside drafts the letter. The claims executive owns it. Suppose they want the clause citation up front, not buried."
+> "Papership.Ai drafts the letter. The claims executive owns it. Suppose they want the clause citation up front, not buried."
 
 Click **Refine**. The inline panel opens. Type into the textarea: *"Lead with the citation to CP clause 17 and mention the 25-knot threshold explicitly."* Click **Refine with AI**. A loading pulse runs for ~1.5 seconds.
 
@@ -93,7 +93,7 @@ Hand the printed PDF to the nearest judge.
 
 > "Two days of work compressed into one minute. Two thousand dollars per hour of incremental recoverable demurrage that today either gets left on the table because the claim is too slow, or gets settled at half its real value because the legal argument was thin."
 >
-> "Greece controls twenty percent of global merchant fleet tonnage. Piraeus is the largest port in the Mediterranean. The dollar volume on the table is in the billions every year. Portside is the first product built for this workflow."
+> "Greece controls twenty percent of global merchant fleet tonnage. Piraeus is the largest port in the Mediterranean. The dollar volume on the table is in the billions every year. Papership.Ai is the first product built for this workflow."
 >
 > "Thank you."
 
@@ -124,7 +124,7 @@ A: Day one, ship operators and charterers in Greece — there are hundreds of sh
 **Q: How accurate does it have to be to be useful?**
 A: It does not have to be perfect — a claims executive will review every output before sending. It has to be **defensible**. Every figure traceable to a source event. Every argument citing a specific clause. A demurrage claim that the counterparty cannot reflexively reject is worth its weight even if the executive edits 10% of it.
 
-**Q: What if the counterparty has Portside too?**
+**Q: What if the counterparty has Papership.Ai too?**
 A: Excellent — that is the second motion. We sell to both sides. The output of both sides feeds into a shared arbitration record. Today these disputes go to LMAA arbitration with paper folders and human advocates. We compress that loop too.
 
 **Q: How long until you have a paying customer?**
@@ -143,7 +143,7 @@ Different from the demo. No screen. Just the team standing up and talking.
 > "There is one Greek industry where a single mistake costs eighty thousand dollars a day. It is not shipping. It is paperwork about shipping. Every contested demurrage claim is a paper fight that takes days, and Greek shipowners — who control a fifth of the world's tonnage — are losing billions of dollars a year because the paper fight is slower than the claim deserves to be."
 
 ### Beat 2 — The product (40s)
-> "Portside turns that paper fight into a one-minute workflow. Three voyage documents in. A defensible, BIMCO-style claim packet out. Per-event laytime calculation with deterministic arithmetic. Legal arguments for each contested time window with charter party clause citations. A formal claim letter ready to send. Today this takes two to four days of specialist time. Portside does it in under sixty seconds."
+> "Papership.Ai turns that paper fight into a one-minute workflow. Three voyage documents in. A defensible, BIMCO-style claim packet out. Per-event laytime calculation with deterministic arithmetic. Legal arguments for each contested time window with charter party clause citations. A formal claim letter ready to send. Today this takes two to four days of specialist time. Papership.Ai does it in under sixty seconds."
 
 ### Beat 3 — Why now, why us (40s)
 > "Two things changed. One, frontier models can now reason about contractual language and event timelines well enough that the synthesis is finally tractable. Two, the maritime industry's center of gravity for these disputes is in this room. Athens controls twenty percent of global tonnage. We showed an early build to a senior executive at a major Greek shipping company and to a shipping-industry adjudicator. Both said the same thing: this is the missing tool."

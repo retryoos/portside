@@ -19,7 +19,6 @@ from typing import Optional
 
 from . import pdf
 from .agents import analyst, calculator, drafter, extractor
-from .fixtures import demo_voyage_fixture
 from .schemas import (
     DisputeAnalysis,
     ExtractionResult,
@@ -70,14 +69,14 @@ async def run(
         await emit("extracting")
         texts = pdf.extract_all(files)
 
-        # Demo safety net: if nothing extractable (placeholder upload, offline
-        # smoke), serve the canonical demo voyage instead of erroring. Real demo
-        # PDFs are text-native, so this only triggers on empty input.
+        # If pdfplumber couldn't pull a single character out of any document,
+        # the upload is unusable (likely scanned/image PDFs without OCR). Fail
+        # loudly instead of silently serving the canonical demo fixture.
         if not any(t.strip() for t in texts.values()):
-            state = demo_voyage_fixture(voyage_id, perspective)
-            if store is not None:
-                await store.save(state)
-            return state
+            raise ValueError(
+                "No text could be extracted from the uploaded PDFs. "
+                "They may be scanned images — please upload text-native PDFs."
+            )
 
         extraction = await extractor.run(texts, voyage_id, perspective)
 

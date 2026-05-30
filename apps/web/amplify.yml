@@ -1,4 +1,4 @@
-# AWS Amplify Hosting build spec for the Portside frontend (Next.js 15 App Router).
+# AWS Amplify Hosting build spec for the Papership.Ai frontend (Next.js 15 App Router).
 # Set the App Root to `apps/web` in the Amplify Console; this file is read from there.
 # NEXT_PUBLIC_API_URL must be set in the Amplify environment variables to the
 # App Runner URL. See notes/16-aws-deploy.md.

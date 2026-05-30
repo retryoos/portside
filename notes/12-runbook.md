@@ -170,7 +170,7 @@ Follow the merge rules in [09-pre-merge-protocol.md](09-pre-merge-protocol.md).
 
 Paste this into your `claude` session:
 
-> You are building the backend for Portside (`apps/api/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/02-architecture.md`, `notes/03-agents.md`, and `notes/04-schemas.md`.
+> You are building the backend for Papership.Ai (`apps/api/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/02-architecture.md`, `notes/03-agents.md`, and `notes/04-schemas.md`.
 >
 > **PR #1 — `track-a/api-skeleton` (do this first and push to main so the frontend agent can start):**
 > 1. Scaffold `apps/api` with `uv` (Python 3.12, FastAPI, uvicorn, pydantic v2, anthropic, pdfplumber).
@@ -186,7 +186,7 @@ Paste this into your `claude` session:
 
 Paste this into the `claude` session on the Windows machine:
 
-> You are building the frontend for Portside (`apps/web/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/06-frontend.md` (especially §0 — the mandatory `/impeccable` + `apps/web/DESIGN.md` workflow), `apps/web/DESIGN.md`, and `notes/04-schemas.md`.
+> You are building the frontend for Papership.Ai (`apps/web/`). **First run `entire status` and confirm it shows ENABLED — if not, run `entire enable` before writing any code (judging requirement, see §1c).** Then read `notes/06-frontend.md` (especially §0 — the mandatory `/impeccable` + `apps/web/DESIGN.md` workflow), `apps/web/DESIGN.md`, and `notes/04-schemas.md`.
 >
 > **PR — `track-c/web-skeleton`:**
 > 1. Scaffold `apps/web` with Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui. Load the fonts and tokens from `apps/web/DESIGN.md` (Fraunces / IBM Plex Sans / JetBrains Mono).

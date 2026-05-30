@@ -1,4 +1,3 @@
-import Breadcrumb from "@/components/Breadcrumb";
 import TopNav from "@/components/TopNav";
 import ClaimScreen from "@/components/ClaimScreen";
 
@@ -14,9 +13,8 @@ export default async function CaseDetailPage({
 }) {
   const { id } = await params;
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-16">
       <TopNav />
-      <Breadcrumb segments={["Voyages", "MT Aegean Pioneer", "Claim"]} />
       <ClaimScreen id={id} />
     </div>
   );

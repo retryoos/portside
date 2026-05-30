@@ -6,6 +6,7 @@
 // clicking reveals the matching dispute.flagged_events entry inline. Owner
 // position shown as a WORD (Strong/Arguable/Weak), never a percentage.
 import { useState } from "react";
+import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
 import {
   confidenceWord,
@@ -24,14 +25,16 @@ const CATEGORY_LABEL: Record<string, string> = {
 export default function SoFTable({
   laytime = demoVoyage.laytime,
   flagged = demoVoyage.dispute?.flagged_events ?? [],
+  loading = false,
 }: {
   laytime?: LaytimeResult | null;
   flagged?: FlaggedEvent[];
+  loading?: boolean;
 }) {
   const lt = laytime;
   const [open, setOpen] = useState<string | null>(null);
 
-  if (!lt) return null;
+  const isLoading = loading || !lt;
 
   const flaggedFor = (eventId: string): FlaggedEvent | undefined =>
     flagged.find((f) => f.event_id === eventId);
@@ -55,27 +58,58 @@ export default function SoFTable({
             </th>
           </tr>
         </thead>
-        <tbody>
-          {lt.rows.map((row, i) => {
-            const flag = row.contestable ? flaggedFor(row.event_id_start) : undefined;
-            const isOpen = open === row.event_id_start;
-            return (
-              <RowFragment
-                key={`${row.event_id_start}-${i}`}
-                contestable={row.contestable}
-                isOpen={isOpen}
-                onToggle={() => setOpen(isOpen ? null : row.event_id_start)}
-                timestamp={formatLocalTimestamp(row.from)}
-                description={row.reason}
-                category={CATEGORY_LABEL[row.status] ?? row.status}
-                cumHrs={formatHours(row.running_total_hours)}
-                flag={flag}
-              />
-            );
-          })}
-        </tbody>
+        {isLoading ? (
+          <SkeletonBody />
+        ) : (
+          <tbody>
+            {lt!.rows.map((row, i) => {
+              const flag = row.contestable
+                ? flaggedFor(row.event_id_start)
+                : undefined;
+              const isOpen = open === row.event_id_start;
+              return (
+                <RowFragment
+                  key={`${row.event_id_start}-${i}`}
+                  contestable={row.contestable}
+                  isOpen={isOpen}
+                  onToggle={() => setOpen(isOpen ? null : row.event_id_start)}
+                  timestamp={formatLocalTimestamp(row.from)}
+                  description={row.reason}
+                  category={CATEGORY_LABEL[row.status] ?? row.status}
+                  cumHrs={formatHours(row.running_total_hours)}
+                  flag={flag}
+                />
+              );
+            })}
+          </tbody>
+        )}
       </table>
     </div>
+  );
+}
+
+// Skeleton tbody: 6 placeholder rows that match the real row geometry. The
+// real <thead> above anchors column widths so nothing shifts when bodies swap.
+function SkeletonBody() {
+  return (
+    <tbody>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <tr key={i} className="border-b border-border">
+          <td className="px-3 py-2.5 align-top">
+            <div className="h-3 w-28 rounded animate-shimmer" />
+          </td>
+          <td className="px-3 py-2.5 align-top">
+            <div className="h-3 w-[80%] rounded animate-shimmer" />
+          </td>
+          <td className="px-3 py-2.5 align-top">
+            <div className="h-3 w-16 rounded animate-shimmer" />
+          </td>
+          <td className="px-3 py-2.5 align-top">
+            <div className="ml-auto h-3 w-10 rounded animate-shimmer" />
+          </td>
+        </tr>
+      ))}
+    </tbody>
   );
 }
 

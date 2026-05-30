@@ -322,7 +322,7 @@ verify between.
 6. Add [apps/web/app/login/page.tsx](../apps/web/app/login/page.tsx). Server
    component. `async` because Next 15 `searchParams` is a `Promise`. Sanitise
    `next` (must start with `/`, must not start with `//`) and pass it to the
-   form. Layout matches DESIGN.md: gradient orbs, soft white card, Portside
+   form. Layout matches DESIGN.md: gradient orbs, soft white card, Papership.Ai
    wordmark above the card.
 7. Add [apps/web/app/login/LoginForm.tsx](../apps/web/app/login/LoginForm.tsx).
    Client component. Controlled inputs, accessible labels (`htmlFor` +

@@ -1,4 +1,4 @@
-# Portside API runtime — slim Python image with no native deps.
+# Papership.Ai API runtime — slim Python image with no native deps.
 # Build context expected at apps/api (i.e. `docker build apps/api` from repo root).
 # See notes/02-architecture.md §12 (App Runner deploy) and notes/16-aws-deploy.md.
 #

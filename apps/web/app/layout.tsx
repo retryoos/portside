@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import LiquidBackground from "@/components/LiquidBackground";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Portside: Demurrage & Laytime Resolution",
+  title: "Papership.Ai: Demurrage & Laytime Resolution",
   description:
     "One voyage document bundle in. One legally-structured demurrage claim packet out.",
 };
@@ -22,7 +23,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <LiquidBackground />
+        {children}
+      </body>
     </html>
   );
 }

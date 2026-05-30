@@ -2,7 +2,7 @@
 
 > The single highest-leverage stretch feature. Without it the demo says "AI generates a claim letter." With it the demo says "AI drafts the claim letter, the professional refines any sentence in place, and the audit trail is preserved."
 
-The shipping-industry judge will have one implicit question throughout the demo: **"Can I trust this?"** Showing that every line is editable — either by hand or by re-prompting the agent on that specific line — answers that question directly. Portside is not replacing the claims executive. It is multiplying them.
+The shipping-industry judge will have one implicit question throughout the demo: **"Can I trust this?"** Showing that every line is editable — either by hand or by re-prompting the agent on that specific line — answers that question directly. Papership.Ai is not replacing the claims executive. It is multiplying them.
 
 ---
 
@@ -247,7 +247,7 @@ After **Beat 5 — The claim letter (45s)** in [08-demo-and-pitch.md §1](08-dem
 
 > *(Letter is on screen.)*
 >
-> "And here is where Portside earns its keep. This letter is a draft. It is not the final word."
+> "And here is where Papership.Ai earns its keep. This letter is a draft. It is not the final word."
 >
 > *(Highlight the second paragraph — the one describing the weather dispute.)*
 >
@@ -317,8 +317,8 @@ Track A (backend) and Track C (frontend) work in parallel on Stretch Hour 1. The
 
 Inline highlight-and-revise is not just a demo trick. It's the foundation for three Phase C product surfaces:
 
-1. **Counterparty correspondence drafts.** When a charterer replies disputing the claim, Portside drafts a rebuttal — the claims executive refines it inline before sending.
+1. **Counterparty correspondence drafts.** When a charterer replies disputing the claim, Papership.Ai drafts a rebuttal — the claims executive refines it inline before sending.
 2. **Internal review.** The senior claims officer reviews the junior's revisions. Every revision has a logged actor (Phase C: Supabase `user_id`). The audit trail becomes a management tool.
-3. **The company brain.** Over months, the patterns of what claims executives revise — and how — train a fleet-specific drafting model. Portside learns the voice of each operator's claims department.
+3. **The company brain.** Over months, the patterns of what claims executives revise — and how — train a fleet-specific drafting model. Papership.Ai learns the voice of each operator's claims department.
 
 So this is not stretch-for-stretch's-sake. It is the door to the AI-native service motion described in [00-PLAN.md §13](00-PLAN.md#13-beyond-the-hackathon-one-paragraph-for-the-pitch). Build the door now.

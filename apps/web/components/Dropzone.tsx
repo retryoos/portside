@@ -17,11 +17,9 @@ const ROLES: { id: Role; label: string }[] = [
 
 export default function Dropzone({
   onSubmit,
-  onDemo,
   busy = false,
 }: {
   onSubmit: (files: VoyageFiles) => void;
-  onDemo: () => void;
   busy?: boolean;
 }) {
   const [files, setFiles] = useState<Partial<Record<Role, File>>>({});
@@ -42,25 +40,34 @@ export default function Dropzone({
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        {ROLES.map((r) => (
-          <label key={r.id} className="block">
-            <span className="text-label-caps text-secondary">{r.label}</span>
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              disabled={busy}
-              onChange={(e) =>
-                setFiles((prev) => ({ ...prev, [r.id]: e.target.files?.[0] }))
-              }
-              className="mt-2 block w-full text-body-sm text-secondary file:mr-3 file:rounded-full file:border file:border-border file:bg-surface-muted file:px-3.5 file:py-1.5 file:text-body-sm file:font-medium file:text-primary hover:file:bg-border"
-            />
-            {files[r.id] && (
-              <span className="mt-1 block truncate text-body-sm text-secondary">
-                {files[r.id]!.name}
-              </span>
-            )}
-          </label>
-        ))}
+        {ROLES.map((r) => {
+          const picked = files[r.id];
+          return (
+            <label key={r.id} className="block">
+              <span className="text-label-caps text-secondary">{r.label}</span>
+              <div className="mt-2 flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className={`inline-flex cursor-pointer items-center rounded-full border border-border bg-surface-muted px-3.5 py-1.5 text-body-sm font-medium text-primary transition-colors hover:bg-border ${busy ? "pointer-events-none opacity-50" : ""}`}
+                >
+                  Choose File
+                </span>
+                <span className="min-w-0 flex-1 truncate text-body-sm text-secondary">
+                  {picked ? picked.name : "no file selected"}
+                </span>
+              </div>
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                disabled={busy}
+                onChange={(e) =>
+                  setFiles((prev) => ({ ...prev, [r.id]: e.target.files?.[0] }))
+                }
+                className="sr-only"
+              />
+            </label>
+          );
+        })}
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
@@ -71,15 +78,6 @@ export default function Dropzone({
           className="rounded-full bg-cta px-5 py-2.5 text-body-sm font-medium text-on-cta transition-colors hover:bg-cta-hover disabled:opacity-50"
         >
           {busy ? "Processing…" : "Process voyage"}
-        </button>
-
-        <button
-          type="button"
-          onClick={onDemo}
-          disabled={busy}
-          className="rounded-full px-4 py-2.5 text-body-sm font-medium text-secondary transition-colors hover:text-primary disabled:opacity-50"
-        >
-          Try the demo voyage
         </button>
       </div>
     </section>

@@ -90,7 +90,7 @@ Once laytime expires and the vessel goes on demurrage, exception clauses general
 ### Time bar
 **This is the most important commercial fact in the entire industry.** Charter parties typically require the demurrage claim to be submitted within a strict window from completion of discharge — commonly 90 days for tanker trades — with all original supporting documents. Miss the time bar by even one day and the entire claim is forfeit, regardless of merit.
 
-Portside must surface the time bar clock the moment the voyage is loaded. **This is the single biggest avoidable loss in the industry and is the most important UX moment in our product.**
+Papership.Ai must surface the time bar clock the moment the voyage is loaded. **This is the single biggest avoidable loss in the industry and is the most important UX moment in our product.**
 
 ### Free pratique
 Clearance by port health authorities. Many CPs treat free pratique as a prerequisite for valid NOR (unless WIFPON applies).
