@@ -367,31 +367,26 @@ one Tier 1 code change.
 > configured makes every request fail (`auth is not configured`). The flip is
 > Tier 1 step 11; the CI assertion in §9 guards against shipping `1` to prod.
 
-### Tier 1 code change: propagate the JWT from the browser to the API
+### JWT propagation from the browser to the API
 
-Today the browser calls the API directly (`apps/web/lib/api.ts`) with no
-`Authorization` header, so the API is the real auth boundary and is only as
-safe as `DEV_AUTH`. After the Cognito swap (§4), wire the token through. Exact
-steps:
+The browser calls the API directly (`apps/web/lib/api.ts`), so the API is the
+real auth boundary. The token-propagation plumbing is **now landed** and is
+forward-compatible across the Cognito swap:
 
-1. **Expose the token to the client.** Add `apps/web/app/api/auth/token/route.ts`
-   (a server route) that reads the session cookie and returns
-   `{ token: <Cognito IdToken> }`. The cookie stays HttpOnly; only this
-   same-origin route can read it.
-2. **Attach it on every API call.** In `apps/web/lib/api.ts` add a helper:
-   ```ts
-   async function authHeader(): Promise<HeadersInit> {
-     const res = await fetch("/api/auth/token");
-     if (!res.ok) return {};
-     const { token } = (await res.json()) as { token?: string };
-     return token ? { Authorization: `Bearer ${token}` } : {};
-   }
-   ```
-   then merge `...(await authHeader())` into the `headers` of `createVoyage`,
-   `listVoyages`, `listVessels`, `getVoyage`, `deleteVoyage`, `setVoyageStatus`,
-   and the revise/rebut/evidence/export calls.
-3. **Verify** with `DEV_AUTH=0` + a real Cognito user: a call without the header
-   returns `401`; with it, `200` and data scoped to that user's `sub`.
+- [x] `apps/web/app/api/auth/token/route.ts` — same-origin server route that
+  reads the HttpOnly session cookie and returns `{ token }` (401 when signed
+  out). Returns whatever the validated cookie carries.
+- [x] `apps/web/lib/api.ts` — `authHeader()` helper (30s cache) merged into
+  every backend call (`createVoyage`, `listVoyages`, `listVessels`,
+  `getVoyage`, `deleteVoyage`, `setVoyageStatus`). Soft-fails to no header so
+  `DEV_AUTH=1` keeps working today.
+
+What remains is purely the Cognito swap in §4: once `credentials.ts` returns a
+real Cognito `IdToken` and `session.ts` verifies it, the cookie carries the
+IdToken and this wiring sends it as `Authorization: Bearer <IdToken>` with no
+further change. **Verify** then with `DEV_AUTH=0` + a real Cognito user: a call
+without the header returns `401`; with it, `200` and data scoped to that
+user's `sub`.
 
 ### Verify the CSP in a browser (after deploy)
 
