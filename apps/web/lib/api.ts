@@ -6,6 +6,7 @@ import type {
   EvidenceChecklist,
   FlaggedEventCitations,
   FlaggedEventStrength,
+  InboxAddress,
   LetterEmailRequest,
   Perspective,
   PipelineStage,
@@ -151,6 +152,24 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+/**
+ * Forward-to inbox address for the workspace (W7,
+ * notes/architecture_weeks_5_to_8.md §2.3). Backend route:
+ * GET /workspaces/{id}/inbox-address. Admin-only; 403 from the backend
+ * means the caller is below admin role on that workspace.
+ */
+export async function fetchInboxAddress(
+  workspaceId: string,
+  signal?: AbortSignal,
+): Promise<InboxAddress> {
+  // The workspace_id may include a colon ("personal:<sub>"); URL-encode so
+  // the route layer receives the slug intact.
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/inbox-address`;
+  const res = await apiFetch(path, { signal });
+  if (!res.ok) throw new Error(`fetchInboxAddress failed: ${res.status}`);
+  return (await res.json()) as InboxAddress;
 }
 
 /**

@@ -161,6 +161,14 @@ function AccountMenu() {
           </div>
           <div className="my-1 h-px bg-border" />
           <Link
+            href="/settings/inbox"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Email-in setup
+          </Link>
+          <Link
             href="/settings/audit"
             role="menuitem"
             onClick={() => setOpen(false)}

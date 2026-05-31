@@ -362,3 +362,17 @@ export interface AuditEvent {
   at: string;
   payload: Record<string, unknown>;
 }
+
+// ---------------------------------------------------------------------------
+// Inbox forwarding address (W7, notes/architecture_weeks_5_to_8.md §2.3)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of the backend _InboxAddressResponse. The closed
+// ``format`` union pins the privacy model the UI surfaces: the customer
+// forwards what we should see; we never read the mailbox.
+export type InboxFormat = "forward_to";
+
+export interface InboxAddress {
+  address: string;
+  format: InboxFormat;
+}

@@ -105,6 +105,21 @@ def role_at_least(role: Role, min_role: Role) -> bool:
     return _ROLE_LEVEL[role] >= _ROLE_LEVEL[min_role]
 
 
+def inbox_local_part(workspace_id: str) -> str:
+    """RFC 5322 friendly local part derived from the workspace id (W7).
+
+    ``personal:<sub>`` slugs to ``personal-<sub>`` because the colon is not
+    in the unquoted local-part character class. A real workspace id (e.g.
+    ``ws_abc123``) passes through unchanged.
+    """
+    return workspace_id.replace(":", "-")
+
+
+def inbox_address(workspace_id: str, domain: str) -> str:
+    """The forward-to address surfaced by the /settings/inbox page (W7)."""
+    return f"{inbox_local_part(workspace_id)}@{domain}"
+
+
 async def ensure_personal_workspace(
     session: AsyncSession,
     *,

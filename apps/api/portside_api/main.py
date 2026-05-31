@@ -260,6 +260,39 @@ async def list_workspace_members(
     ]
 
 
+from pydantic import BaseModel as _InboxBaseModel
+
+
+class _InboxAddressResponse(_InboxBaseModel):
+    """Surface of GET /workspaces/{id}/inbox-address (W7).
+
+    ``format`` is closed at ``"forward_to"`` for now: the customer's mailbox
+    forwards messages here and we never read the original. When OAuth-backed
+    inbound lands (and it might not — forwarding is the privacy story we
+    actually want), ``format`` widens to a Literal union.
+    """
+
+    address: str
+    format: str = "forward_to"
+
+
+@app.get("/workspaces/{workspace_id}/inbox-address")
+async def get_workspace_inbox_address(
+    workspace_id: str,
+    _principal: Annotated[Principal, Depends(_require_admin)],
+) -> _InboxAddressResponse:
+    """The forward-to address for the workspace's email-in surface (W7,
+    notes/architecture_weeks_5_to_8.md §2.3 + W7 frontend brief).
+
+    Computed deterministically from the workspace id + the ``INBOX_DOMAIN``
+    setting; no row to read. Admin-only because the address is the inbound
+    write surface for the workspace; viewer-level members do not need it.
+    """
+    return _InboxAddressResponse(
+        address=workspaces.inbox_address(workspace_id, settings.inbox_domain),
+    )
+
+
 @app.post("/workspaces/{workspace_id}/invitations", status_code=201)
 async def create_workspace_invitation(
     workspace_id: str,

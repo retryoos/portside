@@ -75,6 +75,12 @@ class Settings:
     # unset, the inbound route refuses every call (fail-closed). Generate
     # with ``openssl rand -hex 32`` and put in Doppler / App Runner env.
     email_in_shared_secret: str | None
+    # Email-in delivery domain. Per-workspace addresses look like
+    # ``<workspace-slug>@<inbox_domain>``; the settings page surfaces this
+    # to the workspace admin for use in Gmail / Outlook forwarding rules.
+    # Default points at the production tenant; override in dev to keep
+    # localhost-rendered tutorials honest.
+    inbox_domain: str
     # Multi-tenant workspaces UI flag (notes/architecture_weeks_5_to_8.md
     # §2.1). When off (default), the backend still mints a personal workspace
     # per user (so the data contract is consistent), but the frontend hides
@@ -128,6 +134,7 @@ class Settings:
             .lower()
             in {"1", "true", "yes", "on"},
             email_in_shared_secret=os.environ.get("EMAIL_IN_SHARED_SECRET") or None,
+            inbox_domain=(os.environ.get("INBOX_DOMAIN") or "in.laytimely.com").strip(),
             workspaces_ui=(os.environ.get("WORKSPACES_UI") or "")
             .strip()
             .lower()
