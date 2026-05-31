@@ -249,6 +249,137 @@ async def accept_invitation(
     return inv
 
 
+async def list_pending_invitations(
+    session: AsyncSession,
+    *,
+    workspace_id: str,
+) -> list[InvitationRow]:
+    """Workspace admin view: every invitation that is not yet accepted,
+    revoked, or expired. Newest first.
+
+    Filters in Python rather than SQL so SQLite's lack of a timezone-aware
+    comparison does not bite us; the workspace's invitation list is tiny
+    (sub-1000 typically) so the cost is irrelevant.
+    """
+    rows = (
+        await session.execute(
+            select(InvitationRow).where(InvitationRow.workspace_id == workspace_id)
+        )
+    ).scalars().all()
+    now = _now_utc()
+    pending: list[InvitationRow] = []
+    for row in rows:
+        if row.accepted_at is not None or row.revoked_at is not None:
+            continue
+        expires_at = row.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < now:
+            continue
+        pending.append(row)
+    pending.sort(key=lambda r: r.invited_at, reverse=True)
+    return pending
+
+
+# ---------------------------------------------------------------------------
+# Membership management (W8)
+# ---------------------------------------------------------------------------
+
+
+class MemberRemoveError(RuntimeError):
+    """Carries a stable code so the route handler maps to a precise HTTP
+    status without inspecting strings. The two error modes the route layer
+    needs to distinguish are "no such member" (404) and "would leave the
+    workspace with no owner" (409)."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+async def list_memberships_for_user(
+    session: AsyncSession,
+    *,
+    user_sub: str,
+) -> list[tuple[WorkspaceRow, Role]]:
+    """Every workspace the user is a member of, with their role in each.
+
+    Used by ``GET /me/workspaces`` to populate the workspace switcher and
+    the W8 /settings/members page. Ordered by workspace name so the
+    dropdown is stable across reloads.
+    """
+    rows = (
+        await session.execute(
+            select(MembershipRow, WorkspaceRow)
+            .join(WorkspaceRow, WorkspaceRow.id == MembershipRow.workspace_id)
+            .where(MembershipRow.user_sub == user_sub)
+            .order_by(WorkspaceRow.name)
+        )
+    ).all()
+    return [(ws, mem.role) for (mem, ws) in rows]  # type: ignore[return-value]
+
+
+async def remove_member(
+    session: AsyncSession,
+    *,
+    workspace_id: str,
+    user_sub: str,
+) -> MembershipRow:
+    """Drop a single membership row.
+
+    Two refusal modes (both raise ``MemberRemoveError`` with a stable code):
+
+    - ``not_found``: the user has no membership in this workspace.
+    - ``last_owner``: the target is the only owner. Workspaces must always
+      have at least one owner so a stranded workspace cannot be created by
+      removing the last billing-responsible member. The admin must promote
+      another member first.
+
+    On success the returned row is the just-deleted one (with its prior
+    role field intact) so the route layer can audit it.
+    """
+    row = (
+        await session.execute(
+            select(MembershipRow).where(
+                MembershipRow.workspace_id == workspace_id,
+                MembershipRow.user_sub == user_sub,
+            )
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise MemberRemoveError(
+            "not_found", f"no membership for {user_sub} in {workspace_id}"
+        )
+    if row.role == "owner":
+        # Refuse if this is the only owner. Querying for any other owner row
+        # is cheaper than counting all owners.
+        other_owner = (
+            await session.execute(
+                select(MembershipRow.user_sub)
+                .where(
+                    MembershipRow.workspace_id == workspace_id,
+                    MembershipRow.role == "owner",
+                    MembershipRow.user_sub != user_sub,
+                )
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+        if other_owner is None:
+            raise MemberRemoveError(
+                "last_owner",
+                "cannot remove the only owner; promote another member to owner first",
+            )
+    captured = MembershipRow(
+        workspace_id=row.workspace_id,
+        user_sub=row.user_sub,
+        role=row.role,
+    )
+    await session.delete(row)
+    await session.flush()
+    return captured
+
+
 def to_invitation(row: InvitationRow) -> Invitation:
     return Invitation(
         id=row.id,

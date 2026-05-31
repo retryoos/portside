@@ -376,3 +376,59 @@ export interface InboxAddress {
   address: string;
   format: InboxFormat;
 }
+
+// ---------------------------------------------------------------------------
+// Workspaces + memberships + invitations (W8 + W9, §2.1)
+// ---------------------------------------------------------------------------
+
+export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
+
+export interface Workspace {
+  id: string;
+  name: string;
+  plan: string;
+}
+
+export interface WorkspaceMember {
+  user_sub: string;
+  role: WorkspaceRole;
+}
+
+export interface MyWorkspaceEntry {
+  workspace: Workspace;
+  role: WorkspaceRole;
+}
+
+export interface WorkspaceInvitation {
+  id: number;
+  workspace_id: string;
+  email: string;
+  role: WorkspaceRole;
+  token: string;
+  invited_by_sub: string;
+  invited_at: string;
+  expires_at: string;
+  accepted: boolean;
+  revoked: boolean;
+}
+
+export interface CreateInvitationRequest {
+  email: string;
+  role: WorkspaceRole;
+}
+
+// Stable error codes the backend uses when a workspace mutation refuses.
+// The W8/W9 UIs match on these to render an actionable hint instead of the
+// raw HTTP status.
+export type WorkspaceErrorCode =
+  | "not_found"
+  | "last_owner"
+  | "workspace_role_required"
+  | "invitation_invalid"
+  | "UNKNOWN";
+
+export interface WorkspaceError {
+  code: WorkspaceErrorCode;
+  message: string;
+  status: number;
+}

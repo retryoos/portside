@@ -67,14 +67,21 @@ export default function ClaimLetter({
 
   return (
     <div className="relative rounded-card border border-border bg-surface">
-      <div className="absolute right-6 top-6 z-10 flex items-center gap-2">
+      <div
+        className="absolute right-6 top-6 z-10 flex items-center gap-2"
+        role="toolbar"
+        aria-label="Claim letter actions"
+      >
+        {/* Send actions: primary CTA + mailto fallback. */}
         <EmailLetterButton voyageId={voyageId} vesselName={vesselName} />
-        <div className="mx-1 h-5 w-px bg-border" aria-hidden />
         <MailtoLetterButton
           letterMarkdown={bodyMd}
           voyageId={voyageId}
           vesselName={vesselName}
         />
+        <div className="mx-1 h-5 w-px bg-border" aria-hidden />
+        {/* Download actions: Excel / Word / PDF, ordered by descending
+            preference for the customer's downstream tool. */}
         <ExportXlsxButton voyageId={voyageId} vesselName={vesselName} />
         <ExportDocxButton targetId={LETTER_DOM_ID} />
         <ExportPdfButton targetId={LETTER_DOM_ID} />

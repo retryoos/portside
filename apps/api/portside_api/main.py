@@ -36,6 +36,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from . import audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
@@ -227,6 +228,41 @@ async def me(user: Annotated[Principal, Depends(get_current_user)]) -> Principal
     return user
 
 
+class _MyWorkspaceEntry(BaseModel):
+    """One row of GET /me/workspaces: a workspace + the caller's role in it.
+
+    Used by the W8 workspace switcher chip and the W8 /settings/members
+    page to know which workspace context they are rendering.
+    """
+
+    workspace: workspaces.Workspace
+    role: workspaces.Role
+
+
+@app.get("/me/workspaces")
+async def list_my_workspaces(
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> list[_MyWorkspaceEntry]:
+    """Every workspace the caller is a member of, with their role.
+
+    Idempotently ensures the caller has a personal workspace before
+    listing, so a brand-new user always sees at least one row (the
+    invariant the W8 switcher relies on)."""
+    async with _sessionmaker() as session:
+        await workspaces.ensure_personal_workspace(
+            session, user_sub=user.id, display_name=user.email
+        )
+        await session.commit()
+        rows = await workspaces.list_memberships_for_user(session, user_sub=user.id)
+    return [
+        _MyWorkspaceEntry(
+            workspace=workspaces.Workspace(id=ws.id, name=ws.name, plan=ws.plan),
+            role=role,
+        )
+        for ws, role in rows
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Workspaces (W7/§2.1)
 #
@@ -260,10 +296,7 @@ async def list_workspace_members(
     ]
 
 
-from pydantic import BaseModel as _InboxBaseModel
-
-
-class _InboxAddressResponse(_InboxBaseModel):
+class _InboxAddressResponse(BaseModel):
     """Surface of GET /workspaces/{id}/inbox-address (W7).
 
     ``format`` is closed at ``"forward_to"`` for now: the customer's mailbox
@@ -274,6 +307,71 @@ class _InboxAddressResponse(_InboxBaseModel):
 
     address: str
     format: str = "forward_to"
+
+
+_MEMBER_REMOVE_STATUS: dict[str, int] = {
+    "not_found": 404,
+    "last_owner": 409,
+}
+
+
+@app.delete("/workspaces/{workspace_id}/members/{user_sub}", status_code=204)
+async def remove_workspace_member(
+    workspace_id: str,
+    user_sub: str,
+    principal: Annotated[Principal, Depends(_require_admin)],
+) -> Response:
+    """Admin-only: drop a single membership row (W8).
+
+    Refuses with 409 ``last_owner`` when the target is the only owner; the
+    admin must promote another member to owner first. The caller can remove
+    themselves if and only if another owner exists, which lets a departing
+    admin clean up without orphaning the workspace.
+    """
+    async with _sessionmaker() as session:
+        try:
+            removed = await workspaces.remove_member(
+                session, workspace_id=workspace_id, user_sub=user_sub
+            )
+        except workspaces.MemberRemoveError as exc:
+            status = _MEMBER_REMOVE_STATUS.get(exc.code, 400)
+            await session.rollback()
+            raise HTTPException(
+                status_code=status,
+                detail={"code": exc.code, "message": exc.message},
+            ) from exc
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.member_remove",
+        "membership",
+        f"{workspace_id}:{user_sub}",
+        {
+            "workspace_id": workspace_id,
+            "removed_user_sub": user_sub,
+            "prior_role": removed.role,
+        },
+    )
+    return Response(status_code=204)
+
+
+@app.get("/workspaces/{workspace_id}/invitations")
+async def list_workspace_invitations(
+    workspace_id: str,
+    _principal: Annotated[Principal, Depends(_require_admin)],
+) -> list[workspaces.Invitation]:
+    """Admin-only: list pending invitations for a workspace (W9).
+
+    "Pending" excludes accepted, revoked, and expired rows. Newest first.
+    The admin sees the canonical row including the ``token`` so they can
+    copy the accept link out-of-band; SES delivery of the invite is a
+    separate path tracked under the SES setup checklist.
+    """
+    async with _sessionmaker() as session:
+        rows = await workspaces.list_pending_invitations(
+            session, workspace_id=workspace_id
+        )
+    return [workspaces.to_invitation(row) for row in rows]
 
 
 @app.get("/workspaces/{workspace_id}/inbox-address")

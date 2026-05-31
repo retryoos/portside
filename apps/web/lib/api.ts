@@ -2,18 +2,23 @@
 
 import type {
   AuditEvent,
+  CreateInvitationRequest,
   EmailSendError,
   EvidenceChecklist,
   FlaggedEventCitations,
   FlaggedEventStrength,
   InboxAddress,
   LetterEmailRequest,
+  MyWorkspaceEntry,
   Perspective,
   PipelineStage,
   SesSendResult,
   VesselSummary,
   VoyageState,
   VoyageSummary,
+  WorkspaceError,
+  WorkspaceInvitation,
+  WorkspaceMember,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -152,6 +157,106 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+// ---------------------------------------------------------------------------
+// Workspaces (W8 + W9, notes/architecture_weeks_5_to_8.md §2.1)
+// ---------------------------------------------------------------------------
+
+function _workspaceError(status: number, body: unknown): WorkspaceError {
+  let code: WorkspaceError["code"] = "UNKNOWN";
+  let message = `request failed: ${status}`;
+  if (body && typeof body === "object") {
+    const detail = (body as { detail?: unknown }).detail;
+    if (typeof detail === "object" && detail) {
+      const c = (detail as { code?: unknown }).code;
+      const m = (detail as { message?: unknown }).message;
+      if (typeof c === "string") code = c as WorkspaceError["code"];
+      if (typeof m === "string") message = m;
+    } else if (typeof detail === "string") {
+      message = detail;
+    }
+  }
+  return { code, message, status };
+}
+
+async function _parseWorkspaceError(res: Response): Promise<WorkspaceError> {
+  try {
+    return _workspaceError(res.status, await res.json());
+  } catch {
+    return { code: "UNKNOWN", message: res.statusText, status: res.status };
+  }
+}
+
+/** Workspaces the caller is a member of (W8). */
+export async function listMyWorkspaces(
+  signal?: AbortSignal,
+): Promise<MyWorkspaceEntry[]> {
+  const res = await apiFetch("/me/workspaces", { signal });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as MyWorkspaceEntry[];
+}
+
+/** Admin-only: list every membership row for a workspace (W8). */
+export async function listWorkspaceMembers(
+  workspaceId: string,
+  signal?: AbortSignal,
+): Promise<WorkspaceMember[]> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/members`;
+  const res = await apiFetch(path, { signal });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as WorkspaceMember[];
+}
+
+/**
+ * Admin-only: drop a single membership row (W8). The backend refuses with
+ * 409 ``last_owner`` when removing the only owner; the caller surfaces an
+ * actionable toast in that case.
+ */
+export async function removeWorkspaceMember(
+  workspaceId: string,
+  userSub: string,
+): Promise<void> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userSub)}`;
+  const res = await apiFetch(path, { method: "DELETE" });
+  if (res.status === 204) return;
+  throw await _parseWorkspaceError(res);
+}
+
+/** Admin-only: list pending invitations for a workspace (W9). */
+export async function listWorkspaceInvitations(
+  workspaceId: string,
+  signal?: AbortSignal,
+): Promise<WorkspaceInvitation[]> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/invitations`;
+  const res = await apiFetch(path, { signal });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as WorkspaceInvitation[];
+}
+
+/** Admin-only: mint a new invitation (W9). */
+export async function createWorkspaceInvitation(
+  workspaceId: string,
+  body: CreateInvitationRequest,
+): Promise<WorkspaceInvitation> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/invitations`;
+  const res = await apiFetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as WorkspaceInvitation;
+}
+
+/** Public-ish: accept an invitation token (W9). 410 -> WorkspaceError. */
+export async function acceptInvitation(
+  token: string,
+): Promise<WorkspaceInvitation> {
+  const path = `/invitations/${encodeURIComponent(token)}/accept`;
+  const res = await apiFetch(path, { method: "POST" });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as WorkspaceInvitation;
 }
 
 /**

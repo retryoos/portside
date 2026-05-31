@@ -24,6 +24,24 @@ if str(_API_ROOT) not in sys.path:
 # pylint: disable=wrong-import-position
 from portside_api import main as main_mod, workspaces  # noqa: E402
 from portside_api.auth import DEV_USER_ID  # noqa: E402
+from portside_api.db.models import (  # noqa: E402
+    AuditEventRow,
+    InvitationRow,
+    MembershipRow,
+    WorkspaceRow,
+)
+from sqlalchemy import delete  # noqa: E402
+
+
+async def _wipe_workspace_state() -> None:
+    """Truncate workspace-related tables so this file's route tests do not
+    inherit membership state from a prior test file."""
+    async with main_mod._sessionmaker() as session:
+        async with session.begin():
+            await session.execute(delete(InvitationRow))
+            await session.execute(delete(MembershipRow))
+            await session.execute(delete(WorkspaceRow))
+            await session.execute(delete(AuditEventRow))
 
 
 # ---------------------------------------------------------------------------
@@ -54,9 +72,12 @@ def test_inbox_address_combines_local_part_and_domain() -> None:
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     # The route uses the real _sessionmaker so it can hit the admin gate.
-    # We seed an owner membership for the dev user before the test runs.
+    # Wipe workspace state on entry + exit so we don't inherit memberships
+    # from sibling test files (they share the SQLite file).
+    asyncio.run(_wipe_workspace_state())
     with TestClient(main_mod.app) as c:
         yield c
+    asyncio.run(_wipe_workspace_state())
 
 
 def _seed_personal_workspace_for_dev_user() -> str:
