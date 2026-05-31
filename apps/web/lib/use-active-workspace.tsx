@@ -1,14 +1,14 @@
-// Active workspace context (W8, hardened post-review #6). One fetch of
-// /me/workspaces per mounted ActiveWorkspaceProvider; every consumer reads
-// the same cached state via React Context. Source of truth for the active
-// workspace is localStorage; first-load default is the personal workspace
-// returned by /me/workspaces.
+// Active workspace context (W8, hardened post-review #6 + post-launch fix).
+// One fetch of /me/workspaces per mounted ActiveWorkspaceProvider; every
+// consumer reads the same cached state via React Context.
 //
-// Hook contract is unchanged — components that previously called
-// useActiveWorkspace continue to work; what changes is that under an
-// ActiveWorkspaceProvider all of them share one fetch and re-renders
-// stay in sync (e.g. switching workspace in the TopNav chip immediately
-// updates the /settings/members page).
+// SSR safety: the source of truth for the active workspace id is
+// localStorage, but ``useState`` initializers that read it would diverge
+// between the server (null) and the first client render (whatever was
+// stored). React 19 surfaces such mismatches as "Invalid hook call" /
+// "Cannot read properties of null" further down the tree. We therefore
+// initialize null on both server and client, then sync from localStorage
+// inside a client-only useEffect — standard hydration-safe pattern.
 
 "use client";
 
@@ -38,12 +38,20 @@ export interface ActiveWorkspaceState {
 
 const ActiveWorkspaceContext = createContext<ActiveWorkspaceState | null>(null);
 
+const EMPTY_STATE: ActiveWorkspaceState = {
+  workspaces: null,
+  active: null,
+  error: null,
+  loading: false,
+  setActive: () => undefined,
+  refresh: () => undefined,
+};
+
 export function ActiveWorkspaceProvider({ children }: { children: ReactNode }) {
   const [workspaces, setWorkspaces] = useState<MyWorkspaceEntry[] | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(STORAGE_KEY);
-  });
+  // Always null on first render so the server's HTML matches the client's
+  // first paint. Localstorage gets read in the useEffect below.
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
@@ -51,13 +59,18 @@ export function ActiveWorkspaceProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
+
+    // Client-only: sync activeId from localStorage before the fetch
+    // resolves so a known stored id is honoured immediately.
+    if (typeof window !== "undefined") {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) setActiveId(stored);
+    }
+
     listMyWorkspaces(controller.signal)
       .then((rows) => {
         if (controller.signal.aborted) return;
         setWorkspaces(rows);
-        // Reconcile the stored active id against the live list. If the
-        // stored id is no longer a workspace the caller is a member of,
-        // fall back to the first row (typically the personal workspace).
         if (typeof window !== "undefined") {
           const stored = window.localStorage.getItem(STORAGE_KEY);
           const reconciled =
@@ -114,79 +127,13 @@ export function ActiveWorkspaceProvider({ children }: { children: ReactNode }) {
 /**
  * Read the shared active workspace state.
  *
- * When mounted under an ``ActiveWorkspaceProvider`` (the production path,
- * via the (app) layout) every consumer reads the same cached fetch. When
- * mounted outside one (e.g. an isolated component test) the hook falls
- * back to a one-off internal fetch so callers do not need to wrap test
- * mounts in a provider.
+ * Returns a no-op ``EMPTY_STATE`` when no provider is mounted (the case
+ * for SSR-only paths and isolated test mounts) so callers never have to
+ * branch on a null context. The provider lives at the app root layout
+ * (apps/web/app/Providers.tsx), so any authed page automatically gets
+ * real state.
  */
 export function useActiveWorkspace(): ActiveWorkspaceState {
   const ctx = useContext(ActiveWorkspaceContext);
-  // Standalone fallback: replicate the original behaviour for any consumer
-  // mounted outside a provider. This keeps tests + ad-hoc usage working
-  // even though production wraps everything in the provider.
-  const [fallbackWorkspaces, setFallbackWorkspaces] = useState<
-    MyWorkspaceEntry[] | null
-  >(null);
-  const [fallbackActiveId, setFallbackActiveId] = useState<string | null>(
-    () => {
-      if (typeof window === "undefined") return null;
-      return window.localStorage.getItem(STORAGE_KEY);
-    },
-  );
-  const [fallbackError, setFallbackError] = useState<string | null>(null);
-  const [fallbackLoading, setFallbackLoading] = useState(true);
-  const [fallbackTick, setFallbackTick] = useState(0);
-
-  useEffect(() => {
-    if (ctx) return; // Provider is responsible; do nothing.
-    const controller = new AbortController();
-    setFallbackLoading(true);
-    listMyWorkspaces(controller.signal)
-      .then((rows) => {
-        if (controller.signal.aborted) return;
-        setFallbackWorkspaces(rows);
-        if (typeof window !== "undefined") {
-          const stored = window.localStorage.getItem(STORAGE_KEY);
-          const reconciled =
-            stored && rows.some((r) => r.workspace.id === stored)
-              ? stored
-              : (rows[0]?.workspace.id ?? null);
-          setFallbackActiveId(reconciled);
-          if (reconciled) {
-            window.localStorage.setItem(STORAGE_KEY, reconciled);
-          }
-        }
-      })
-      .catch((e) => {
-        if (controller.signal.aborted) return;
-        setFallbackError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setFallbackLoading(false);
-      });
-    return () => controller.abort();
-  }, [ctx, fallbackTick]);
-
-  const setActiveFallback = useCallback((workspaceId: string) => {
-    setFallbackActiveId(workspaceId);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, workspaceId);
-    }
-  }, []);
-
-  const refreshFallback = useCallback(() => setFallbackTick((t) => t + 1), []);
-
-  if (ctx) return ctx;
-  return {
-    workspaces: fallbackWorkspaces,
-    active:
-      fallbackWorkspaces?.find((r) => r.workspace.id === fallbackActiveId) ??
-      fallbackWorkspaces?.[0] ??
-      null,
-    error: fallbackError,
-    loading: fallbackLoading,
-    setActive: setActiveFallback,
-    refresh: refreshFallback,
-  };
+  return ctx ?? EMPTY_STATE;
 }
