@@ -77,16 +77,22 @@ class LocalObjectStore:
 class S3ObjectStore:
     """S3-backed store. boto3 is imported lazily so dev/tests don't load it."""
 
-    def __init__(self, bucket: str, region: str | None) -> None:
+    def __init__(
+        self, bucket: str, region: str | None, endpoint_url: str | None = None
+    ) -> None:
         self._bucket = bucket
         self._region = region
+        # Set for S3-compatible providers (Cloudflare R2); None hits real AWS S3.
+        self._endpoint_url = endpoint_url
         self._client = None
 
     def _get_client(self):  # noqa: ANN202
         if self._client is None:
             import boto3
 
-            self._client = boto3.client("s3", region_name=self._region)
+            self._client = boto3.client(
+                "s3", region_name=self._region, endpoint_url=self._endpoint_url
+            )
         return self._client
 
     async def put(self, key: str, data: bytes, content_type: str) -> None:
@@ -115,5 +121,7 @@ class S3ObjectStore:
 def make_object_store() -> ObjectStore:
     """S3 when a bucket is configured, otherwise the local filesystem store."""
     if settings.s3_bucket:
-        return S3ObjectStore(settings.s3_bucket, settings.s3_region)
+        return S3ObjectStore(
+            settings.s3_bucket, settings.s3_region, settings.s3_endpoint_url
+        )
     return LocalObjectStore(settings.objects_dir)

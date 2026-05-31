@@ -5,8 +5,9 @@
 // contestable row is amber-tinted (full tint, no side stripe) and clickable;
 // clicking reveals the matching dispute.flagged_events entry inline. Owner
 // position shown as a WORD (Strong/Arguable/Weak), never a percentage.
-import { useState } from "react";
-import Reveal from "@/components/Reveal";
+import { useEffect, useState } from "react";
+import { fetchClaimStrengths } from "@/lib/api";
+import StrengthPanel from "@/components/StrengthPanel";
 import { demoVoyage } from "@/lib/demo";
 import {
   confidenceWord,
@@ -14,7 +15,12 @@ import {
   formatLocalTimestamp,
   formatEur,
 } from "@/lib/format";
-import type { FlaggedEvent, LaytimeResult } from "@/lib/types";
+import type {
+  ClaimStrengthSubScores,
+  FlaggedEvent,
+  FlaggedEventStrength,
+  LaytimeResult,
+} from "@/lib/types";
 
 const CATEGORY_LABEL: Record<string, string> = {
   laytime: "Laytime",
@@ -26,13 +32,38 @@ export default function SoFTable({
   laytime = demoVoyage.laytime,
   flagged = demoVoyage.dispute?.flagged_events ?? [],
   loading = false,
+  voyageId = demoVoyage.voyage_id,
 }: {
   laytime?: LaytimeResult | null;
   flagged?: FlaggedEvent[];
   loading?: boolean;
+  voyageId?: string;
 }) {
   const lt = laytime;
   const [open, setOpen] = useState<string | null>(null);
+  // Sub-score panels arrive as a sibling list; fetched once when the dispute
+  // lands. Lazy network: no fetch until we actually have flagged events.
+  // null === fetched but server returned 404/409 (offline empty); undefined
+  // === not yet fetched (skeleton).
+  const [strengths, setStrengths] = useState<
+    FlaggedEventStrength[] | null | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (flagged.length === 0) return;
+    const controller = new AbortController();
+    fetchClaimStrengths(voyageId, controller.signal)
+      .then((rows) => setStrengths(rows))
+      .catch(() => setStrengths(null));
+    return () => controller.abort();
+  }, [voyageId, flagged.length]);
+
+  const subScoresFor = (
+    eventId: string,
+  ): ClaimStrengthSubScores | undefined => {
+    if (!strengths) return undefined;
+    return strengths.find((r) => r.event_id === eventId)?.sub_scores;
+  };
 
   const isLoading = loading || !lt;
 
@@ -78,6 +109,8 @@ export default function SoFTable({
                   category={CATEGORY_LABEL[row.status] ?? row.status}
                   cumHrs={formatHours(row.running_total_hours)}
                   flag={flag}
+                  subScores={flag ? subScoresFor(flag.event_id) : undefined}
+                  strengthsReady={strengths !== undefined}
                 />
               );
             })}
@@ -122,6 +155,8 @@ function RowFragment({
   category,
   cumHrs,
   flag,
+  subScores,
+  strengthsReady,
 }: {
   contestable: boolean;
   isOpen: boolean;
@@ -131,6 +166,8 @@ function RowFragment({
   category: string;
   cumHrs: string;
   flag?: FlaggedEvent;
+  subScores?: ClaimStrengthSubScores;
+  strengthsReady: boolean;
 }) {
   return (
     <>
@@ -160,32 +197,39 @@ function RowFragment({
       {contestable && isOpen && flag && (
         <tr className="bg-contested-container">
           <td colSpan={4} className="px-3 pb-4 pt-1">
-            <div className="rounded-md border border-border bg-surface p-5">
-              <p className="text-h3 text-primary">{flag.title}</p>
-              <p className="mt-2 text-body-sm text-secondary">{flag.summary}</p>
-              <p className="mt-3 text-body-sm text-primary">{flag.owner_argument}</p>
-              <dl className="mt-4 space-y-1.5">
-                <div className="flex items-baseline gap-2">
-                  <dt className="text-label-caps text-secondary">Owner position</dt>
-                  <dd className="text-body-sm text-primary">
-                    {confidenceWord(flag.owner_position_strength)}
-                  </dd>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <dt className="text-label-caps text-secondary">
-                    Incremental demurrage
-                  </dt>
-                  <dd className="text-body-sm tabular-nums text-primary">
-                    {formatEur(flag.incremental_demurrage_eur)}
-                  </dd>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <dt className="text-label-caps text-secondary">Citations</dt>
-                  <dd className="text-body-sm text-primary">
-                    {flag.clauses_cited.join("; ")}
-                  </dd>
-                </div>
-              </dl>
+            <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+              <div className="rounded-md border border-border bg-surface p-5">
+                <p className="text-h3 text-primary">{flag.title}</p>
+                <p className="mt-2 text-body-sm text-secondary">{flag.summary}</p>
+                <p className="mt-3 text-body-sm text-primary">{flag.owner_argument}</p>
+                <dl className="mt-4 space-y-1.5">
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-label-caps text-secondary">Owner position</dt>
+                    <dd className="text-body-sm text-primary">
+                      {confidenceWord(flag.owner_position_strength)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-label-caps text-secondary">
+                      Incremental demurrage
+                    </dt>
+                    <dd className="text-body-sm tabular-nums text-primary">
+                      {formatEur(flag.incremental_demurrage_eur)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-label-caps text-secondary">Citations</dt>
+                    <dd className="text-body-sm text-primary">
+                      {flag.clauses_cited.join("; ")}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              {strengthsReady ? (
+                <StrengthPanel subScores={subScores} />
+              ) : (
+                <StrengthPanel subScores={undefined} />
+              )}
             </div>
           </td>
         </tr>

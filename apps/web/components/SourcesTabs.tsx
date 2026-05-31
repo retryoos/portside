@@ -9,24 +9,29 @@
 // real content crossfades in via <Reveal> once available. The Calculation tab
 // passes its own readiness down to LaytimeSummary + SoFTable.
 import { useState } from "react";
+import AuthoritiesList from "@/components/AuthoritiesList";
 import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
+import EvidenceChecklistTab from "@/components/EvidenceChecklistTab";
 import LaytimeSummary from "@/components/LaytimeSummary";
 import SoFTable from "@/components/SoFTable";
-import type { VoyageState } from "@/lib/types";
+import type { FlaggedEventCitations, VoyageState } from "@/lib/types";
 
-type Tab = "sources" | "calculation" | "documents";
+type Tab = "sources" | "calculation" | "documents" | "evidence";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "sources", label: "Sources" },
   { id: "calculation", label: "Calculation" },
+  { id: "evidence", label: "Evidence" },
   { id: "documents", label: "Documents" },
 ];
 
 export default function SourcesTabs({
   voyage = demoVoyage,
+  citations,
 }: {
   voyage?: VoyageState;
+  citations?: FlaggedEventCitations[] | null;
 }) {
   const [active, setActive] = useState<Tab>("calculation");
 
@@ -73,6 +78,7 @@ export default function SourcesTabs({
               laytime={voyage.laytime}
               flagged={voyage.dispute?.flagged_events ?? []}
               loading={!readyLaytime}
+              voyageId={voyage.voyage_id}
             />
           </div>
         )}
@@ -80,20 +86,43 @@ export default function SourcesTabs({
         {active === "sources" &&
           (readyClauses ? (
             <Reveal ready>
-              <ul className="space-y-3">
-                {clauses.map((c) => (
-                  <li key={c.clause_no} className="rounded-lg bg-surface-muted p-4">
-                    <p className="text-label-caps text-secondary">
-                      Clause {c.clause_no}
-                    </p>
-                    <p className="mt-2 text-letter-body text-primary">{c.text}</p>
-                  </li>
-                ))}
-              </ul>
+              <div className="space-y-8">
+                <section>
+                  <p className="text-eyebrow text-secondary">Clauses</p>
+                  <ul className="mt-4 space-y-3">
+                    {clauses.map((c) => (
+                      <li
+                        key={c.clause_no}
+                        className="rounded-lg bg-surface-muted p-4"
+                      >
+                        <p className="text-label-caps text-secondary">
+                          Clause {c.clause_no}
+                        </p>
+                        <p className="mt-2 text-letter-body text-primary">
+                          {c.text}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <section>
+                  <p className="text-eyebrow text-secondary">Cases</p>
+                  <div className="mt-4">
+                    <AuthoritiesList bundles={citations ?? []} />
+                  </div>
+                </section>
+              </div>
             </Reveal>
           ) : (
             <ClausesSkeleton />
           ))}
+
+        {active === "evidence" && (
+          <EvidenceChecklistTab
+            voyageId={voyage.voyage_id}
+            active={active === "evidence"}
+          />
+        )}
 
         {active === "documents" &&
           (readyDocuments ? (

@@ -50,6 +50,9 @@ class Settings:
     # Object storage (A3). S3 in production; a local directory otherwise.
     s3_bucket: str | None
     s3_region: str | None
+    # Custom S3 endpoint for S3-compatible providers (Cloudflare R2 in the demo).
+    # Unset for real AWS S3 — that is the whole storage migration (one var removed).
+    s3_endpoint_url: str | None
     s3_prefix: str
     objects_dir: str
     # A4: a voyage left in a non-terminal pipeline stage with no progress for
@@ -75,6 +78,12 @@ class Settings:
     # unset, the inbound route refuses every call (fail-closed). Generate
     # with ``openssl rand -hex 32`` and put in Doppler / App Runner env.
     email_in_shared_secret: str | None
+    # Email-in delivery domain. Per-workspace addresses look like
+    # ``<workspace-slug>@<inbox_domain>``; the settings page surfaces this
+    # to the workspace admin for use in Gmail / Outlook forwarding rules.
+    # Default points at the production tenant; override in dev to keep
+    # localhost-rendered tutorials honest.
+    inbox_domain: str
     # Multi-tenant workspaces UI flag (notes/architecture_weeks_5_to_8.md
     # §2.1). When off (default), the backend still mints a personal workspace
     # per user (so the data contract is consistent), but the frontend hides
@@ -86,6 +95,20 @@ class Settings:
     # coarse abuse/cost guard, not an auth boundary.
     rate_limit_max_requests: int
     rate_limit_window_seconds: int
+    # Audit retention (review #9). Lifespan startup reaps rows older than
+    # this many days so the table stays bounded under unbounded growth.
+    # 0 disables retention (forever-grow).
+    audit_retention_days: int
+    # SES sender + invitation accept link base URL (review #12). Used by
+    # the workspace invitation email path; the claim-letter SES path keeps
+    # using settings.email_send_live + its own helper.
+    ses_sender: str | None
+    invitation_base_url: str
+    # Per-actor rate limit on invitation mint (security hardening). At
+    # most ``invitation_rate_limit_max`` per actor per window. Defaults
+    # are generous so admins can paste-batch invites.
+    invitation_rate_limit_max: int
+    invitation_rate_limit_window_seconds: int
 
     @classmethod
     def load(cls) -> "Settings":
@@ -110,6 +133,7 @@ class Settings:
             cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
             s3_bucket=os.environ.get("S3_BUCKET") or None,
             s3_region=os.environ.get("S3_REGION") or None,
+            s3_endpoint_url=os.environ.get("S3_ENDPOINT_URL") or None,
             s3_prefix=os.environ.get("S3_PREFIX") or "",
             objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
             stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),
@@ -128,6 +152,7 @@ class Settings:
             .lower()
             in {"1", "true", "yes", "on"},
             email_in_shared_secret=os.environ.get("EMAIL_IN_SHARED_SECRET") or None,
+            inbox_domain=(os.environ.get("INBOX_DOMAIN") or "in.laytimely.com").strip(),
             workspaces_ui=(os.environ.get("WORKSPACES_UI") or "")
             .strip()
             .lower()
@@ -137,6 +162,20 @@ class Settings:
             ),
             rate_limit_window_seconds=int(
                 os.environ.get("RATE_LIMIT_WINDOW_SECONDS") or "60"
+            ),
+            audit_retention_days=int(
+                os.environ.get("AUDIT_RETENTION_DAYS") or "90"
+            ),
+            ses_sender=os.environ.get("SES_SENDER") or None,
+            invitation_base_url=(
+                os.environ.get("INVITATION_BASE_URL")
+                or "http://localhost:3000"
+            ).rstrip("/"),
+            invitation_rate_limit_max=int(
+                os.environ.get("INVITATION_RATE_LIMIT_MAX") or "20"
+            ),
+            invitation_rate_limit_window_seconds=int(
+                os.environ.get("INVITATION_RATE_LIMIT_WINDOW_SECONDS") or "3600"
             ),
         )
 

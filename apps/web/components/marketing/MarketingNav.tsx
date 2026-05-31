@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Wordmark from "@/components/Wordmark";
 
@@ -8,21 +9,36 @@ import Wordmark from "@/components/Wordmark";
 // solidifies into the neutral surface once the user scrolls past the first
 // viewport. Compass + wordmark on the left, three text links + a sign-in
 // pill on the right.
+//
+// The transparent style only makes sense on the landing page (``/``), which
+// has a dark photographic hero. Meta pages like ``/contact`` and
+// ``/security`` are white-on-white, so the nav would read as invisible
+// when scrollY=0. We solidify by default on every route except ``/`` so
+// the chrome is always visible and clickable.
 const NAV = [
-  { label: "Product", href: "#product" },
-  { label: "How it works", href: "#how" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Product", href: "/#product" },
+  { label: "How it works", href: "/#how" },
+  { label: "Pricing", href: "/#pricing" },
 ];
 
 export default function MarketingNav() {
-  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname() ?? "/";
+  const isLanding = pathname === "/";
+  // Non-landing routes default to the solid scrolled style so the nav
+  // never reads as invisible. On the landing page we still fade in
+  // from transparent to solid as the user scrolls past the hero.
+  const [scrolled, setScrolled] = useState(!isLanding);
 
   useEffect(() => {
+    if (!isLanding) {
+      setScrolled(true);
+      return;
+    }
     const onScroll = () => setScrolled(window.scrollY > 80);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isLanding]);
 
   return (
     <header

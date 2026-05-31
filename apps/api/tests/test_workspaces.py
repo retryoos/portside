@@ -64,9 +64,10 @@ def test_role_lattice_is_strict_ordering() -> None:
 def test_ensure_personal_workspace_mints_owner_membership(sessionmaker) -> None:
     async def go():
         async with sessionmaker() as s:
-            wid = await workspaces.ensure_personal_workspace(
+            wid, created = await workspaces.ensure_personal_workspace(
                 s, user_sub="user-1", display_name="Dimitris"
             )
+            assert created is True
             await s.commit()
             return wid
 
@@ -89,8 +90,14 @@ def test_ensure_personal_workspace_mints_owner_membership(sessionmaker) -> None:
 def test_ensure_personal_workspace_is_idempotent(sessionmaker) -> None:
     async def go():
         async with sessionmaker() as s:
-            wid1 = await workspaces.ensure_personal_workspace(s, user_sub="u")
-            wid2 = await workspaces.ensure_personal_workspace(s, user_sub="u")
+            wid1, created1 = await workspaces.ensure_personal_workspace(
+                s, user_sub="u"
+            )
+            wid2, created2 = await workspaces.ensure_personal_workspace(
+                s, user_sub="u"
+            )
+            assert created1 is True
+            assert created2 is False
             await s.commit()
         async with sessionmaker() as s:
             count = (

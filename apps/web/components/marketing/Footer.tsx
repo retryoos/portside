@@ -4,6 +4,10 @@ import Wordmark from "@/components/Wordmark";
 
 // Marketing footer. Wordmark on the left, four short sitemap columns, a
 // copyright line at the bottom. Off-white surface, hairline rule above.
+//
+// Two product links currently point at /login (the authed product is
+// behind that gate); keys are by label rather than href so the duplicate
+// href does not produce a React "two children with the same key" warning.
 const PRODUCT = [
   { label: "Demurrage workspace", href: "/login" },
   { label: "Edit with AI", href: "/login" },
@@ -44,9 +48,7 @@ export default function Footer() {
 
         <div className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-8 text-body-sm text-secondary">
           <p>© {new Date().getFullYear()} Laytimely. All rights reserved.</p>
-          <p>
-            Built in Athens by Dimitris, Panos &amp; Roman at the ACG AI Lab.
-          </p>
+          <p>Built in Athens by Dimitris &amp; Roman at the ACG AI Lab.</p>
         </div>
       </Container>
     </footer>
@@ -65,7 +67,9 @@ function FooterColumn({
       <p className="text-eyebrow text-secondary">{title}</p>
       <ul className="mt-5 space-y-3">
         {links.map((l) => (
-          <li key={l.href}>
+          // Key by ``label`` since two product links currently share the
+          // ``/login`` href; href-based keys would collide.
+          <li key={l.label}>
             <Link
               href={l.href}
               className="text-body-sm text-primary transition-colors hover:text-secondary"

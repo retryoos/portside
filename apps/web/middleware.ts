@@ -43,6 +43,12 @@ export async function middleware(request: NextRequest) {
   const session = await verifySession(token);
 
   const isLoginRoute = pathname === LOGIN_PATH;
+  // /invite/<token> (W9) is technically open to any authed user (even one
+  // who is not yet a member of any workspace), but the existing default
+  // flow already handles that: unauthed -> redirected to /login with the
+  // invite path preserved as `next`, signed-in -> page renders + the
+  // accept POST mints the workspace membership. No allowlist change
+  // needed; this comment documents the intent for the next reviewer.
 
   if (isLoginRoute) {
     if (session) {

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Wordmark from "@/components/Wordmark";
+import { flags } from "@/lib/flags";
+import { useActiveWorkspace } from "@/lib/use-active-workspace";
 
 // Top app bar (DESIGN.md "Layout"): Laytimely wordmark on the left, pill nav
 // tabs centred, account chip on the right. Shared chrome across every screen.
@@ -52,11 +54,109 @@ export default function TopNav() {
             })}
           </nav>
         </div>
-        <AccountMenu />
+        <div className="flex items-center gap-3">
+          <WorkspaceSwitcher />
+          <AccountMenu />
+        </div>
       </div>
     </header>
   );
 }
+
+function WorkspaceSwitcher() {
+  const { workspaces, active, setActive } = useActiveWorkspace();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Hide the chip when the feature flag is off OR when the user has only
+  // one workspace (the dropdown would have nothing to switch to). Flag
+  // surface lives in ``lib/flags`` (review #16).
+  const flagOn = flags.workspacesUi;
+
+  useEffect(() => {
+    if (!open) return;
+    function onClick(event: MouseEvent) {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  if (!flagOn) return null;
+  if (!workspaces || workspaces.length < 2 || !active) return null;
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Switch workspace"
+        className={`flex h-9 max-w-[14rem] items-center gap-2 rounded-pill border border-border-strong bg-surface px-3 text-body-sm text-primary transition-colors hover:bg-surface-muted ${
+          open ? "bg-surface-muted" : ""
+        }`}
+      >
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-muted text-[0.65rem] font-semibold text-primary">
+          {active.workspace.name.slice(0, 1).toUpperCase()}
+        </span>
+        <span className="truncate font-semibold">{active.workspace.name}</span>
+        <svg
+          aria-hidden
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3.5 w-3.5 shrink-0 text-secondary"
+        >
+          <path d="m4 6 4 4 4-4" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-card border border-border bg-surface py-2 shadow-card"
+        >
+          <p className="px-4 pb-1 pt-2 text-eyebrow text-secondary">
+            Workspaces
+          </p>
+          {workspaces.map((entry) => {
+            const selected = entry.workspace.id === active.workspace.id;
+            return (
+              <button
+                key={entry.workspace.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={selected}
+                onClick={() => {
+                  setActive(entry.workspace.id);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center justify-between gap-2 px-4 py-2 text-left text-body-sm transition-colors hover:bg-surface-muted ${
+                  selected ? "font-semibold text-primary" : "text-primary"
+                }`}
+              >
+                <span className="truncate">{entry.workspace.name}</span>
+                <span className="text-label-caps text-secondary">{entry.role}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function AccountMenu() {
   const router = useRouter();
@@ -159,6 +259,39 @@ function AccountMenu() {
               {user.name}
             </p>
           </div>
+          <div className="my-1 h-px bg-border" />
+          <Link
+            href="/settings/members"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Members
+          </Link>
+          <Link
+            href="/settings/invitations"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Invitations
+          </Link>
+          <Link
+            href="/settings/inbox"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Email-in setup
+          </Link>
+          <Link
+            href="/settings/audit"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Audit log
+          </Link>
           <div className="my-1 h-px bg-border" />
           <button
             type="button"

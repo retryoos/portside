@@ -100,6 +100,32 @@ async def record(
 # ---------------------------------------------------------------------------
 
 
+async def reap_older_than(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    *,
+    retention_days: int,
+) -> int:
+    """Delete audit rows older than ``retention_days``.
+
+    Called from the FastAPI lifespan on startup so a long-running process
+    keeps the table bounded without an external cron. The hot table for
+    incident response is the last 90 days; everything beyond that is in
+    CloudWatch (planned). 0 disables retention.
+    """
+    if retention_days <= 0:
+        return 0
+    from datetime import datetime, timedelta, timezone
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+    async with sessionmaker() as session:
+        async with session.begin():
+            from sqlalchemy import delete as _delete
+            result = await session.execute(
+                _delete(AuditEventRow).where(AuditEventRow.at < cutoff)
+            )
+    return result.rowcount or 0
+
+
 async def list_for_actor(
     sessionmaker: async_sessionmaker[AsyncSession],
     actor_sub: str,

@@ -120,6 +120,7 @@ class InvitationRow(Base):
     accepted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    accepted_by_sub: Mapped[str | None] = mapped_column(String, nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -180,6 +181,14 @@ class Voyage(Base):
     # External evidence gathered by the researcher (A7). Also off the rewrite
     # path: gathered once, persisted, and returned on subsequent reads.
     evidence: Mapped[list[VoyageEvidenceRow]] = relationship(
+        back_populates="voyage",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+    # Analyst legal citations cached per (voyage, event). Same first-read-then-
+    # cache shape as ``evidence``; populated by the /citations route which
+    # invokes the per-event picker pass over the curated corpus.
+    citations: Mapped[list["VoyageCitationRow"]] = relationship(
         back_populates="voyage",
         cascade="all, delete-orphan",
         lazy="selectin",
@@ -608,6 +617,35 @@ class VoyageEvidenceRow(Base):
     supports: Mapped[str] = mapped_column(String)
     citation: Mapped[str] = mapped_column(Text)
     summary: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+# --- analyst citations (W5/§1.6) -------------------------------------------
+
+
+class VoyageCitationRow(Base):
+    """One verified CitedAuthority cached per (voyage, event).
+
+    The analyst citation pass (analyst.run_with_citations) runs against the
+    case-law corpus + (future) IMO/EUR-Lex tool surfaces. The picker output
+    is validated against the candidate list so case_id is always real; we
+    cache the surviving rows so the second read does not re-call the model.
+    """
+
+    __tablename__ = "voyage_citations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    voyage_id: Mapped[str] = mapped_column(
+        ForeignKey("voyages.voyage_id", ondelete="CASCADE"), index=True
+    )
+    voyage: Mapped[Voyage] = relationship(back_populates="citations")
+    event_id: Mapped[str] = mapped_column(String, index=True)
+    citation: Mapped[str] = mapped_column(Text)
+    tool_used: Mapped[str] = mapped_column(String)
+    proposition: Mapped[str] = mapped_column(Text)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )

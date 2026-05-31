@@ -11,24 +11,34 @@
 // first render so any post-mount re-render cannot stomp on the user's edits.
 // The PDF export reads the live DOM, so edits flow straight into the
 // downloaded file.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import CitationFootnotes from "@/components/CitationFootnotes";
+import EmailLetterButton from "@/components/EmailLetterButton";
 import ExportDocxButton from "@/components/ExportDocxButton";
 import ExportPdfButton from "@/components/ExportPdfButton";
+import ExportXlsxButton from "@/components/ExportXlsxButton";
 import MailtoLetterButton from "@/components/MailtoLetterButton";
 import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
-import type { ClaimPacket } from "@/lib/types";
+import { injectCitationMarkers } from "@/lib/letter-citations";
+import type { ClaimPacket, FlaggedEventCitations } from "@/lib/types";
 
 export const LETTER_DOM_ID = "claim-letter-sheet";
 
 export default function ClaimLetter({
   packet = demoVoyage.packet,
   loading = false,
+  voyageId = demoVoyage.voyage_id,
+  vesselName,
+  citations,
 }: {
   packet?: ClaimPacket | null;
   loading?: boolean;
+  voyageId?: string;
+  vesselName?: string | null;
+  citations?: FlaggedEventCitations[] | null;
 }) {
   // Snapshot the markdown on first render so React's diff cannot wipe user
   // edits if the parent re-renders with the same (or newly arrived) packet.
@@ -45,15 +55,34 @@ export default function ClaimLetter({
     return <ClaimLetterSkeleton />;
   }
 
-  const bodyMd = snapshotMd ?? packet.claim_letter_markdown;
+  const rawBodyMd = snapshotMd ?? packet.claim_letter_markdown;
+  // Inject ¹ ² ³ markers after every reference to a verified citation and
+  // get back the flat numbered list for the footnotes block. useMemo keeps
+  // the regex run off the hot edit path (this only re-runs when the body
+  // text or the citations list changes).
+  const { markdown: bodyMd, flat: numberedAuthorities } = useMemo(
+    () => injectCitationMarkers(rawBodyMd, citations ?? []),
+    [rawBodyMd, citations],
+  );
 
   return (
     <div className="relative rounded-card border border-border bg-surface">
-      <div className="absolute right-6 top-6 z-10 flex items-center gap-1">
+      <div
+        className="absolute right-6 top-6 z-10 flex items-center gap-2"
+        role="toolbar"
+        aria-label="Claim letter actions"
+      >
+        {/* Send actions: primary CTA + mailto fallback. */}
+        <EmailLetterButton voyageId={voyageId} vesselName={vesselName} />
         <MailtoLetterButton
           letterMarkdown={bodyMd}
-          voyageId={packet ? "voyage" : "voyage"}
+          voyageId={voyageId}
+          vesselName={vesselName}
         />
+        <div className="mx-1 h-5 w-px bg-border" aria-hidden />
+        {/* Download actions: Excel / Word / PDF, ordered by descending
+            preference for the customer's downstream tool. */}
+        <ExportXlsxButton voyageId={voyageId} vesselName={vesselName} />
         <ExportDocxButton targetId={LETTER_DOM_ID} />
         <ExportPdfButton targetId={LETTER_DOM_ID} />
       </div>
@@ -102,6 +131,7 @@ export default function ClaimLetter({
             >
               {bodyMd}
             </ReactMarkdown>
+            <CitationFootnotes authorities={numberedAuthorities} />
           </div>
         </article>
       </Reveal>

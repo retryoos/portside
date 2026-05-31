@@ -196,3 +196,239 @@ export interface VesselSummary {
   last_activity: string;
   perspectives: Perspective[];
 }
+
+// ---------------------------------------------------------------------------
+// Email subsystem (W2, notes/architecture_weeks_5_to_8.md §1.3)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/email/models.py. The PDF attachment is a
+// stretch and is uploaded as multipart in a future variant of the route; v0.1
+// emails the markdown letter body inline.
+export interface LetterEmailRequest {
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject?: string;
+  preamble_markdown?: string;
+}
+
+export interface SesSendResult {
+  ses_message_id: string;
+  sent_at: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  sandbox: boolean;
+}
+
+// Stable enum used by the backend EmailSendError.code field. The route surfaces
+// these as {detail: {code, message}}; the UI uses the code to render an
+// actionable toast.
+export type EmailErrorCode =
+  | "SES_UNVERIFIED_RECIPIENT"
+  | "SES_THROTTLED"
+  | "SES_REJECTED"
+  | "SES_TRANSPORT"
+  | "SES_NOT_CONFIGURED";
+
+// Error thrown by sendClaimLetter when the backend returns 4xx/5xx with a
+// JSON {code, message} body. Lets the caller render a friendly toast.
+export interface EmailSendError {
+  code: EmailErrorCode | "UNKNOWN";
+  message: string;
+  status: number;
+}
+
+// ---------------------------------------------------------------------------
+// Evidence checklist (W3, notes/architecture_weeks_5_to_8.md §1.4)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/evidence_checklist.py. ``attached`` is
+// deterministic on the backend (uploaded CP -> cp_excerpt rows attached;
+// research bundle covering an event -> the weather row attached); the UI just
+// renders it.
+export type EvidenceRole =
+  | "cp_excerpt"
+  | "nor"
+  | "sof"
+  | "bunker_note"
+  | "port_log"
+  | "weather_observation"
+  | "agent_correspondence"
+  | "other";
+
+export interface EvidenceItem {
+  role: EvidenceRole;
+  label: string;
+  supports_event_id: string | null;
+  supports_clause: string | null;
+  attached: boolean;
+  source_voyage_doc_id?: string | null;
+  note?: string | null;
+}
+
+export interface EvidenceChecklist {
+  items: EvidenceItem[];
+}
+
+// ---------------------------------------------------------------------------
+// Claim strength sub-scores (W4, notes/architecture_weeks_5_to_8.md §1.5)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/claim_strength.py. Two of the four
+// sub-scores are deterministic backend-side (time_bar_risk + evidence_completeness);
+// the UI never needs to know which, since they all arrive as the same closed
+// vocabulary word.
+export type Strength = "Strong" | "Arguable" | "Weak";
+
+export interface ClaimStrengthSubScores {
+  clause_clarity: Strength;
+  evidence_completeness: Strength;
+  counterparty_pushback_risk: Strength;
+  time_bar_risk: Strength;
+}
+
+export interface FlaggedEventStrength {
+  event_id: string;
+  sub_scores: ClaimStrengthSubScores;
+}
+
+// ---------------------------------------------------------------------------
+// Legal citations (W5, notes/architecture_weeks_5_to_8.md §1.6)
+// ---------------------------------------------------------------------------
+
+// Mirrors portside_api/legal/models.py. ``verified_via_tool`` is always true
+// on the wire: the backend's verify gate drops anything that did not pass.
+// ``tool_used`` carries the channel (currently always "corpus"; "imo" and
+// "eur_lex" are wired but not yet emitting).
+export type CitedAuthorityTool =
+  | "corpus"
+  | "lookup"
+  | "eur_lex"
+  | "imo"
+  | "bailii";
+
+export interface CitedAuthority {
+  citation: string;
+  verified_via_tool: boolean;
+  tool_used: CitedAuthorityTool;
+  proposition: string;
+  url?: string | null;
+}
+
+export interface FlaggedEventCitations {
+  event_id: string;
+  cited_authorities: CitedAuthority[];
+}
+
+// ---------------------------------------------------------------------------
+// Audit log (W6, notes/architecture_weeks_5_to_8.md §2.2)
+// ---------------------------------------------------------------------------
+
+// Closed action vocabulary mirroring portside_api/audit.py. A backend
+// addition trips tsc here so the UI never silently renders an unknown
+// action.
+export type AuditAction =
+  | "voyage.create"
+  | "voyage.delete"
+  | "voyage.status_change"
+  | "voyage.revise_apply"
+  | "voyage.rebuttal"
+  | "voyage.letter_email"
+  | "voyage.evidence_refresh"
+  | "voyage.from_email"
+  | "workspace.create"
+  | "workspace.invite"
+  | "workspace.accept"
+  | "workspace.member_remove";
+
+export type AuditTarget =
+  | "voyage"
+  | "claim"
+  | "workspace"
+  | "membership"
+  | "invitation";
+
+export interface AuditEvent {
+  id: number;
+  actor_sub: string | null;
+  // Wire field is a free str (the backend Pydantic model loosens the
+  // closed Literal to str for forward compatibility); the closed union
+  // above is what the UI actually expects to render.
+  action: AuditAction | string;
+  target_type: AuditTarget | string;
+  target_id: string;
+  at: string;
+  payload: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
+// Inbox forwarding address (W7, notes/architecture_weeks_5_to_8.md §2.3)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of the backend _InboxAddressResponse. The closed
+// ``format`` union pins the privacy model the UI surfaces: the customer
+// forwards what we should see; we never read the mailbox.
+export type InboxFormat = "forward_to";
+
+export interface InboxAddress {
+  address: string;
+  format: InboxFormat;
+}
+
+// ---------------------------------------------------------------------------
+// Workspaces + memberships + invitations (W8 + W9, §2.1)
+// ---------------------------------------------------------------------------
+
+export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
+
+export interface Workspace {
+  id: string;
+  name: string;
+  plan: string;
+}
+
+export interface WorkspaceMember {
+  user_sub: string;
+  role: WorkspaceRole;
+}
+
+export interface MyWorkspaceEntry {
+  workspace: Workspace;
+  role: WorkspaceRole;
+}
+
+export interface WorkspaceInvitation {
+  id: number;
+  workspace_id: string;
+  email: string;
+  role: WorkspaceRole;
+  token: string;
+  invited_by_sub: string;
+  invited_at: string;
+  expires_at: string;
+  accepted: boolean;
+  revoked: boolean;
+}
+
+export interface CreateInvitationRequest {
+  email: string;
+  role: WorkspaceRole;
+}
+
+// Stable error codes the backend uses when a workspace mutation refuses.
+// The W8/W9 UIs match on these to render an actionable hint instead of the
+// raw HTTP status.
+export type WorkspaceErrorCode =
+  | "not_found"
+  | "last_owner"
+  | "workspace_role_required"
+  | "invitation_invalid"
+  | "UNKNOWN";
+
+export interface WorkspaceError {
+  code: WorkspaceErrorCode;
+  message: string;
+  status: number;
+}
