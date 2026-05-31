@@ -37,7 +37,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import audit, defense, pipeline, researcher, reviser
+from . import audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
@@ -213,6 +213,91 @@ async def healthz() -> dict[str, str]:
 async def me(user: Annotated[Principal, Depends(get_current_user)]) -> Principal:
     """The current authenticated principal (id + email)."""
     return user
+
+
+# ---------------------------------------------------------------------------
+# Workspaces (W7/§2.1)
+#
+# Foundation only: every authed call ensures the caller has a personal
+# workspace (so the data model is consistent). The /workspaces routes ship the
+# invitation contract; the workspace switcher UI lands with the WORKSPACES_UI
+# flag.
+# ---------------------------------------------------------------------------
+
+
+_require_admin = workspaces.require_workspace_role("admin", _sessionmaker)
+
+
+@app.get("/workspaces/{workspace_id}/members")
+async def list_workspace_members(
+    workspace_id: str,
+    _principal: Annotated[Principal, Depends(_require_admin)],
+) -> list[workspaces.Member]:
+    """Admin-only: list the membership rows for a workspace."""
+    from sqlalchemy import select as _select
+    from .db.models import MembershipRow as _MembershipRow
+
+    async with _sessionmaker() as session:
+        result = await session.execute(
+            _select(_MembershipRow).where(_MembershipRow.workspace_id == workspace_id)
+        )
+        rows = result.scalars().all()
+    return [
+        workspaces.Member(user_sub=row.user_sub, role=row.role)  # type: ignore[arg-type]
+        for row in rows
+    ]
+
+
+@app.post("/workspaces/{workspace_id}/invitations", status_code=201)
+async def create_workspace_invitation(
+    workspace_id: str,
+    body: workspaces.CreateInvitationRequest,
+    principal: Annotated[Principal, Depends(_require_admin)],
+) -> workspaces.Invitation:
+    """Admin-only: mint an invitation token. The SES send + audit row land
+    after this returns; today the helper writes the row only."""
+    async with _sessionmaker() as session:
+        row = await workspaces.create_invitation(
+            session,
+            workspace_id=workspace_id,
+            email=str(body.email),
+            role=body.role,
+            invited_by_sub=principal.id,
+        )
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.invite",
+        "invitation",
+        str(row.id),
+        {"workspace_id": workspace_id, "role": body.role},
+    )
+    return workspaces.to_invitation(row)
+
+
+@app.post("/invitations/{token}/accept")
+async def accept_workspace_invitation(
+    token: str,
+    principal: Annotated[Principal, Depends(get_current_user)],
+) -> workspaces.Invitation:
+    """Public-ish accept: the caller must be authed, but they do not yet need
+    to be a member of the workspace (that is the point of the invite). 410
+    for expired / revoked / already-accepted tokens."""
+    async with _sessionmaker() as session:
+        row = await workspaces.accept_invitation(
+            session, token=token, acceptor_sub=principal.id
+        )
+        if row is None:
+            raise HTTPException(status_code=410, detail="invitation not active")
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.accept",
+        "invitation",
+        str(row.id),
+        {"workspace_id": row.workspace_id, "role": row.role},
+    )
+    return workspaces.to_invitation(row)
 
 
 @app.get("/audit")

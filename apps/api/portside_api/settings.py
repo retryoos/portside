@@ -75,6 +75,11 @@ class Settings:
     # unset, the inbound route refuses every call (fail-closed). Generate
     # with ``openssl rand -hex 32`` and put in Doppler / App Runner env.
     email_in_shared_secret: str | None
+    # Multi-tenant workspaces UI flag (notes/architecture_weeks_5_to_8.md
+    # §2.1). When off (default), the backend still mints a personal workspace
+    # per user (so the data contract is consistent), but the frontend hides
+    # the workspace switcher. Flip on per-account when a team needs the UI.
+    workspaces_ui: bool
     # Rate limiting for the expensive, paid pipeline trigger (POST /voyages):
     # at most ``rate_limit_max_requests`` per caller per
     # ``rate_limit_window_seconds``. Set the max to 0 to disable. This is a
@@ -123,6 +128,10 @@ class Settings:
             .lower()
             in {"1", "true", "yes", "on"},
             email_in_shared_secret=os.environ.get("EMAIL_IN_SHARED_SECRET") or None,
+            workspaces_ui=(os.environ.get("WORKSPACES_UI") or "")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"},
             rate_limit_max_requests=int(
                 os.environ.get("RATE_LIMIT_MAX_REQUESTS") or "30"
             ),
