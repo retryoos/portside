@@ -31,6 +31,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import defense, pipeline, researcher, reviser
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .email import (
+    EmailErrorCode,
+    EmailSendError,
+    LetterEmailRequest,
+    SesSendResult,
+    send_claim_letter,
+)
 from .exports import excel as excel_export
 from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
@@ -355,6 +362,48 @@ async def rebut_voyage(
             status_code=409, detail="voyage is not ready for rebuttal"
         )
     return await defense.build_rebuttal_packet(state)
+
+
+_EMAIL_ERROR_STATUS: dict[EmailErrorCode, int] = {
+    EmailErrorCode.SANDBOX_UNVERIFIED: 422,
+    EmailErrorCode.THROTTLED: 429,
+    EmailErrorCode.REJECTED: 422,
+    EmailErrorCode.TRANSPORT: 502,
+    EmailErrorCode.NOT_CONFIGURED: 503,
+}
+
+
+@app.post("/voyages/{voyage_id}/letter/email")
+async def email_claim_letter(
+    voyage_id: str,
+    body: LetterEmailRequest,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> SesSendResult:
+    """Send the claim letter via SES (notes/architecture_weeks_5_to_8.md §1.3).
+
+    When ``settings.email_send_live`` is off the route runs end-to-end against
+    the sandbox path (audit row + 200 with ``sandbox=true``) so the surface
+    is exercised without an SES identity. When live, errors are translated to
+    a stable HTTP status via the ``EmailErrorCode`` enum.
+
+    Note: PDF attachment upload is a stretch (multipart form variant of this
+    route) and will land in a follow-up PR; the v0.1 surface emails the
+    Markdown letter body inline.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.packet is None:
+        raise HTTPException(status_code=409, detail="voyage is not ready to email")
+    try:
+        result = await send_claim_letter(state, body)
+    except EmailSendError as exc:
+        status = _EMAIL_ERROR_STATUS.get(exc.code, 502)
+        raise HTTPException(
+            status_code=status,
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+    return result
 
 
 @app.get("/voyages/{voyage_id}/laytime.xlsx")

@@ -65,6 +65,11 @@ class Settings:
     # `legal_bailii_live=1` enables a polite BAILII scraper (phase 2).
     legal_eur_lex_live: bool
     legal_bailii_live: bool
+    # Email send via SES (notes/architecture_weeks_5_to_8.md §1.3). Default off
+    # so dev environments without an SES identity exercise the sandbox path
+    # (audit row + rate limit + 200 response, no outbound). Flip to 1 after
+    # the AWS support ticket for production access lands.
+    email_send_live: bool
 
     @classmethod
     def load(cls) -> "Settings":
@@ -99,6 +104,10 @@ class Settings:
             .lower()
             in {"1", "true", "yes", "on"},
             legal_bailii_live=(os.environ.get("LEGAL_BAILII_LIVE") or "")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"},
+            email_send_live=(os.environ.get("EMAIL_SEND_LIVE") or "")
             .strip()
             .lower()
             in {"1", "true", "yes", "on"},
