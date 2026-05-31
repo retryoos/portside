@@ -31,6 +31,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import defense, pipeline, researcher, reviser
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .exports import excel as excel_export
 from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
@@ -354,6 +355,43 @@ async def rebut_voyage(
             status_code=409, detail="voyage is not ready for rebuttal"
         )
     return await defense.build_rebuttal_packet(state)
+
+
+@app.get("/voyages/{voyage_id}/laytime.xlsx")
+async def export_laytime_xlsx(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> Response:
+    """Render the laytime ledger + summary + letter to a three-sheet workbook.
+
+    Spec: notes/architecture_weeks_5_to_8.md §1.1. Workbook shape is fixed and
+    snapshot-tested against the Rotterdam fixture so the public API consumer
+    can rely on it (sheet names, cell coordinates, the canonical quantum at
+    Summary!B7). 409 when the pipeline has not produced laytime yet.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.extraction is None or state.laytime is None:
+        raise HTTPException(status_code=409, detail="voyage is not ready for export")
+
+    # Render off-thread so the event loop never blocks on a large workbook.
+    workbook_bytes = await asyncio.to_thread(
+        excel_export.render_laytime_workbook, state
+    )
+    vessel = (
+        state.extraction.charter_party.vessel_name.replace(" ", "_")
+        if state.extraction
+        else "voyage"
+    )
+    filename = f"laytime-{vessel}-{voyage_id}.xlsx"
+    return Response(
+        content=workbook_bytes,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/voyages/{voyage_id}/evidence")
