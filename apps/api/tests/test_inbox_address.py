@@ -24,24 +24,7 @@ if str(_API_ROOT) not in sys.path:
 # pylint: disable=wrong-import-position
 from portside_api import main as main_mod, workspaces  # noqa: E402
 from portside_api.auth import DEV_USER_ID  # noqa: E402
-from portside_api.db.models import (  # noqa: E402
-    AuditEventRow,
-    InvitationRow,
-    MembershipRow,
-    WorkspaceRow,
-)
-from sqlalchemy import delete  # noqa: E402
-
-
-async def _wipe_workspace_state() -> None:
-    """Truncate workspace-related tables so this file's route tests do not
-    inherit membership state from a prior test file."""
-    async with main_mod._sessionmaker() as session:
-        async with session.begin():
-            await session.execute(delete(InvitationRow))
-            await session.execute(delete(MembershipRow))
-            await session.execute(delete(WorkspaceRow))
-            await session.execute(delete(AuditEventRow))
+from tests.conftest import run_wipe  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -55,6 +38,22 @@ def test_inbox_local_part_replaces_colon() -> None:
 
 def test_inbox_local_part_passes_through_clean_id() -> None:
     assert workspaces.inbox_local_part("ws_acme") == "ws_acme"
+
+
+def test_inbox_local_part_strips_unsafe_chars() -> None:
+    """Review #17: workspace_id with spaces / specials produces a safe
+    local part rather than an invalid email address."""
+    assert workspaces.inbox_local_part("ws bad slug") == "ws-bad-slug"
+    assert workspaces.inbox_local_part("ws_acme!") == "ws_acme"
+    assert workspaces.inbox_local_part("UPPER:CASE") == "upper-case"
+
+
+def test_inbox_local_part_pathological_falls_back_to_sentinel() -> None:
+    """A workspace_id made entirely of separators must still produce a
+    deliverable address."""
+    out = workspaces.inbox_local_part("---")
+    assert out.startswith("ws-")
+    assert "@" not in out
 
 
 def test_inbox_address_combines_local_part_and_domain() -> None:
@@ -74,16 +73,16 @@ def client() -> Iterator[TestClient]:
     # The route uses the real _sessionmaker so it can hit the admin gate.
     # Wipe workspace state on entry + exit so we don't inherit memberships
     # from sibling test files (they share the SQLite file).
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
     with TestClient(main_mod.app) as c:
         yield c
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
 
 
 def _seed_personal_workspace_for_dev_user() -> str:
     async def _seed() -> str:
         async with main_mod._sessionmaker() as session:
-            wid = await workspaces.ensure_personal_workspace(
+            wid, _ = await workspaces.ensure_personal_workspace(
                 session, user_sub=DEV_USER_ID
             )
             await session.commit()

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Wordmark from "@/components/Wordmark";
+import { flags } from "@/lib/flags";
 import { useActiveWorkspace } from "@/lib/use-active-workspace";
 
 // Top app bar (DESIGN.md "Layout"): Laytimely wordmark on the left, pill nav
@@ -68,11 +69,9 @@ function WorkspaceSwitcher() {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Hide the chip when the feature flag is off OR when the user has only
-  // one workspace (the dropdown would have nothing to switch to). The flag
-  // is read at module import via Next.js' NEXT_PUBLIC_ inlining.
-  const flagOn =
-    process.env.NEXT_PUBLIC_WORKSPACES_UI === "1" ||
-    process.env.NEXT_PUBLIC_WORKSPACES_UI === "true";
+  // one workspace (the dropdown would have nothing to switch to). Flag
+  // surface lives in ``lib/flags`` (review #16).
+  const flagOn = flags.workspacesUi;
 
   useEffect(() => {
     if (!open) return;

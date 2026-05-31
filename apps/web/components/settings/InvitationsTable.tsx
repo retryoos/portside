@@ -7,7 +7,12 @@
 
 import { useEffect, useState } from "react";
 
-import type { WorkspaceInvitation, WorkspaceRole } from "@/lib/types";
+import { revokeWorkspaceInvitation } from "@/lib/api";
+import type {
+  WorkspaceError,
+  WorkspaceInvitation,
+  WorkspaceRole,
+} from "@/lib/types";
 
 const TOAST_TTL_MS = 4000;
 
@@ -20,10 +25,31 @@ const ROLE_TONE: Record<WorkspaceRole, string> = {
 
 export default function InvitationsTable({
   invitations,
+  workspaceId,
+  onChanged,
 }: {
   invitations: WorkspaceInvitation[];
+  workspaceId: string;
+  onChanged: () => void;
 }) {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleRevoke(invitationId: number) {
+    if (revokingId) return;
+    setRevokingId(invitationId);
+    setError(null);
+    try {
+      await revokeWorkspaceInvitation(workspaceId, invitationId);
+      onChanged();
+    } catch (e) {
+      const err = e as WorkspaceError;
+      setError(err.message);
+    } finally {
+      setRevokingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!copiedToken) return;
@@ -55,7 +81,16 @@ export default function InvitationsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-border bg-surface">
+    <div className="space-y-3">
+      {error ? (
+        <p
+          role="alert"
+          className="rounded-card border border-danger/20 bg-danger-container px-4 py-3 text-body-sm text-danger"
+        >
+          {error}
+        </p>
+      ) : null}
+      <div className="overflow-hidden rounded-card border border-border bg-surface">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-border bg-surface-muted text-label-caps text-secondary">
@@ -86,18 +121,30 @@ export default function InvitationsTable({
                 {formatDate(inv.expires_at)}
               </td>
               <td className="px-4 py-3 align-middle text-right">
-                <button
-                  type="button"
-                  onClick={() => copyLink(inv.token)}
-                  className="rounded-pill border border-border bg-surface px-3 py-1.5 text-body-sm text-primary transition-colors hover:bg-surface-muted"
-                >
-                  {copiedToken === inv.token ? "Copied" : "Copy link"}
-                </button>
+                <div className="inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => copyLink(inv.token)}
+                    className="rounded-pill border border-border bg-surface px-3 py-1.5 text-body-sm text-primary transition-colors hover:bg-surface-muted"
+                  >
+                    {copiedToken === inv.token ? "Copied" : "Copy link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRevoke(inv.id)}
+                    disabled={revokingId === inv.id}
+                    title="Revoke this invitation"
+                    className="rounded-pill border border-border bg-surface px-3 py-1.5 text-body-sm text-secondary transition-colors hover:bg-danger-container hover:text-danger disabled:opacity-50"
+                  >
+                    {revokingId === inv.id ? "Revoking…" : "Revoke"}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

@@ -90,7 +90,11 @@ export default function InvitationsPage() {
                 {invitations === null ? (
                   <Skeleton />
                 ) : (
-                  <InvitationsTable invitations={invitations} />
+                  <InvitationsTable
+                    invitations={invitations}
+                    workspaceId={active.workspace.id}
+                    onChanged={() => setTick((t) => t + 1)}
+                  />
                 )}
               </div>
             </section>

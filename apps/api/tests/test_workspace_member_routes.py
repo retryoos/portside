@@ -28,42 +28,23 @@ if str(_API_ROOT) not in sys.path:
 # pylint: disable=wrong-import-position
 from portside_api import main as main_mod, workspaces  # noqa: E402
 from portside_api.auth import DEV_USER_ID  # noqa: E402
-from portside_api.db.models import (  # noqa: E402
-    AuditEventRow,
-    InvitationRow,
-    MembershipRow,
-    WorkspaceRow,
-)
-from sqlalchemy import delete  # noqa: E402
+from portside_api.db.models import MembershipRow  # noqa: E402
 
-
-async def _wipe_workspace_state() -> None:
-    """Drop every workspace-related row so tests do not bleed into each other.
-
-    The shared SQLite file under ``portside.db`` is reused across the test
-    session because ``_sessionmaker`` is module-level; isolation is by
-    table truncation.
-    """
-    async with main_mod._sessionmaker() as session:
-        async with session.begin():
-            await session.execute(delete(InvitationRow))
-            await session.execute(delete(MembershipRow))
-            await session.execute(delete(WorkspaceRow))
-            await session.execute(delete(AuditEventRow))
+from tests.conftest import run_wipe  # noqa: E402
 
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
     with TestClient(main_mod.app) as c:
         yield c
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
 
 
 def _seed_personal_workspace_for_dev_user() -> str:
     async def _seed() -> str:
         async with main_mod._sessionmaker() as session:
-            wid = await workspaces.ensure_personal_workspace(
+            wid, _ = await workspaces.ensure_personal_workspace(
                 session, user_sub=DEV_USER_ID
             )
             await session.commit()
@@ -164,6 +145,30 @@ def test_member_remove_refuses_last_owner(client: TestClient) -> None:
     assert resp.status_code == 409
     body = resp.json()
     assert body["detail"]["code"] == "last_owner"
+
+
+def test_change_role_promotes_member_to_admin(client: TestClient) -> None:
+    """Review #11: PATCH updates the role and writes an audit row."""
+    wid = _seed_personal_workspace_for_dev_user()
+    other_sub = "promotable-user"
+    _seed_admin_membership(wid, other_sub)  # seed at admin
+    resp = client.patch(
+        f"/workspaces/{wid}/members/{other_sub}",
+        json={"role": "viewer"},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["role"] == "viewer"
+
+
+def test_change_role_refuses_demoting_last_owner(client: TestClient) -> None:
+    """Review #11: same last-owner refusal applies on demotion."""
+    wid = _seed_personal_workspace_for_dev_user()
+    resp = client.patch(
+        f"/workspaces/{wid}/members/{DEV_USER_ID}",
+        json={"role": "admin"},
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "last_owner"
 
 
 def test_member_remove_allows_owner_when_another_owner_exists(

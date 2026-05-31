@@ -4,18 +4,26 @@
 // Plain list, role chip, Remove button. The Remove button surfaces the
 // backend's stable "last_owner" code as a friendly toast: an admin who
 // tries to remove the last owner is told to promote another member first
-// rather than being shown a raw 409. The caller's own row is highlighted
-// (no Remove button if removing self would leave the workspace ownerless;
-// the backend enforces this and the UI mirrors it client-side for clarity).
+// rather than being shown a raw 409.
+//
+// Self-removal: clicking Leave on the caller's own row removes the
+// membership and then router.replace() to /cases so the admin does not
+// orphan themselves on a page they no longer have permission to view.
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import type {
   WorkspaceError,
   WorkspaceMember,
   WorkspaceRole,
 } from "@/lib/types";
-import { removeWorkspaceMember } from "@/lib/api";
+import {
+  changeWorkspaceMemberRole,
+  removeWorkspaceMember,
+} from "@/lib/api";
+
+const ROLE_OPTIONS: WorkspaceRole[] = ["owner", "admin", "member", "viewer"];
 
 const TOAST_TTL_MS = 5000;
 
@@ -37,7 +45,9 @@ export default function MembersTable({
   callerSub: string | null;
   onChanged: () => void;
 }) {
+  const router = useRouter();
   const [busySub, setBusySub] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [toast, setToast] = useState<{
     kind: "success" | "error";
     message: string;
@@ -53,9 +63,23 @@ export default function MembersTable({
 
   async function handleRemove(member: WorkspaceMember) {
     if (busySub) return;
+    const isSelf = callerSub !== null && member.user_sub === callerSub;
+    // For self-removal, require a one-click confirmation so a stray click
+    // doesn't orphan an admin from their own workspace.
+    if (isSelf && !confirmLeave) {
+      setConfirmLeave(true);
+      return;
+    }
     setBusySub(member.user_sub);
     try {
       await removeWorkspaceMember(workspaceId, member.user_sub);
+      if (isSelf) {
+        // The caller no longer has access to this settings page; the next
+        // render would 404. Land them on the cases dashboard with a hard
+        // navigation so the workspace-cache in TopNav refreshes.
+        router.replace("/cases");
+        return;
+      }
       setToast({ kind: "success", message: `Removed ${shortSub(member.user_sub)}` });
       onChanged();
     } catch (e) {
@@ -67,6 +91,7 @@ export default function MembersTable({
       setToast({ kind: "error", message });
     } finally {
       setBusySub(null);
+      setConfirmLeave(false);
     }
   }
 
@@ -110,11 +135,42 @@ export default function MembersTable({
                     ) : null}
                   </td>
                   <td className="px-4 py-3 align-middle">
-                    <span
-                      className={`inline-flex rounded-pill px-2.5 py-0.5 text-label-caps ${ROLE_TONE[m.role]}`}
+                    <select
+                      value={m.role}
+                      onChange={async (e) => {
+                        const next = e.target.value as WorkspaceRole;
+                        if (next === m.role) return;
+                        try {
+                          await changeWorkspaceMemberRole(
+                            workspaceId,
+                            m.user_sub,
+                            next,
+                          );
+                          onChanged();
+                          setToast({
+                            kind: "success",
+                            message: `Role updated to ${next}`,
+                          });
+                        } catch (err) {
+                          const e = err as WorkspaceError;
+                          setToast({
+                            kind: "error",
+                            message:
+                              e.code === "last_owner"
+                                ? "Cannot demote the only owner; promote another member first."
+                                : e.message,
+                          });
+                        }
+                      }}
+                      aria-label={`Change role for ${m.user_sub}`}
+                      className={`inline-flex cursor-pointer rounded-pill px-2.5 py-0.5 text-label-caps focus:outline-none ${ROLE_TONE[m.role]}`}
                     >
-                      {m.role}
-                    </span>
+                      {ROLE_OPTIONS.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-4 py-3 align-middle text-right">
                     <button
@@ -125,15 +181,23 @@ export default function MembersTable({
                         wouldStrandWorkspace
                           ? "Cannot remove the only owner"
                           : isSelf
-                            ? "Leave workspace"
+                            ? confirmLeave
+                              ? "Click again to confirm"
+                              : "Leave workspace"
                             : "Remove member"
                       }
-                      className="rounded-pill border border-border bg-surface px-3 py-1.5 text-body-sm text-primary transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                      className={`rounded-pill border px-3 py-1.5 text-body-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        isSelf && confirmLeave
+                          ? "border-danger bg-danger text-on-danger hover:opacity-90"
+                          : "border-border bg-surface text-primary hover:bg-surface-muted"
+                      }`}
                     >
                       {busySub === m.user_sub
                         ? "Removing…"
                         : isSelf
-                          ? "Leave"
+                          ? confirmLeave
+                            ? "Click to confirm leave"
+                            : "Leave"
                           : "Remove"}
                     </button>
                   </td>

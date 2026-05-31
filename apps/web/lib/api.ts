@@ -188,11 +188,18 @@ async function _parseWorkspaceError(res: Response): Promise<WorkspaceError> {
   }
 }
 
-/** Workspaces the caller is a member of (W8). */
+/** Workspaces the caller is a member of (W8).
+ *
+ * 401 returns an empty list rather than raising so the
+ * ActiveWorkspaceProvider mounted at the root layout does not flood the
+ * marketing pages with auth errors. The middleware already redirects
+ * unauthed visitors away from authed routes; this is just defensive.
+ */
 export async function listMyWorkspaces(
   signal?: AbortSignal,
 ): Promise<MyWorkspaceEntry[]> {
   const res = await apiFetch("/me/workspaces", { signal });
+  if (res.status === 401) return [];
   if (!res.ok) throw await _parseWorkspaceError(res);
   return (await res.json()) as MyWorkspaceEntry[];
 }
@@ -219,6 +226,33 @@ export async function removeWorkspaceMember(
 ): Promise<void> {
   const path = `/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userSub)}`;
   const res = await apiFetch(path, { method: "DELETE" });
+  if (res.status === 204) return;
+  throw await _parseWorkspaceError(res);
+}
+
+/** Admin-only: promote or demote a member (review #11). */
+export async function changeWorkspaceMemberRole(
+  workspaceId: string,
+  userSub: string,
+  role: WorkspaceMember["role"],
+): Promise<WorkspaceMember> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/members/${encodeURIComponent(userSub)}`;
+  const res = await apiFetch(path, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) throw await _parseWorkspaceError(res);
+  return (await res.json()) as WorkspaceMember;
+}
+
+/** Admin-only: revoke a pending invitation (review #10). */
+export async function revokeWorkspaceInvitation(
+  workspaceId: string,
+  invitationId: number,
+): Promise<void> {
+  const path = `/workspaces/${encodeURIComponent(workspaceId)}/invitations/${invitationId}/revoke`;
+  const res = await apiFetch(path, { method: "POST" });
   if (res.status === 204) return;
   throw await _parseWorkspaceError(res);
 }

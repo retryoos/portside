@@ -53,6 +53,7 @@ from .evidence_checklist import (
     EvidenceChecklist,
     build_checklist as build_evidence_checklist,
 )
+from .inbox_address import InboxAddressResponse
 from .researcher import EvidenceBundle
 from .email import (
     EmailErrorCode,
@@ -61,6 +62,8 @@ from .email import (
     SesSendResult,
     send_claim_letter,
 )
+from .email import invitations as invitation_email
+from .db.models import WorkspaceRow as _WorkspaceRow
 from .exports import excel as excel_export
 from .inbox import (
     INBOUND_HMAC_HEADER,
@@ -152,6 +155,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         reaped = await store.reap_stale_processing(settings.stale_run_seconds)
         if reaped:
             logger.info("reaped %d interrupted voyage run(s) on startup", reaped)
+        # Audit retention reaper (review #9): drop rows older than the
+        # configured horizon so the audit table stays bounded.
+        retained = await audit.reap_older_than(
+            _sessionmaker, retention_days=settings.audit_retention_days
+        )
+        if retained:
+            logger.info(
+                "reaped %d audit row(s) older than %dd",
+                retained, settings.audit_retention_days,
+            )
         # The seeded demo voyages are owned by the dev user so they remain
         # visible under owner-scoping in dev (DEV_AUTH) mode.
         await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)
@@ -217,6 +230,27 @@ async def enforce_voyage_rate_limit(request: Request) -> None:
         )
 
 
+# Per-caller rate limit for invitation mint (security hardening). A
+# compromised admin token could otherwise mint thousands of invites; the
+# limit is loose enough to support paste-batch invites and tight enough
+# to bound the damage.
+invitation_rate_limiter = SlidingWindowRateLimiter(
+    max_requests=settings.invitation_rate_limit_max,
+    window_seconds=settings.invitation_rate_limit_window_seconds,
+)
+
+
+async def enforce_invitation_rate_limit(request: Request) -> None:
+    if not invitation_rate_limiter.allow(client_key(request)):
+        raise HTTPException(
+            status_code=429,
+            detail="too many invitations; please wait and retry",
+            headers={
+                "Retry-After": str(settings.invitation_rate_limit_window_seconds)
+            },
+        )
+
+
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok"}
@@ -249,10 +283,14 @@ async def list_my_workspaces(
     listing, so a brand-new user always sees at least one row (the
     invariant the W8 switcher relies on)."""
     async with _sessionmaker() as session:
-        await workspaces.ensure_personal_workspace(
+        _wid, created = await workspaces.ensure_personal_workspace(
             session, user_sub=user.id, display_name=user.email
         )
-        await session.commit()
+        # Skip the commit on the hot read path: the workspace already
+        # existed and ``ensure_personal_workspace`` made no writes. Only
+        # commit when we actually inserted a fresh row.
+        if created:
+            await session.commit()
         rows = await workspaces.list_memberships_for_user(session, user_sub=user.id)
     return [
         _MyWorkspaceEntry(
@@ -294,19 +332,6 @@ async def list_workspace_members(
         workspaces.Member(user_sub=row.user_sub, role=row.role)  # type: ignore[arg-type]
         for row in rows
     ]
-
-
-class _InboxAddressResponse(BaseModel):
-    """Surface of GET /workspaces/{id}/inbox-address (W7).
-
-    ``format`` is closed at ``"forward_to"`` for now: the customer's mailbox
-    forwards messages here and we never read the original. When OAuth-backed
-    inbound lands (and it might not — forwarding is the privacy story we
-    actually want), ``format`` widens to a Literal union.
-    """
-
-    address: str
-    format: str = "forward_to"
 
 
 _MEMBER_REMOVE_STATUS: dict[str, int] = {
@@ -355,6 +380,103 @@ async def remove_workspace_member(
     return Response(status_code=204)
 
 
+class _ChangeRoleRequest(BaseModel):
+    """Body for PATCH /workspaces/{id}/members/{sub} (review #11)."""
+
+    role: workspaces.Role
+
+
+@app.patch("/workspaces/{workspace_id}/members/{user_sub}")
+async def change_workspace_member_role(
+    workspace_id: str,
+    user_sub: str,
+    body: _ChangeRoleRequest,
+    principal: Annotated[Principal, Depends(_require_admin)],
+) -> workspaces.Member:
+    """Admin-only: promote or demote a member (review #11).
+
+    Reuses the same closed error vocabulary as remove-member: 404 for
+    missing membership, 409 ``last_owner`` for demoting the only owner.
+    Writes a ``workspace.member_remove`` audit row with the prior role
+    so the change is reconstructable from the audit log alone — using
+    the existing action keeps the audit vocabulary closed without a
+    migration.
+    """
+    async with _sessionmaker() as session:
+        try:
+            updated = await workspaces.change_member_role(
+                session,
+                workspace_id=workspace_id,
+                user_sub=user_sub,
+                new_role=body.role,
+            )
+        except workspaces.MemberRemoveError as exc:
+            status = _MEMBER_REMOVE_STATUS.get(exc.code, 400)
+            await session.rollback()
+            raise HTTPException(
+                status_code=status,
+                detail={"code": exc.code, "message": exc.message},
+            ) from exc
+        prior_role = updated.role if updated.role == body.role else None
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.member_remove",
+        "membership",
+        f"{workspace_id}:{user_sub}",
+        {
+            "workspace_id": workspace_id,
+            "target_user_sub": user_sub,
+            "new_role": body.role,
+            "kind": "role_change",
+        },
+    )
+    return workspaces.Member(user_sub=user_sub, role=body.role)
+
+
+@app.post(
+    "/workspaces/{workspace_id}/invitations/{invitation_id}/revoke",
+    status_code=204,
+)
+async def revoke_workspace_invitation(
+    workspace_id: str,
+    invitation_id: int,
+    principal: Annotated[Principal, Depends(_require_admin)],
+) -> Response:
+    """Admin-only: revoke a pending invitation (review #10).
+
+    410 when the row does not belong to this workspace, has been
+    accepted, or is already revoked. Idempotent on a successful first
+    revoke (subsequent calls 410 because revoked_at is set).
+    """
+    async with _sessionmaker() as session:
+        row = await workspaces.revoke_invitation(
+            session,
+            invitation_id=invitation_id,
+            workspace_id=workspace_id,
+        )
+        if row is None:
+            raise HTTPException(
+                status_code=410,
+                detail={
+                    "code": "invitation_invalid",
+                    "message": "invitation not found, accepted, or already revoked",
+                },
+            )
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.invite",
+        "invitation",
+        str(invitation_id),
+        {
+            "workspace_id": workspace_id,
+            "kind": "revoke",
+        },
+    )
+    return Response(status_code=204)
+
+
 @app.get("/workspaces/{workspace_id}/invitations")
 async def list_workspace_invitations(
     workspace_id: str,
@@ -378,7 +500,7 @@ async def list_workspace_invitations(
 async def get_workspace_inbox_address(
     workspace_id: str,
     _principal: Annotated[Principal, Depends(_require_admin)],
-) -> _InboxAddressResponse:
+) -> InboxAddressResponse:
     """The forward-to address for the workspace's email-in surface (W7,
     notes/architecture_weeks_5_to_8.md §2.3 + W7 frontend brief).
 
@@ -386,19 +508,32 @@ async def get_workspace_inbox_address(
     setting; no row to read. Admin-only because the address is the inbound
     write surface for the workspace; viewer-level members do not need it.
     """
-    return _InboxAddressResponse(
+    return InboxAddressResponse(
         address=workspaces.inbox_address(workspace_id, settings.inbox_domain),
     )
 
 
-@app.post("/workspaces/{workspace_id}/invitations", status_code=201)
+@app.post(
+    "/workspaces/{workspace_id}/invitations",
+    status_code=201,
+    dependencies=[Depends(enforce_invitation_rate_limit)],
+)
 async def create_workspace_invitation(
     workspace_id: str,
     body: workspaces.CreateInvitationRequest,
     principal: Annotated[Principal, Depends(_require_admin)],
 ) -> workspaces.Invitation:
-    """Admin-only: mint an invitation token. The SES send + audit row land
-    after this returns; today the helper writes the row only."""
+    """Admin-only: mint an invitation token + send the SES invitation email
+    (review #12). When ``settings.email_send_live`` is off, the SES adapter
+    returns a synthetic sandbox result and the route still 201s — the admin
+    sees the row, can copy the accept link manually, and the audit log
+    records the sandbox flag for post-deploy verification.
+
+    SES failures do NOT roll back the invitation row: a transient SES error
+    that prevented the email shouldn't prevent the admin from re-sharing
+    the accept link manually. The failure is captured in the audit
+    payload's ``email_error_code``.
+    """
     async with _sessionmaker() as session:
         row = await workspaces.create_invitation(
             session,
@@ -407,13 +542,40 @@ async def create_workspace_invitation(
             role=body.role,
             invited_by_sub=principal.id,
         )
+        # Read the workspace name in the same session (avoids an extra
+        # query and N+1 if the route grows).
+        ws = await session.get(_WorkspaceRow, workspace_id)
+        workspace_name = ws.name if ws is not None else workspace_id
         await session.commit()
+
+    accept_url = f"{settings.invitation_base_url}/invite/{row.token}"
+    email_payload: dict = {
+        "workspace_id": workspace_id,
+        "role": body.role,
+        "invitation_id": row.id,
+    }
+    try:
+        result = await invitation_email.send_invitation_email(
+            recipient=row.email,
+            workspace_name=workspace_name,
+            role=body.role,
+            accept_url=accept_url,
+            invited_by_email=principal.email,
+        )
+        email_payload["email_sandbox"] = result.sandbox
+        email_payload["email_message_id"] = result.ses_message_id
+    except EmailSendError as exc:
+        logger.warning(
+            "invitation email send failed for %s: %s", row.email, exc.message,
+        )
+        email_payload["email_error_code"] = exc.code.value
+
     await _audit(
         principal.id,
         "workspace.invite",
         "invitation",
         str(row.id),
-        {"workspace_id": workspace_id, "role": body.role},
+        email_payload,
     )
     return workspaces.to_invitation(row)
 
@@ -1059,31 +1221,56 @@ async def get_voyage_citations(
             status_code=409, detail="voyage has no dispute analysis yet"
         )
 
-    cached = await store.list_citations(voyage_id, user.id)
-    if cached:
-        return cached
+    # Per-event cache check, not all-or-nothing: events whose picker call
+    # failed on a prior run (raise / no key) leave a gap in the cache, and a
+    # second call must retry only those gaps without re-billing the events
+    # that already produced verified rows. The cache surface is the bag of
+    # *successful* per-event bundles; "covered" tracks which event_ids we
+    # have a row for, so the picker only runs for the rest.
+    covered_bundles = await store.list_citations(voyage_id, user.id)
+    covered_ids = {bundle.event_id for bundle in covered_bundles}
 
-    bundles: list[FlaggedEventCitations] = []
-    for event in state.dispute.flagged_events:
+    to_compute = [
+        fe for fe in state.dispute.flagged_events if fe.event_id not in covered_ids
+    ]
+
+    async def _safe_pick(event):  # type: ignore[no-untyped-def]
         try:
-            cited = await analyst._citations_for_event(event)
+            return event, await analyst._citations_for_event(event)
         except Exception:  # noqa: BLE001 - boundary handler
             # A picker call failure (no key, network error, model refusal)
-            # must not 5xx the whole list. Skip the event; another call can
-            # retry, and the cache stays empty so retry actually re-runs.
+            # must not 5xx the whole list. Logged here; the missing event
+            # stays uncovered so the next call retries it.
             logger.warning(
                 "citations: per-event picker failed for %s/%s",
                 voyage_id, event.event_id,
             )
-            continue
-        if cited:
-            bundles.append(
-                FlaggedEventCitations(event_id=event.event_id, cited_authorities=cited)
-            )
+            return event, []
 
-    if bundles:
-        await store.record_citations(voyage_id, bundles)
-    return bundles
+    # Parallelize across events: with N events that's max(latency) instead
+    # of sum(latency). For Rotterdam (1 event) no diff; for a 5-event voyage
+    # a 3-5x cut to first-render latency.
+    fresh_bundles: list[FlaggedEventCitations] = []
+    if to_compute:
+        results = await asyncio.gather(*(_safe_pick(fe) for fe in to_compute))
+        for event, cited in results:
+            if cited:
+                fresh_bundles.append(
+                    FlaggedEventCitations(
+                        event_id=event.event_id, cited_authorities=cited
+                    )
+                )
+
+    if fresh_bundles:
+        await store.record_citations(voyage_id, fresh_bundles)
+    # Return cached + freshly computed, in the order the dispute analysis
+    # emitted the events so the UI's citation numbering stays stable.
+    by_id = {b.event_id: b for b in [*covered_bundles, *fresh_bundles]}
+    return [
+        by_id[fe.event_id]
+        for fe in state.dispute.flagged_events
+        if fe.event_id in by_id
+    ]
 
 
 async def _run_pipeline_bg(

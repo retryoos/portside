@@ -92,6 +92,20 @@ class Settings:
     # coarse abuse/cost guard, not an auth boundary.
     rate_limit_max_requests: int
     rate_limit_window_seconds: int
+    # Audit retention (review #9). Lifespan startup reaps rows older than
+    # this many days so the table stays bounded under unbounded growth.
+    # 0 disables retention (forever-grow).
+    audit_retention_days: int
+    # SES sender + invitation accept link base URL (review #12). Used by
+    # the workspace invitation email path; the claim-letter SES path keeps
+    # using settings.email_send_live + its own helper.
+    ses_sender: str | None
+    invitation_base_url: str
+    # Per-actor rate limit on invitation mint (security hardening). At
+    # most ``invitation_rate_limit_max`` per actor per window. Defaults
+    # are generous so admins can paste-batch invites.
+    invitation_rate_limit_max: int
+    invitation_rate_limit_window_seconds: int
 
     @classmethod
     def load(cls) -> "Settings":
@@ -144,6 +158,20 @@ class Settings:
             ),
             rate_limit_window_seconds=int(
                 os.environ.get("RATE_LIMIT_WINDOW_SECONDS") or "60"
+            ),
+            audit_retention_days=int(
+                os.environ.get("AUDIT_RETENTION_DAYS") or "90"
+            ),
+            ses_sender=os.environ.get("SES_SENDER") or None,
+            invitation_base_url=(
+                os.environ.get("INVITATION_BASE_URL")
+                or "http://localhost:3000"
+            ).rstrip("/"),
+            invitation_rate_limit_max=int(
+                os.environ.get("INVITATION_RATE_LIMIT_MAX") or "20"
+            ),
+            invitation_rate_limit_window_seconds=int(
+                os.environ.get("INVITATION_RATE_LIMIT_WINDOW_SECONDS") or "3600"
             ),
         )
 

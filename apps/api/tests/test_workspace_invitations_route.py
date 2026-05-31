@@ -29,36 +29,24 @@ if str(_API_ROOT) not in sys.path:
 # pylint: disable=wrong-import-position
 from portside_api import main as main_mod, workspaces  # noqa: E402
 from portside_api.auth import DEV_USER_ID  # noqa: E402
-from portside_api.db.models import (  # noqa: E402
-    AuditEventRow,
-    InvitationRow,
-    MembershipRow,
-    WorkspaceRow,
-)
-from sqlalchemy import delete, select  # noqa: E402
+from portside_api.db.models import InvitationRow, MembershipRow  # noqa: E402
+from sqlalchemy import select  # noqa: E402
 
-
-async def _wipe_workspace_state() -> None:
-    async with main_mod._sessionmaker() as session:
-        async with session.begin():
-            await session.execute(delete(InvitationRow))
-            await session.execute(delete(MembershipRow))
-            await session.execute(delete(WorkspaceRow))
-            await session.execute(delete(AuditEventRow))
+from tests.conftest import run_wipe  # noqa: E402
 
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
     with TestClient(main_mod.app) as c:
         yield c
-    asyncio.run(_wipe_workspace_state())
+    run_wipe()
 
 
 def _seed_personal_workspace_for_dev_user() -> str:
     async def _seed() -> str:
         async with main_mod._sessionmaker() as session:
-            wid = await workspaces.ensure_personal_workspace(
+            wid, _ = await workspaces.ensure_personal_workspace(
                 session, user_sub=DEV_USER_ID
             )
             await session.commit()
@@ -144,11 +132,56 @@ def test_create_then_accept_mints_membership(client: TestClient) -> None:
     accepted = accept.json()
     assert accepted["accepted"] is True
 
-    # Re-accepting at the same role is idempotent (no error).
+    # Re-accepting at the same role is idempotent for the same caller (W9
+    # fix #2): the route returns 200 with the same row so the user can hit
+    # back and see the success page again without a confusing 410.
     again = client.post(f"/invitations/{token}/accept")
-    # Existing row is already accepted; accept_invitation returns None and
-    # the route layer 410s. This is the same shape as expired/revoked.
-    assert again.status_code == 410
+    assert again.status_code == 200, again.text
+    again_body = again.json()
+    assert again_body["id"] == accepted["id"]
+    assert again_body["accepted"] is True
+
+
+def test_accept_already_used_by_different_user_returns_410(
+    client: TestClient,
+) -> None:
+    """A token already consumed by user A returns 410 to user B (W9 fix #2).
+
+    The idempotency we relaxed is for the *same* user re-accepting; a
+    different user touching a used token must still be refused.
+    """
+    wid = _seed_personal_workspace_for_dev_user()
+    # Mint then "consume" the invite under a non-dev acceptor by writing
+    # the accepted_at + a membership row directly. Simulates user A having
+    # accepted in a prior session.
+    create = client.post(
+        f"/workspaces/{wid}/invitations",
+        json={"email": "first@example.com", "role": "member"},
+    )
+    token = create.json()["token"]
+
+    async def _consume_as_other_user() -> None:
+        async with main_mod._sessionmaker() as session:
+            inv = (
+                await session.execute(
+                    select(InvitationRow).where(InvitationRow.token == token)
+                )
+            ).scalar_one_or_none()
+            assert inv is not None
+            inv.accepted_at = datetime.now(timezone.utc)
+            session.add(
+                MembershipRow(
+                    workspace_id=wid,
+                    user_sub="some-other-user",
+                    role="member",
+                )
+            )
+            await session.commit()
+
+    asyncio.run(_consume_as_other_user())
+    # Now the dev user (a different caller) hits the same token.
+    resp = client.post(f"/invitations/{token}/accept")
+    assert resp.status_code == 410
 
 
 def test_create_invitation_rejects_invalid_email(client: TestClient) -> None:
@@ -183,6 +216,28 @@ def test_invite_writes_audit_row(client: TestClient) -> None:
         and row["payload"].get("workspace_id") == wid
         for row in audit
     )
+
+
+def test_revoke_invitation_204_then_subsequent_returns_410(
+    client: TestClient,
+) -> None:
+    """Review #10: revoke succeeds once; second revoke is 410."""
+    wid = _seed_personal_workspace_for_dev_user()
+    create = client.post(
+        f"/workspaces/{wid}/invitations",
+        json={"email": "revoke@example.com", "role": "member"},
+    )
+    invitation_id = create.json()["id"]
+
+    first = client.post(
+        f"/workspaces/{wid}/invitations/{invitation_id}/revoke"
+    )
+    assert first.status_code == 204, first.text
+
+    second = client.post(
+        f"/workspaces/{wid}/invitations/{invitation_id}/revoke"
+    )
+    assert second.status_code == 410
 
 
 def test_invitation_token_persists_in_db(client: TestClient) -> None:

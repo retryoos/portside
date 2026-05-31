@@ -54,6 +54,13 @@ export default function EmailLetterModal({
   const preambleId = useId();
 
   const cardRef = useRef<HTMLDivElement>(null);
+  // Read ``busy`` via a ref inside the keydown handler so the window
+  // listener does NOT bind/unbind every time ``busy`` flips during send
+  // (review #14).
+  const busyRef = useRef(busy);
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
 
   // Reset form on open so a previous draft never leaks into a new send.
   useEffect(() => {
@@ -71,15 +78,17 @@ export default function EmailLetterModal({
     });
   }, [open, defaultSubject, toId]);
 
-  // Esc closes the modal.
+  // Esc closes the modal. The listener registers once per open cycle and
+  // reads ``busy`` from a ref so a send-in-flight does not thrash the
+  // window-level listener (review #14).
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && !busy) onClose();
+      if (e.key === "Escape" && !busyRef.current) onClose();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose, busy]);
+  }, [open, onClose]);
 
   if (!open) return null;
 
