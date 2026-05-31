@@ -70,6 +70,17 @@ class Settings:
     # (audit row + rate limit + 200 response, no outbound). Flip to 1 after
     # the AWS support ticket for production access lands.
     email_send_live: bool
+    # Email-in ingestion (notes/architecture_weeks_5_to_8.md §2.3). Shared
+    # secret the SES → S3 → Lambda hop signs its forwarded payload with. When
+    # unset, the inbound route refuses every call (fail-closed). Generate
+    # with ``openssl rand -hex 32`` and put in Doppler / App Runner env.
+    email_in_shared_secret: str | None
+    # Rate limiting for the expensive, paid pipeline trigger (POST /voyages):
+    # at most ``rate_limit_max_requests`` per caller per
+    # ``rate_limit_window_seconds``. Set the max to 0 to disable. This is a
+    # coarse abuse/cost guard, not an auth boundary.
+    rate_limit_max_requests: int
+    rate_limit_window_seconds: int
 
     @classmethod
     def load(cls) -> "Settings":
@@ -111,6 +122,13 @@ class Settings:
             .strip()
             .lower()
             in {"1", "true", "yes", "on"},
+            email_in_shared_secret=os.environ.get("EMAIL_IN_SHARED_SECRET") or None,
+            rate_limit_max_requests=int(
+                os.environ.get("RATE_LIMIT_MAX_REQUESTS") or "30"
+            ),
+            rate_limit_window_seconds=int(
+                os.environ.get("RATE_LIMIT_WINDOW_SECONDS") or "60"
+            ),
         )
 
     @property

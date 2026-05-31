@@ -25,7 +25,16 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response, UploadFile
+from fastapi import (
+    Depends,
+    FastAPI,
+    Form,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import audit, defense, pipeline, researcher, reviser
@@ -40,6 +49,14 @@ from .email import (
     send_claim_letter,
 )
 from .exports import excel as excel_export
+from .inbox import (
+    INBOUND_HMAC_HEADER,
+    InboundError,
+    InboundErrorCode,
+    match_voyage,
+    parse_message,
+    verify_signature,
+)
 from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
@@ -518,6 +535,139 @@ async def email_claim_letter(
         },
     )
     return result
+
+
+_INBOUND_ERROR_STATUS: dict[InboundErrorCode, int] = {
+    InboundErrorCode.BAD_SIGNATURE: 401,
+    InboundErrorCode.BAD_PAYLOAD: 400,
+    InboundErrorCode.NO_PDF_ATTACHMENT: 400,
+    InboundErrorCode.OVERSIZE: 413,
+    InboundErrorCode.DISALLOWED_TYPE: 415,
+    InboundErrorCode.VIRUS_DETECTED: 422,
+}
+
+
+@app.post("/voyages/from-email", status_code=202)
+async def voyages_from_email(
+    request: Request,
+    x_laytimely_inbound_signature: Annotated[str | None, Header()] = None,
+    x_laytimely_av_scanned: Annotated[str | None, Header()] = None,
+    x_laytimely_av_clean: Annotated[str | None, Header()] = None,
+) -> dict[str, str]:
+    """Inbound email ingestion (notes/architecture_weeks_5_to_8.md §2.3).
+
+    The SES → S3 → Lambda hop forwards each scanned message here. The
+    boundary is one HMAC-SHA256 header verified in constant time; without the
+    matching signature the route 401s. AV flags come from headers the Lambda
+    sets; v0.1 trusts those (a follow-up moves a ClamAV pass in-process).
+
+    On success the route returns 202 with the voyage id the message was
+    attached to ("matched": "existing" | "new"). The pipeline run is
+    fire-and-forget like the regular POST /voyages.
+    """
+    raw = await request.body()
+    try:
+        verify_signature(
+            settings.email_in_shared_secret, raw, x_laytimely_inbound_signature
+        )
+    except InboundError as exc:
+        raise HTTPException(
+            status_code=_INBOUND_ERROR_STATUS[exc.code],
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+
+    av_scanned = (x_laytimely_av_scanned or "").lower() in {"1", "true", "yes"}
+    av_clean = (x_laytimely_av_clean or "").lower() in {"1", "true", "yes"}
+
+    try:
+        message = parse_message(raw, av_scanned=av_scanned, av_clean=av_clean)
+    except InboundError as exc:
+        raise HTTPException(
+            status_code=_INBOUND_ERROR_STATUS[exc.code],
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+
+    existing_id = match_voyage(message)
+    perspective: Perspective = "owner"  # inbound mail defaults to owner-side
+
+    if existing_id is not None:
+        # Existing voyage: append the inbound attachments as documents and
+        # log the event; no new pipeline run today.
+        state = await store.load(existing_id, DEV_USER_ID)
+        if state is not None:
+            for att in message.attachments:
+                key = build_key(existing_id, f"inbox-{att.filename}", settings.s3_prefix)
+                await object_store.put(key, att.data, "application/pdf")
+                await store.record_documents(
+                    existing_id,
+                    [
+                        StoredDocument(
+                            role="inbox",
+                            object_key=key,
+                            content_type="application/pdf",
+                            size_bytes=att.size_bytes,
+                        )
+                    ],
+                )
+            await _audit(
+                DEV_USER_ID,
+                "voyage.from_email",
+                "voyage",
+                existing_id,
+                {"source": message.sender, "voyage_id": existing_id},
+            )
+            return {"voyage_id": existing_id, "matched": "existing"}
+
+    # No match: open a new voyage. Same shape as POST /voyages: seed the
+    # state, persist the documents, kick the pipeline off-thread. Because
+    # inbound mail does not pre-classify attachments, we map the first three
+    # PDFs onto cp/nor/sof in order; a smarter classifier lands later.
+    if len(message.attachments) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INBOUND_INCOMPLETE",
+                "message": (
+                    "new voyages need three PDFs (cp, nor, sof); "
+                    f"received {len(message.attachments)}"
+                ),
+            },
+        )
+
+    voyage_id = f"v_{uuid.uuid4().hex[:12]}"
+    await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)
+    await store.save(
+        VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded"),
+        owner_user_id=DEV_USER_ID,
+    )
+    roles = ("cp", "nor", "sof")
+    files: dict[str, bytes] = {}
+    documents: list[StoredDocument] = []
+    for role, attachment in zip(roles, message.attachments[:3]):
+        files[role] = attachment.data
+        key = build_key(voyage_id, role, settings.s3_prefix)
+        await object_store.put(key, attachment.data, "application/pdf")
+        documents.append(
+            StoredDocument(
+                role=role,
+                object_key=key,
+                content_type="application/pdf",
+                size_bytes=attachment.size_bytes,
+            )
+        )
+    await store.record_documents(voyage_id, documents)
+    task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+
+    await _audit(
+        DEV_USER_ID,
+        "voyage.from_email",
+        "voyage",
+        voyage_id,
+        {"source": message.sender, "perspective": perspective},
+    )
+    return {"voyage_id": voyage_id, "matched": "new"}
 
 
 @app.get("/voyages/{voyage_id}/laytime.xlsx")
