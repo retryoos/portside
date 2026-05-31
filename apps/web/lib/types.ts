@@ -196,3 +196,46 @@ export interface VesselSummary {
   last_activity: string;
   perspectives: Perspective[];
 }
+
+// ---------------------------------------------------------------------------
+// Email subsystem (W2, notes/architecture_weeks_5_to_8.md §1.3)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/email/models.py. The PDF attachment is a
+// stretch and is uploaded as multipart in a future variant of the route; v0.1
+// emails the markdown letter body inline.
+export interface LetterEmailRequest {
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject?: string;
+  preamble_markdown?: string;
+}
+
+export interface SesSendResult {
+  ses_message_id: string;
+  sent_at: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  sandbox: boolean;
+}
+
+// Stable enum used by the backend EmailSendError.code field. The route surfaces
+// these as {detail: {code, message}}; the UI uses the code to render an
+// actionable toast.
+export type EmailErrorCode =
+  | "SES_UNVERIFIED_RECIPIENT"
+  | "SES_THROTTLED"
+  | "SES_REJECTED"
+  | "SES_TRANSPORT"
+  | "SES_NOT_CONFIGURED";
+
+// Error thrown by sendClaimLetter when the backend returns 4xx/5xx with a
+// JSON {code, message} body. Lets the caller render a friendly toast.
+export interface EmailSendError {
+  code: EmailErrorCode | "UNKNOWN";
+  message: string;
+  status: number;
+}

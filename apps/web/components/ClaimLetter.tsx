@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import EmailLetterButton from "@/components/EmailLetterButton";
 import ExportDocxButton from "@/components/ExportDocxButton";
 import ExportPdfButton from "@/components/ExportPdfButton";
 import ExportXlsxButton from "@/components/ExportXlsxButton";
@@ -54,7 +55,9 @@ export default function ClaimLetter({
 
   return (
     <div className="relative rounded-card border border-border bg-surface">
-      <div className="absolute right-6 top-6 z-10 flex items-center gap-1">
+      <div className="absolute right-6 top-6 z-10 flex items-center gap-2">
+        <EmailLetterButton voyageId={voyageId} vesselName={vesselName} />
+        <div className="mx-1 h-5 w-px bg-border" aria-hidden />
         <MailtoLetterButton
           letterMarkdown={bodyMd}
           voyageId={voyageId}

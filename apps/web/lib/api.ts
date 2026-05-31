@@ -1,8 +1,11 @@
 // Typed client for the Laytimely API (notes/04-schemas.md §6).
 
 import type {
+  EmailSendError,
+  LetterEmailRequest,
   Perspective,
   PipelineStage,
+  SesSendResult,
   VesselSummary,
   VoyageState,
   VoyageSummary,
@@ -106,6 +109,44 @@ export async function deleteVoyage(voyageId: string): Promise<void> {
   if (!res.ok && res.status !== 404) {
     throw new Error(`deleteVoyage failed: ${res.status}`);
   }
+}
+
+/**
+ * Send the rendered claim letter via SES. Spec:
+ * notes/architecture_weeks_5_to_8.md §1.3. The backend translates SES
+ * failures into stable {detail: {code, message}} bodies via EmailErrorCode;
+ * callers throw a typed EmailSendError so the toast can be actionable
+ * (THROTTLED -> "try again shortly"; UNVERIFIED_RECIPIENT -> "verify the
+ * address in SES first"; etc.).
+ */
+export async function sendClaimLetter(
+  voyageId: string,
+  body: LetterEmailRequest,
+): Promise<SesSendResult> {
+  const res = await apiFetch(`/voyages/${voyageId}/letter/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) return (await res.json()) as SesSendResult;
+  // Surface the backend code+message to the caller. The shape is either
+  // {detail: {code, message}} for EmailSendError, or {detail: string} for the
+  // generic 404/409 branches above.
+  let code: EmailSendError["code"] = "UNKNOWN";
+  let message = `sendClaimLetter failed: ${res.status}`;
+  try {
+    const data = await res.json();
+    if (data && typeof data.detail === "object" && data.detail) {
+      if (typeof data.detail.code === "string") code = data.detail.code;
+      if (typeof data.detail.message === "string") message = data.detail.message;
+    } else if (typeof data?.detail === "string") {
+      message = data.detail;
+    }
+  } catch {
+    // Response wasn't JSON; keep the default message.
+  }
+  const err: EmailSendError = { code, message, status: res.status };
+  throw err;
 }
 
 /**
