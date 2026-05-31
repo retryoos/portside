@@ -75,6 +75,7 @@ export default function SourcesTabs({
               laytime={voyage.laytime}
               flagged={voyage.dispute?.flagged_events ?? []}
               loading={!readyLaytime}
+              voyageId={voyage.voyage_id}
             />
           </div>
         )}

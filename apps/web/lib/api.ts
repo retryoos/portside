@@ -3,6 +3,7 @@
 import type {
   EmailSendError,
   EvidenceChecklist,
+  FlaggedEventStrength,
   LetterEmailRequest,
   Perspective,
   PipelineStage,
@@ -148,6 +149,22 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+/**
+ * Per-event claim-strength sub-score panels (W4,
+ * notes/architecture_weeks_5_to_8.md §1.5). Backend route:
+ * GET /voyages/{id}/strengths. Returns null when the dispute analysis has
+ * not landed yet (409) or the voyage is unknown (404).
+ */
+export async function fetchClaimStrengths(
+  voyageId: string,
+  signal?: AbortSignal,
+): Promise<FlaggedEventStrength[] | null> {
+  const res = await apiFetch(`/voyages/${voyageId}/strengths`, { signal });
+  if (res.status === 404 || res.status === 409) return null;
+  if (!res.ok) throw new Error(`fetchClaimStrengths failed: ${res.status}`);
+  return (await res.json()) as FlaggedEventStrength[];
 }
 
 /**

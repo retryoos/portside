@@ -271,3 +271,25 @@ export interface EvidenceItem {
 export interface EvidenceChecklist {
   items: EvidenceItem[];
 }
+
+// ---------------------------------------------------------------------------
+// Claim strength sub-scores (W4, notes/architecture_weeks_5_to_8.md §1.5)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/claim_strength.py. Two of the four
+// sub-scores are deterministic backend-side (time_bar_risk + evidence_completeness);
+// the UI never needs to know which, since they all arrive as the same closed
+// vocabulary word.
+export type Strength = "Strong" | "Arguable" | "Weak";
+
+export interface ClaimStrengthSubScores {
+  clause_clarity: Strength;
+  evidence_completeness: Strength;
+  counterparty_pushback_risk: Strength;
+  time_bar_risk: Strength;
+}
+
+export interface FlaggedEventStrength {
+  event_id: string;
+  sub_scores: ClaimStrengthSubScores;
+}

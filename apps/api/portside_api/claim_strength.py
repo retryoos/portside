@@ -128,6 +128,25 @@ def build_panel(
     )
 
 
+def derive_model_panel_from_event(
+    owner_position_strength: float,
+) -> tuple[Strength, Strength]:
+    """Deterministic v0.1 fallback for the two model-owned sub-scores.
+
+    Maps ``owner_position_strength`` (already calibrated by the analyst) into
+    ``(clause_clarity, counterparty_pushback_risk)``. The mapping is the
+    obvious one: a strong owner position implies the clause reads clearly in
+    the owner's favour AND that the charterer has limited room to push back.
+    Replaced in v0.2 by an extended analyst prompt that emits the two words
+    directly (see §1.5 calibration plan).
+    """
+    if owner_position_strength >= 0.7:
+        return ("Strong", "Weak")
+    if owner_position_strength >= 0.4:
+        return ("Arguable", "Arguable")
+    return ("Weak", "Strong")
+
+
 def build_panels(
     *,
     flagged_events: Iterable,

@@ -41,6 +41,11 @@ from . import audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .claim_strength import (
+    FlaggedEventStrength,
+    build_panels as build_strength_panels,
+    derive_model_panel_from_event,
+)
 from .evidence_checklist import (
     EvidenceChecklist,
     build_checklist as build_evidence_checklist,
@@ -847,6 +852,51 @@ async def get_evidence_checklist(
         state.dispute.flagged_events,
         voyage_documents=[d.role for d in docs],
         evidence_bundle=bundle,
+    )
+
+
+@app.get("/voyages/{voyage_id}/strengths")
+async def get_claim_strengths(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> list[FlaggedEventStrength]:
+    """Per-event sub-score panels (W4, notes/architecture_weeks_5_to_8.md §1.5).
+
+    Composes the four-cell strength panel for each contested event:
+      - ``time_bar_risk`` from ``packet.days_until_time_bar`` (deterministic)
+      - ``evidence_completeness`` from the per-event checklist rows (deterministic)
+      - ``clause_clarity`` + ``counterparty_pushback_risk`` derived from the
+        analyst's calibrated ``owner_position_strength`` (v0.1 fallback; v0.2
+        replaces this with an extended analyst prompt that emits the two
+        words directly, see §1.5 calibration plan).
+
+    404 on unknown voyage; 409 when no dispute is on the state yet.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.dispute is None:
+        raise HTTPException(
+            status_code=409, detail="voyage has no dispute analysis yet"
+        )
+    docs = await store.list_documents(voyage_id, user.id)
+    cached_evidence = await store.list_evidence(voyage_id, user.id)
+    bundle = EvidenceBundle(items=cached_evidence) if cached_evidence else None
+    checklist = build_evidence_checklist(
+        state.dispute.flagged_events,
+        voyage_documents=[d.role for d in docs],
+        evidence_bundle=bundle,
+    )
+    model_panels = {
+        fe.event_id: derive_model_panel_from_event(fe.owner_position_strength)
+        for fe in state.dispute.flagged_events
+    }
+    days = state.packet.days_until_time_bar if state.packet else None
+    return build_strength_panels(
+        flagged_events=state.dispute.flagged_events,
+        model_panels=model_panels,
+        days_until_time_bar=days,
+        checklist=checklist,
     )
 
 
