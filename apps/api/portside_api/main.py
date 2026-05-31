@@ -25,16 +25,43 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Response, UploadFile
+from fastapi import (
+    Depends,
+    FastAPI,
+    Form,
+    Header,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import defense, pipeline, researcher, reviser
+from . import audit, defense, pipeline, researcher, reviser, workspaces
+from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .email import (
+    EmailErrorCode,
+    EmailSendError,
+    LetterEmailRequest,
+    SesSendResult,
+    send_claim_letter,
+)
+from .exports import excel as excel_export
+from .inbox import (
+    INBOUND_HMAC_HEADER,
+    InboundError,
+    InboundErrorCode,
+    match_voyage,
+    parse_message,
+    verify_signature,
+)
 from .researcher import EvidenceItem
 from .db.engine import make_engine, make_sessionmaker, run_migrations
 from .fixtures import seed_voyages
-from .limits import validate_and_read
+from .limits import SlidingWindowRateLimiter, client_key, validate_and_read
+from .pipeline import GENERIC_PIPELINE_ERROR
 from .objects import (
     StoredDocument,
     VoyageDocumentInfo,
@@ -58,7 +85,36 @@ logger = logging.getLogger("portside_api")
 # (no connection until first use), so constructing it at import is side-effect
 # free; tests monkeypatch ``store`` with an InMemoryStore before startup.
 _engine = make_engine(settings.database_url)
-store: VoyageStore = SqlVoyageStore(make_sessionmaker(_engine))
+_sessionmaker = make_sessionmaker(_engine)
+store: VoyageStore = SqlVoyageStore(_sessionmaker)
+
+
+async def _audit(
+    actor_sub: str | None,
+    action: audit.AuditAction,
+    target_type: audit.AuditTarget,
+    target_id: str,
+    payload: dict | None = None,
+) -> None:
+    """Write one audit row in a fresh, short-lived session.
+
+    Best-effort: failures are logged but never propagate to the caller. The
+    audit trail is the second-best source of truth; we never block a real
+    mutation on it.
+    """
+    try:
+        async with _sessionmaker() as session:
+            await audit.record(
+                session,
+                actor_sub=actor_sub,
+                action=action,
+                target_type=target_type,
+                target_id=target_id,
+                payload=payload,
+            )
+            await session.commit()
+    except Exception:  # noqa: BLE001
+        logger.exception("audit.record failed for %s/%s", action, target_id)
 
 # Object storage for uploaded PDFs (S3 in prod, local dir otherwise). Tests
 # monkeypatch this with a LocalObjectStore pointed at a temp dir.
@@ -107,6 +163,47 @@ app.add_middleware(
 )
 
 
+# Baseline security headers on every response. The API serves JSON and file
+# downloads (never HTML it renders itself), so a locked-down CSP is safe:
+# `default-src 'none'` plus `frame-ancestors 'none'` blocks framing/clickjacking
+# and any subresource loads. HSTS is ignored by browsers over plain HTTP (local
+# dev) and enforced once the service is fronted by HTTPS (App Runner).
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains",
+}
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):  # noqa: ANN001
+    response = await call_next(request)
+    for header, value in _SECURITY_HEADERS.items():
+        response.headers.setdefault(header, value)
+    return response
+
+
+# Coarse per-caller rate limit for the paid pipeline trigger (POST /voyages):
+# unauthenticated demo mode + an Anthropic-backed pipeline means an unbounded
+# endpoint is a cost/DoS amplifier. Tune via RATE_LIMIT_* env vars; 0 disables.
+voyage_rate_limiter = SlidingWindowRateLimiter(
+    max_requests=settings.rate_limit_max_requests,
+    window_seconds=settings.rate_limit_window_seconds,
+)
+
+
+async def enforce_voyage_rate_limit(request: Request) -> None:
+    """Reject (429) once a caller exceeds the POST /voyages budget."""
+    if not voyage_rate_limiter.allow(client_key(request)):
+        raise HTTPException(
+            status_code=429,
+            detail="too many voyage uploads; please wait and retry",
+            headers={"Retry-After": str(settings.rate_limit_window_seconds)},
+        )
+
+
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok"}
@@ -116,6 +213,106 @@ async def healthz() -> dict[str, str]:
 async def me(user: Annotated[Principal, Depends(get_current_user)]) -> Principal:
     """The current authenticated principal (id + email)."""
     return user
+
+
+# ---------------------------------------------------------------------------
+# Workspaces (W7/§2.1)
+#
+# Foundation only: every authed call ensures the caller has a personal
+# workspace (so the data model is consistent). The /workspaces routes ship the
+# invitation contract; the workspace switcher UI lands with the WORKSPACES_UI
+# flag.
+# ---------------------------------------------------------------------------
+
+
+_require_admin = workspaces.require_workspace_role("admin", _sessionmaker)
+
+
+@app.get("/workspaces/{workspace_id}/members")
+async def list_workspace_members(
+    workspace_id: str,
+    _principal: Annotated[Principal, Depends(_require_admin)],
+) -> list[workspaces.Member]:
+    """Admin-only: list the membership rows for a workspace."""
+    from sqlalchemy import select as _select
+    from .db.models import MembershipRow as _MembershipRow
+
+    async with _sessionmaker() as session:
+        result = await session.execute(
+            _select(_MembershipRow).where(_MembershipRow.workspace_id == workspace_id)
+        )
+        rows = result.scalars().all()
+    return [
+        workspaces.Member(user_sub=row.user_sub, role=row.role)  # type: ignore[arg-type]
+        for row in rows
+    ]
+
+
+@app.post("/workspaces/{workspace_id}/invitations", status_code=201)
+async def create_workspace_invitation(
+    workspace_id: str,
+    body: workspaces.CreateInvitationRequest,
+    principal: Annotated[Principal, Depends(_require_admin)],
+) -> workspaces.Invitation:
+    """Admin-only: mint an invitation token. The SES send + audit row land
+    after this returns; today the helper writes the row only."""
+    async with _sessionmaker() as session:
+        row = await workspaces.create_invitation(
+            session,
+            workspace_id=workspace_id,
+            email=str(body.email),
+            role=body.role,
+            invited_by_sub=principal.id,
+        )
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.invite",
+        "invitation",
+        str(row.id),
+        {"workspace_id": workspace_id, "role": body.role},
+    )
+    return workspaces.to_invitation(row)
+
+
+@app.post("/invitations/{token}/accept")
+async def accept_workspace_invitation(
+    token: str,
+    principal: Annotated[Principal, Depends(get_current_user)],
+) -> workspaces.Invitation:
+    """Public-ish accept: the caller must be authed, but they do not yet need
+    to be a member of the workspace (that is the point of the invite). 410
+    for expired / revoked / already-accepted tokens."""
+    async with _sessionmaker() as session:
+        row = await workspaces.accept_invitation(
+            session, token=token, acceptor_sub=principal.id
+        )
+        if row is None:
+            raise HTTPException(status_code=410, detail="invitation not active")
+        await session.commit()
+    await _audit(
+        principal.id,
+        "workspace.accept",
+        "invitation",
+        str(row.id),
+        {"workspace_id": row.workspace_id, "role": row.role},
+    )
+    return workspaces.to_invitation(row)
+
+
+@app.get("/audit")
+async def list_audit_events(
+    user: Annotated[Principal, Depends(get_current_user)],
+    limit: int = 100,
+) -> list[AuditEvent]:
+    """Recent audit events for the caller (notes/architecture_weeks_5_to_8.md §2.2).
+
+    Workspace-admin view (all events for a workspace) lands with §2.1. Limit
+    is clamped to a sane ceiling so a malicious caller cannot stream the
+    whole table.
+    """
+    limit = max(1, min(limit, 500))
+    return await audit.list_for_actor(_sessionmaker, user.id, limit=limit)
 
 
 @app.get("/voyages")
@@ -134,7 +331,11 @@ async def list_vessels(
     return await store.list_vessels(user.id)
 
 
-@app.post("/voyages", status_code=201)
+@app.post(
+    "/voyages",
+    status_code=201,
+    dependencies=[Depends(enforce_voyage_rate_limit)],
+)
 async def create_voyage(
     cp: UploadFile,
     nor: UploadFile,
@@ -179,6 +380,13 @@ async def create_voyage(
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
 
+    await _audit(
+        user.id,
+        "voyage.create",
+        "voyage",
+        voyage_id,
+        {"perspective": perspective},
+    )
     return {"voyage_id": voyage_id}
 
 
@@ -202,6 +410,7 @@ async def delete_voyage(
     """Delete one of the caller's voyages. 404 if it is missing or not theirs."""
     if not await store.delete(voyage_id, user.id):
         raise HTTPException(status_code=404, detail="voyage not found")
+    await _audit(user.id, "voyage.delete", "voyage", voyage_id, {})
 
 
 @app.get("/voyages/{voyage_id}/documents")
@@ -274,15 +483,14 @@ async def set_voyage_status(
 
     updated = await store.patch(voyage_id, stage=body.stage)
     assert updated is not None  # load() above proved it exists
+    await _audit(
+        user.id,
+        "voyage.status_change",
+        "voyage",
+        voyage_id,
+        {"from_stage": state.stage, "to_stage": body.stage},
+    )
     return updated
-
-
-@app.delete("/voyages/{voyage_id}", status_code=204)
-async def delete_voyage(voyage_id: str) -> None:
-    """Remove a voyage from the in-memory store. 404 if it doesn't exist."""
-    removed = await store.delete(voyage_id)
-    if not removed:
-        raise HTTPException(status_code=404, detail="voyage not found")
 
 
 @app.post("/voyages/{voyage_id}/revise")
@@ -333,6 +541,7 @@ async def apply_revision(
 
     updated = await store.patch(voyage_id, packet=new_packet)
     assert updated is not None  # load() above proved it exists
+    await _audit(user.id, "voyage.revise_apply", "voyage", voyage_id, {})
     return updated
 
 
@@ -353,7 +562,234 @@ async def rebut_voyage(
         raise HTTPException(
             status_code=409, detail="voyage is not ready for rebuttal"
         )
-    return await defense.build_rebuttal_packet(state)
+    rebuttal = await defense.build_rebuttal_packet(state)
+    await _audit(user.id, "voyage.rebuttal", "voyage", voyage_id, {})
+    return rebuttal
+
+
+_EMAIL_ERROR_STATUS: dict[EmailErrorCode, int] = {
+    EmailErrorCode.SANDBOX_UNVERIFIED: 422,
+    EmailErrorCode.THROTTLED: 429,
+    EmailErrorCode.REJECTED: 422,
+    EmailErrorCode.TRANSPORT: 502,
+    EmailErrorCode.NOT_CONFIGURED: 503,
+}
+
+
+@app.post("/voyages/{voyage_id}/letter/email")
+async def email_claim_letter(
+    voyage_id: str,
+    body: LetterEmailRequest,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> SesSendResult:
+    """Send the claim letter via SES (notes/architecture_weeks_5_to_8.md §1.3).
+
+    When ``settings.email_send_live`` is off the route runs end-to-end against
+    the sandbox path (audit row + 200 with ``sandbox=true``) so the surface
+    is exercised without an SES identity. When live, errors are translated to
+    a stable HTTP status via the ``EmailErrorCode`` enum.
+
+    Note: PDF attachment upload is a stretch (multipart form variant of this
+    route) and will land in a follow-up PR; the v0.1 surface emails the
+    Markdown letter body inline.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.packet is None:
+        raise HTTPException(status_code=409, detail="voyage is not ready to email")
+    try:
+        result = await send_claim_letter(state, body)
+    except EmailSendError as exc:
+        status = _EMAIL_ERROR_STATUS.get(exc.code, 502)
+        raise HTTPException(
+            status_code=status,
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+    await _audit(
+        user.id,
+        "voyage.letter_email",
+        "voyage",
+        voyage_id,
+        {
+            "recipients_to": list(body.to),
+            "recipients_cc": list(body.cc),
+            "recipients_bcc": list(body.bcc),
+            "sandbox": result.sandbox,
+            "ses_message_id": result.ses_message_id,
+        },
+    )
+    return result
+
+
+_INBOUND_ERROR_STATUS: dict[InboundErrorCode, int] = {
+    InboundErrorCode.BAD_SIGNATURE: 401,
+    InboundErrorCode.BAD_PAYLOAD: 400,
+    InboundErrorCode.NO_PDF_ATTACHMENT: 400,
+    InboundErrorCode.OVERSIZE: 413,
+    InboundErrorCode.DISALLOWED_TYPE: 415,
+    InboundErrorCode.VIRUS_DETECTED: 422,
+}
+
+
+@app.post("/voyages/from-email", status_code=202)
+async def voyages_from_email(
+    request: Request,
+    x_laytimely_inbound_signature: Annotated[str | None, Header()] = None,
+    x_laytimely_av_scanned: Annotated[str | None, Header()] = None,
+    x_laytimely_av_clean: Annotated[str | None, Header()] = None,
+) -> dict[str, str]:
+    """Inbound email ingestion (notes/architecture_weeks_5_to_8.md §2.3).
+
+    The SES → S3 → Lambda hop forwards each scanned message here. The
+    boundary is one HMAC-SHA256 header verified in constant time; without the
+    matching signature the route 401s. AV flags come from headers the Lambda
+    sets; v0.1 trusts those (a follow-up moves a ClamAV pass in-process).
+
+    On success the route returns 202 with the voyage id the message was
+    attached to ("matched": "existing" | "new"). The pipeline run is
+    fire-and-forget like the regular POST /voyages.
+    """
+    raw = await request.body()
+    try:
+        verify_signature(
+            settings.email_in_shared_secret, raw, x_laytimely_inbound_signature
+        )
+    except InboundError as exc:
+        raise HTTPException(
+            status_code=_INBOUND_ERROR_STATUS[exc.code],
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+
+    av_scanned = (x_laytimely_av_scanned or "").lower() in {"1", "true", "yes"}
+    av_clean = (x_laytimely_av_clean or "").lower() in {"1", "true", "yes"}
+
+    try:
+        message = parse_message(raw, av_scanned=av_scanned, av_clean=av_clean)
+    except InboundError as exc:
+        raise HTTPException(
+            status_code=_INBOUND_ERROR_STATUS[exc.code],
+            detail={"code": exc.code.value, "message": exc.message},
+        ) from exc
+
+    existing_id = match_voyage(message)
+    perspective: Perspective = "owner"  # inbound mail defaults to owner-side
+
+    if existing_id is not None:
+        # Existing voyage: append the inbound attachments as documents and
+        # log the event; no new pipeline run today.
+        state = await store.load(existing_id, DEV_USER_ID)
+        if state is not None:
+            for att in message.attachments:
+                key = build_key(existing_id, f"inbox-{att.filename}", settings.s3_prefix)
+                await object_store.put(key, att.data, "application/pdf")
+                await store.record_documents(
+                    existing_id,
+                    [
+                        StoredDocument(
+                            role="inbox",
+                            object_key=key,
+                            content_type="application/pdf",
+                            size_bytes=att.size_bytes,
+                        )
+                    ],
+                )
+            await _audit(
+                DEV_USER_ID,
+                "voyage.from_email",
+                "voyage",
+                existing_id,
+                {"source": message.sender, "voyage_id": existing_id},
+            )
+            return {"voyage_id": existing_id, "matched": "existing"}
+
+    # No match: open a new voyage. Same shape as POST /voyages: seed the
+    # state, persist the documents, kick the pipeline off-thread. Because
+    # inbound mail does not pre-classify attachments, we map the first three
+    # PDFs onto cp/nor/sof in order; a smarter classifier lands later.
+    if len(message.attachments) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "INBOUND_INCOMPLETE",
+                "message": (
+                    "new voyages need three PDFs (cp, nor, sof); "
+                    f"received {len(message.attachments)}"
+                ),
+            },
+        )
+
+    voyage_id = f"v_{uuid.uuid4().hex[:12]}"
+    await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)
+    await store.save(
+        VoyageState(voyage_id=voyage_id, perspective=perspective, stage="uploaded"),
+        owner_user_id=DEV_USER_ID,
+    )
+    roles = ("cp", "nor", "sof")
+    files: dict[str, bytes] = {}
+    documents: list[StoredDocument] = []
+    for role, attachment in zip(roles, message.attachments[:3]):
+        files[role] = attachment.data
+        key = build_key(voyage_id, role, settings.s3_prefix)
+        await object_store.put(key, attachment.data, "application/pdf")
+        documents.append(
+            StoredDocument(
+                role=role,
+                object_key=key,
+                content_type="application/pdf",
+                size_bytes=attachment.size_bytes,
+            )
+        )
+    await store.record_documents(voyage_id, documents)
+    task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+
+    await _audit(
+        DEV_USER_ID,
+        "voyage.from_email",
+        "voyage",
+        voyage_id,
+        {"source": message.sender, "perspective": perspective},
+    )
+    return {"voyage_id": voyage_id, "matched": "new"}
+
+
+@app.get("/voyages/{voyage_id}/laytime.xlsx")
+async def export_laytime_xlsx(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> Response:
+    """Render the laytime ledger + summary + letter to a three-sheet workbook.
+
+    Spec: notes/architecture_weeks_5_to_8.md §1.1. Workbook shape is fixed and
+    snapshot-tested against the Rotterdam fixture so the public API consumer
+    can rely on it (sheet names, cell coordinates, the canonical quantum at
+    Summary!B7). 409 when the pipeline has not produced laytime yet.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.extraction is None or state.laytime is None:
+        raise HTTPException(status_code=409, detail="voyage is not ready for export")
+
+    # Render off-thread so the event loop never blocks on a large workbook.
+    workbook_bytes = await asyncio.to_thread(
+        excel_export.render_laytime_workbook, state
+    )
+    vessel = (
+        state.extraction.charter_party.vessel_name.replace(" ", "_")
+        if state.extraction
+        else "voyage"
+    )
+    filename = f"laytime-{vessel}-{voyage_id}.xlsx"
+    return Response(
+        content=workbook_bytes,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ),
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @app.get("/voyages/{voyage_id}/evidence")
@@ -394,13 +830,16 @@ async def _run_pipeline_bg(
     """
     try:
         await pipeline.run(voyage_id, perspective, files, store)
-    except Exception as exc:  # noqa: BLE001 - boundary handler
+    except Exception:  # noqa: BLE001 - boundary handler
+        # Log the full exception server-side; surface only a generic message to
+        # the client so internal types/stack details never reach the polled
+        # VoyageState (verbose-error hardening).
         logger.exception("pipeline failed for voyage %s", voyage_id)
         await store.save(
             VoyageState(
                 voyage_id=voyage_id,
                 perspective=perspective,
                 stage="error",
-                error=f"{type(exc).__name__}: {exc}",
+                error=GENERIC_PIPELINE_ERROR,
             )
         )

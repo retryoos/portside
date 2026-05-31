@@ -52,6 +52,79 @@ class User(Base):
     )
 
 
+# --- workspaces (W7/§2.1) --------------------------------------------------
+
+
+class WorkspaceRow(Base):
+    """A team workspace. Each user has at least one (their personal
+    workspace, named after them, created lazily on first auth). Real teams
+    add more members via invitations.
+
+    Voyages, audit events, and email-in addresses are workspace-scoped once
+    the WORKSPACES_UI feature flag is on; until then everything routes to
+    the caller's personal workspace by default.
+    """
+
+    __tablename__ = "workspaces"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    plan: Mapped[str] = mapped_column(String, default="self_serve")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+class MembershipRow(Base):
+    """One user's role within one workspace.
+
+    Roles (closed vocabulary): owner / admin / member / viewer. Enforced at
+    the route boundary by ``require_workspace_role(min_role)``.
+    """
+
+    __tablename__ = "memberships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    user_sub: Mapped[str] = mapped_column(String, index=True)
+    role: Mapped[str] = mapped_column(String)
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+class InvitationRow(Base):
+    """Pending workspace invitation by email.
+
+    ``token`` is a URL-safe random string; the invite URL is
+    ``https://laytimely.com/invite/<token>``. ``expires_at`` is enforced at
+    the accept route.
+    """
+
+    __tablename__ = "invitations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    email: Mapped[str] = mapped_column(String, index=True)
+    role: Mapped[str] = mapped_column(String)
+    token: Mapped[str] = mapped_column(String, unique=True, index=True)
+    invited_by_sub: Mapped[str] = mapped_column(String)
+    invited_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 # --- top-level voyage ------------------------------------------------------
 
 
@@ -538,3 +611,36 @@ class VoyageEvidenceRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
+
+
+# --- audit log (W7/§2.2) ---------------------------------------------------
+
+
+class AuditEventRow(Base):
+    """Append-only record of every state-mutating action.
+
+    Population is explicit: every mutation route calls ``audit.record(...)``
+    rather than relying on a decorator (decorators hide what got written).
+    ``payload_redacted`` is a small JSON blob whose schema is per-action;
+    PII and the model's prose are intentionally NOT included. See
+    ``portside_api/audit.py`` for the helper and the action vocabulary.
+
+    Retention: 90 days hot in Postgres; the CloudWatch sink for the long tail
+    lands in the observability work (Tier 2 of the customer checklist).
+    """
+
+    __tablename__ = "audit_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    actor_sub: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    action: Mapped[str] = mapped_column(String, index=True)
+    target_type: Mapped[str] = mapped_column(String, index=True)
+    target_id: Mapped[str] = mapped_column(String, index=True)
+    at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    # Per-action payload, redacted at the call site. Stored as a string so it
+    # round-trips across SQLite (no JSON column) and Postgres (could promote
+    # to JSONB in a follow-up; the helper writes JSON-encoded strings either
+    # way so the call sites do not change).
+    payload_redacted: Mapped[str] = mapped_column(Text, default="{}")

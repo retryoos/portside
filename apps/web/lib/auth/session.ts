@@ -29,6 +29,14 @@ let warned = false;
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (secret && secret.length >= 16) return secret;
+  // In production a missing/weak secret lets anyone forge a session cookie, so
+  // fail closed rather than silently signing with a public dev value.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "[auth] AUTH_SECRET is unset or too short in production. " +
+        "Set AUTH_SECRET to a random 32+ char value.",
+    );
+  }
   if (!warned) {
     warned = true;
     // eslint-disable-next-line no-console

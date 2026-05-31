@@ -1,0 +1,19 @@
+{
+  "hague_visby": {
+    "name": "International Convention for the Unification of Certain Rules of Law relating to Bills of Lading, 1924, as amended by the Visby Protocol 1968 and the SDR Protocol 1979 ('Hague-Visby Rules')",
+    "source_url": "https://www.imo.org/en/About/Conventions/Pages/International-Convention-for-the-Unification-of-Certain-Rules-of-Law-relating-to-Bills-of-Lading-(Hague-Visby-Rules).aspx",
+    "articles": {
+      "III r 1": "The carrier shall be bound, before and at the beginning of the voyage, to exercise due diligence to: (a) make the ship seaworthy; (b) properly man, equip and supply the ship; (c) make the holds, refrigerating and cool chambers, and all other parts of the ship in which goods are carried, fit and safe for their reception, carriage and preservation.",
+      "III r 6": "Unless notice of loss or damage and the general nature of such loss or damage be given in writing to the carrier or his agent at the port of discharge before or at the time of the removal of the goods into the custody of the person entitled to delivery thereof under the contract of carriage, such removal shall be prima facie evidence of the delivery by the carrier of the goods as described in the bill of lading. In any event the carrier and the ship shall be discharged from all liability whatsoever in respect of the goods, unless suit is brought within one year of their delivery or of the date when they should have been delivered.",
+      "IV r 2(c)": "Neither the carrier nor the ship shall be responsible for loss or damage arising or resulting from perils, dangers and accidents of the sea or other navigable waters.",
+      "IV r 5(a)": "Unless the nature and value of such goods have been declared by the shipper before shipment and inserted in the bill of lading, neither the carrier nor the ship shall in any event be or become liable for any loss or damage to or in connection with the goods in an amount exceeding 666.67 units of account per package or unit or 2 units of account per kilogramme of gross weight of the goods lost or damaged, whichever is the higher."
+    }
+  },
+  "solas_v_19": {
+    "name": "International Convention for the Safety of Life at Sea (SOLAS), 1974, as amended — Chapter V Regulation 19 (Carriage requirements for shipborne navigational systems and equipment)",
+    "source_url": "https://www.imo.org/en/About/Conventions/Pages/International-Convention-for-the-Safety-of-Life-at-Sea-(SOLAS),-1974.aspx",
+    "articles": {
+      "V/19.2": "All ships irrespective of size shall have, in addition to the requirements of regulation 18: .1 A standard magnetic compass; .2 A pelorus or compass bearing device; .3 A means of correcting heading and bearings to true at all times; .4 Nautical charts and nautical publications to plan and display the ship's route for the intended voyage and to plot and monitor positions throughout the voyage; .5 A back-up arrangement to meet the functional requirements of subparagraph .4, if this function is partly or fully fulfilled by electronic means."
+    }
+  }
+}

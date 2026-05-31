@@ -10,6 +10,54 @@ import type {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+// Bearer token for the backend, fetched from the same-origin token route (the
+// session cookie is HttpOnly). Cached briefly so the ~1s voyage poll doesn't
+// hit the route every tick. Failure is soft: we send no header and let the API
+// decide, so DEV_AUTH=1 mode (which ignores the header) keeps working. After
+// the Cognito swap this carries the real IdToken the API verifies.
+let _cachedAuth: { value: HeadersInit; at: number } | null = null;
+const _AUTH_TTL_MS = 30_000;
+
+async function authHeader(): Promise<HeadersInit> {
+  const now = Date.now();
+  if (_cachedAuth && now - _cachedAuth.at < _AUTH_TTL_MS) return _cachedAuth.value;
+  let value: HeadersInit = {};
+  try {
+    const res = await fetch("/api/auth/token");
+    if (res.ok) {
+      const { token } = (await res.json()) as { token?: string | null };
+      if (token) value = { Authorization: `Bearer ${token}` };
+    }
+  } catch {
+    // Soft-fail: no header. The API enforces auth on its side.
+  }
+  _cachedAuth = { value, at: now };
+  return value;
+}
+
+function invalidateAuth(): void {
+  _cachedAuth = null;
+}
+
+/**
+ * Single entry point for backend calls. Injects the bearer header and, on a
+ * 401 (the cached token expired or was rotated), drops the cache and retries
+ * once with a fresh token. A second 401 propagates to the caller. 401 is an
+ * auth rejection (no side effect ran), so retrying a mutating call is safe.
+ */
+async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const build = async (): Promise<RequestInit> => ({
+    ...init,
+    headers: { ...(init.headers as Record<string, string> | undefined), ...(await authHeader()) },
+  });
+  let res = await fetch(`${API_BASE}${path}`, await build());
+  if (res.status === 401) {
+    invalidateAuth();
+    res = await fetch(`${API_BASE}${path}`, await build());
+  }
+  return res;
+}
+
 export interface VoyageFiles {
   cp: File;
   nor: File;
@@ -26,20 +74,20 @@ export async function createVoyage(
   form.append("sof", files.sof);
   form.append("perspective", perspective);
 
-  const res = await fetch(`${API_BASE}/voyages`, { method: "POST", body: form });
+  const res = await apiFetch(`/voyages`, { method: "POST", body: form });
   if (!res.ok) throw new Error(`createVoyage failed: ${res.status}`);
   const data = (await res.json()) as { voyage_id: string };
   return data.voyage_id;
 }
 
 export async function listVoyages(signal?: AbortSignal): Promise<VoyageSummary[]> {
-  const res = await fetch(`${API_BASE}/voyages`, { signal });
+  const res = await apiFetch(`/voyages`, { signal });
   if (!res.ok) throw new Error(`listVoyages failed: ${res.status}`);
   return (await res.json()) as VoyageSummary[];
 }
 
 export async function listVessels(signal?: AbortSignal): Promise<VesselSummary[]> {
-  const res = await fetch(`${API_BASE}/vessels`, { signal });
+  const res = await apiFetch(`/vessels`, { signal });
   if (!res.ok) throw new Error(`listVessels failed: ${res.status}`);
   return (await res.json()) as VesselSummary[];
 }
@@ -48,13 +96,13 @@ export async function getVoyage(
   voyageId: string,
   signal?: AbortSignal,
 ): Promise<VoyageState> {
-  const res = await fetch(`${API_BASE}/voyages/${voyageId}`, { signal });
+  const res = await apiFetch(`/voyages/${voyageId}`, { signal });
   if (!res.ok) throw new Error(`getVoyage failed: ${res.status}`);
   return (await res.json()) as VoyageState;
 }
 
 export async function deleteVoyage(voyageId: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/voyages/${voyageId}`, { method: "DELETE" });
+  const res = await apiFetch(`/voyages/${voyageId}`, { method: "DELETE" });
   if (!res.ok && res.status !== 404) {
     throw new Error(`deleteVoyage failed: ${res.status}`);
   }
@@ -65,7 +113,7 @@ export async function setVoyageStatus(
   voyageId: string,
   stage: PipelineStage,
 ): Promise<VoyageState> {
-  const res = await fetch(`${API_BASE}/voyages/${voyageId}/status`, {
+  const res = await apiFetch(`/voyages/${voyageId}/status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stage }),

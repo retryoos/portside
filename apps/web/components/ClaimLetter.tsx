@@ -14,7 +14,9 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import ExportDocxButton from "@/components/ExportDocxButton";
 import ExportPdfButton from "@/components/ExportPdfButton";
+import MailtoLetterButton from "@/components/MailtoLetterButton";
 import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
 import type { ClaimPacket } from "@/lib/types";
@@ -47,7 +49,12 @@ export default function ClaimLetter({
 
   return (
     <div className="relative rounded-card border border-border bg-surface">
-      <div className="absolute right-6 top-6 z-10">
+      <div className="absolute right-6 top-6 z-10 flex items-center gap-1">
+        <MailtoLetterButton
+          letterMarkdown={bodyMd}
+          voyageId={packet ? "voyage" : "voyage"}
+        />
+        <ExportDocxButton targetId={LETTER_DOM_ID} />
         <ExportPdfButton targetId={LETTER_DOM_ID} />
       </div>
       <Reveal ready>

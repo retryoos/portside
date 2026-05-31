@@ -9,6 +9,7 @@ swap (set COGNITO_* and DEV_AUTH=0), no code change.
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 
 import jwt
@@ -17,6 +18,8 @@ from jwt import PyJWKClient
 from pydantic import BaseModel
 
 from .settings import settings
+
+logger = logging.getLogger("portside_api.auth")
 
 # Owner id for dev-auth requests and for the seeded demo voyages, so the dev
 # user actually sees the seeds once owner-scoping is on.
@@ -49,9 +52,10 @@ def _verify_cognito_jwt(token: str) -> dict:
             issuer=issuer,
         )
     except jwt.PyJWTError as exc:
-        raise HTTPException(
-            status_code=401, detail=f"invalid token: {exc}"
-        ) from exc
+        # Don't echo PyJWT's internals back to the caller; a generic 401 is
+        # enough for the client and avoids leaking verifier details.
+        logger.warning("rejected token: %s", exc)
+        raise HTTPException(status_code=401, detail="invalid token") from exc
 
 
 async def get_current_user(
