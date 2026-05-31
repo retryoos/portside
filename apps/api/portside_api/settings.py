@@ -59,6 +59,12 @@ class Settings:
     # A7: when off, the research tools serve a committed offline fixture; when
     # on, they may attempt a live API (seam for a real weather/calendar feed).
     research_live: bool
+    # Legal citation subsystem (notes/architecture_weeks_5_to_8.md §1.6). When
+    # off (default), corpus + IMO conventions are the only sources. Flipping
+    # `legal_eur_lex_live=1` enables the CELLAR client; flipping
+    # `legal_bailii_live=1` enables a polite BAILII scraper (phase 2).
+    legal_eur_lex_live: bool
+    legal_bailii_live: bool
 
     @classmethod
     def load(cls) -> "Settings":
@@ -87,6 +93,14 @@ class Settings:
             objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
             stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),
             research_live=(os.environ.get("RESEARCH_LIVE") or "").strip().lower()
+            in {"1", "true", "yes", "on"},
+            legal_eur_lex_live=(os.environ.get("LEGAL_EUR_LEX_LIVE") or "")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"},
+            legal_bailii_live=(os.environ.get("LEGAL_BAILII_LIVE") or "")
+            .strip()
+            .lower()
             in {"1", "true", "yes", "on"},
         )
 
