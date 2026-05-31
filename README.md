@@ -149,7 +149,7 @@ apps/
     DESIGN.md                  design tokens contract
     lib/demo.ts                offline demo fixture (mirrors fixtures.py)
 synthetic-data/                demo PDF generator + committed scenario PDFs
-notes/                         planning, architecture, agent specs, deploy + pre deployment checklist
+notes/                         SYSTEM.md (built) · ROADMAP.md (planned) · OPERATIONS.md (run + deploy)
 ```
 
 ## Deployment
@@ -158,7 +158,7 @@ Artifacts are in the repo and kept off the critical path; the local laptop is th
 
 - **Backend:** `apps/api/Dockerfile` + `apprunner.yaml` for AWS App Runner. Set `ANTHROPIC_API_KEY` and `CORS_ORIGINS`.
 - **Frontend:** `apps/web/amplify.yml` for AWS Amplify Hosting. Set `NEXT_PUBLIC_API_URL` to the App Runner URL.
-- Full step by step and a go / no go checklist: `notes/17-pre-deployment.md` and `notes/16-aws-deploy.md`.
+- Full run, demo-deploy, and AWS-migration steps: [notes/OPERATIONS.md](notes/OPERATIONS.md).
 
 ## Scope and roadmap
 
