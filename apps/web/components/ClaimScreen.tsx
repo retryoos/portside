@@ -119,7 +119,12 @@ export default function ClaimScreen({ id }: { id?: string }) {
 
       <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-[58fr_42fr]">
         <div>
-          <ClaimLetter packet={voyage.packet} loading={!readyPacket} />
+          <ClaimLetter
+            packet={voyage.packet}
+            loading={!readyPacket}
+            voyageId={voyage.voyage_id}
+            vesselName={cp?.vessel_name ?? null}
+          />
         </div>
         <div>
           <SourcesTabs voyage={voyage} />

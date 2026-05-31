@@ -108,6 +108,28 @@ export async function deleteVoyage(voyageId: string): Promise<void> {
   }
 }
 
+/**
+ * Download the three-sheet laytime workbook (Calculation / Summary / Letter)
+ * for a voyage. Backend route: GET /voyages/{id}/laytime.xlsx, spec in
+ * notes/architecture_weeks_5_to_8.md §1.1. 404 = unknown voyage; 409 = the
+ * pipeline has not produced laytime yet (caller should surface the message).
+ */
+export async function downloadLaytimeXlsx(voyageId: string): Promise<Blob> {
+  const res = await apiFetch(`/voyages/${voyageId}/laytime.xlsx`);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = (await res.json()).detail ?? "";
+    } catch {
+      // Response wasn't JSON; leave detail empty.
+    }
+    throw new Error(
+      `downloadLaytimeXlsx failed: ${res.status}${detail ? ` ${detail}` : ""}`,
+    );
+  }
+  return await res.blob();
+}
+
 /** Advance a voyage through the negotiation lifecycle (send/settle/reject/revise). */
 export async function setVoyageStatus(
   voyageId: string,

@@ -16,6 +16,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import ExportDocxButton from "@/components/ExportDocxButton";
 import ExportPdfButton from "@/components/ExportPdfButton";
+import ExportXlsxButton from "@/components/ExportXlsxButton";
 import MailtoLetterButton from "@/components/MailtoLetterButton";
 import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
@@ -26,9 +27,13 @@ export const LETTER_DOM_ID = "claim-letter-sheet";
 export default function ClaimLetter({
   packet = demoVoyage.packet,
   loading = false,
+  voyageId = demoVoyage.voyage_id,
+  vesselName,
 }: {
   packet?: ClaimPacket | null;
   loading?: boolean;
+  voyageId?: string;
+  vesselName?: string | null;
 }) {
   // Snapshot the markdown on first render so React's diff cannot wipe user
   // edits if the parent re-renders with the same (or newly arrived) packet.
@@ -52,8 +57,10 @@ export default function ClaimLetter({
       <div className="absolute right-6 top-6 z-10 flex items-center gap-1">
         <MailtoLetterButton
           letterMarkdown={bodyMd}
-          voyageId={packet ? "voyage" : "voyage"}
+          voyageId={voyageId}
+          vesselName={vesselName}
         />
+        <ExportXlsxButton voyageId={voyageId} vesselName={vesselName} />
         <ExportDocxButton targetId={LETTER_DOM_ID} />
         <ExportPdfButton targetId={LETTER_DOM_ID} />
       </div>

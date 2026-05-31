@@ -58,3 +58,20 @@ dollar significance.
 
 Return the analysis via the required structured output. Every numeric assertion
 must trace to a specific laytime row or event ID.
+
+LEGAL CITATIONS (W0, notes/architecture_weeks_5_to_8.md §1.6)
+A second, focused call runs after this one to attach case-law authorities to
+each flagged event. That second call is given a short list of candidate cases
+retrieved from a curated corpus and may only pick from that list. You do NOT
+emit citations in THIS call. Your job here is to write the arguments cleanly
+enough that the picker can identify which authority each event needs:
+
+- Frame contested events around the legal principle they turn on (weather
+  exception, NOR tender, arrived-ship doctrine, deviation, free pratique,
+  WIBON/WIPON, Hague-Visby time bar, etc.) rather than around the surface
+  facts only. The clearer the principle in your prose, the more likely the
+  picker finds the right authority.
+- Do not invent case citations in arguments or narrative. If you cite case
+  law inline, the citation will be dropped server-side unless it appears in
+  the picker's tool transcript. Better to cite the principle without a case
+  name than to guess one.
