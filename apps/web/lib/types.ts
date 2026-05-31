@@ -321,3 +321,44 @@ export interface FlaggedEventCitations {
   event_id: string;
   cited_authorities: CitedAuthority[];
 }
+
+// ---------------------------------------------------------------------------
+// Audit log (W6, notes/architecture_weeks_5_to_8.md §2.2)
+// ---------------------------------------------------------------------------
+
+// Closed action vocabulary mirroring portside_api/audit.py. A backend
+// addition trips tsc here so the UI never silently renders an unknown
+// action.
+export type AuditAction =
+  | "voyage.create"
+  | "voyage.delete"
+  | "voyage.status_change"
+  | "voyage.revise_apply"
+  | "voyage.rebuttal"
+  | "voyage.letter_email"
+  | "voyage.evidence_refresh"
+  | "voyage.from_email"
+  | "workspace.create"
+  | "workspace.invite"
+  | "workspace.accept"
+  | "workspace.member_remove";
+
+export type AuditTarget =
+  | "voyage"
+  | "claim"
+  | "workspace"
+  | "membership"
+  | "invitation";
+
+export interface AuditEvent {
+  id: number;
+  actor_sub: string | null;
+  // Wire field is a free str (the backend Pydantic model loosens the
+  // closed Literal to str for forward compatibility); the closed union
+  // above is what the UI actually expects to render.
+  action: AuditAction | string;
+  target_type: AuditTarget | string;
+  target_id: string;
+  at: string;
+  payload: Record<string, unknown>;
+}

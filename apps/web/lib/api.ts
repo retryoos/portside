@@ -1,6 +1,7 @@
 // Typed client for the Laytimely API (notes/04-schemas.md §6).
 
 import type {
+  AuditEvent,
   EmailSendError,
   EvidenceChecklist,
   FlaggedEventCitations,
@@ -150,6 +151,21 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+/**
+ * Recent audit events for the caller (W6,
+ * notes/architecture_weeks_5_to_8.md §2.2). Backend route: GET /audit; the
+ * server clamps ``limit`` to [1, 500]. Newest-first by ``at``.
+ */
+export async function listAuditEvents(
+  limit = 100,
+  signal?: AbortSignal,
+): Promise<AuditEvent[]> {
+  const url = `/audit?limit=${encodeURIComponent(String(limit))}`;
+  const res = await apiFetch(url, { signal });
+  if (!res.ok) throw new Error(`listAuditEvents failed: ${res.status}`);
+  return (await res.json()) as AuditEvent[];
 }
 
 /**

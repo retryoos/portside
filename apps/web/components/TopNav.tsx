@@ -160,6 +160,15 @@ function AccountMenu() {
             </p>
           </div>
           <div className="my-1 h-px bg-border" />
+          <Link
+            href="/settings/audit"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
+          >
+            Audit log
+          </Link>
+          <div className="my-1 h-px bg-border" />
           <button
             type="button"
             role="menuitem"
