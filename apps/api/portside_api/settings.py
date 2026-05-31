@@ -50,6 +50,9 @@ class Settings:
     # Object storage (A3). S3 in production; a local directory otherwise.
     s3_bucket: str | None
     s3_region: str | None
+    # Custom S3 endpoint for S3-compatible providers (Cloudflare R2 in the demo).
+    # Unset for real AWS S3 — that is the whole storage migration (one var removed).
+    s3_endpoint_url: str | None
     s3_prefix: str
     objects_dir: str
     # A4: a voyage left in a non-terminal pipeline stage with no progress for
@@ -130,6 +133,7 @@ class Settings:
             cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
             s3_bucket=os.environ.get("S3_BUCKET") or None,
             s3_region=os.environ.get("S3_REGION") or None,
+            s3_endpoint_url=os.environ.get("S3_ENDPOINT_URL") or None,
             s3_prefix=os.environ.get("S3_PREFIX") or "",
             objects_dir=os.environ.get("OBJECTS_DIR") or _DEFAULT_OBJECTS_DIR,
             stale_run_seconds=int(os.environ.get("STALE_RUN_SECONDS") or "900"),

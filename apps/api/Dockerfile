@@ -32,9 +32,10 @@ RUN uv sync --frozen --no-dev
 # Copy the application package.
 COPY portside_api /app/portside_api
 
-# App Runner sets PORT; uvicorn listens on 0.0.0.0:8000 by default. Both work.
+# App Runner sets PORT=8000; Heroku injects a dynamic $PORT the web process must
+# bind. Shell form expands ${PORT:-8000} so the same image runs on both.
 ENV PORT=8000
 EXPOSE 8000
 
 # CMD form (not ENTRYPOINT) so App Runner / Docker can override for ops.
-CMD ["uv", "run", "--no-dev", "uvicorn", "portside_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uv run --no-dev uvicorn portside_api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
