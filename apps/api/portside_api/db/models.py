@@ -538,3 +538,36 @@ class VoyageEvidenceRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )
+
+
+# --- audit log (W7/§2.2) ---------------------------------------------------
+
+
+class AuditEventRow(Base):
+    """Append-only record of every state-mutating action.
+
+    Population is explicit: every mutation route calls ``audit.record(...)``
+    rather than relying on a decorator (decorators hide what got written).
+    ``payload_redacted`` is a small JSON blob whose schema is per-action;
+    PII and the model's prose are intentionally NOT included. See
+    ``portside_api/audit.py`` for the helper and the action vocabulary.
+
+    Retention: 90 days hot in Postgres; the CloudWatch sink for the long tail
+    lands in the observability work (Tier 2 of the customer checklist).
+    """
+
+    __tablename__ = "audit_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    actor_sub: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    action: Mapped[str] = mapped_column(String, index=True)
+    target_type: Mapped[str] = mapped_column(String, index=True)
+    target_id: Mapped[str] = mapped_column(String, index=True)
+    at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    # Per-action payload, redacted at the call site. Stored as a string so it
+    # round-trips across SQLite (no JSON column) and Postgres (could promote
+    # to JSONB in a follow-up; the helper writes JSON-encoded strings either
+    # way so the call sites do not change).
+    payload_redacted: Mapped[str] = mapped_column(Text, default="{}")
