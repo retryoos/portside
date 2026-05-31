@@ -3,6 +3,7 @@
 import type {
   EmailSendError,
   EvidenceChecklist,
+  FlaggedEventCitations,
   FlaggedEventStrength,
   LetterEmailRequest,
   Perspective,
@@ -149,6 +150,23 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+/**
+ * Verified legal authorities per flagged event (W5,
+ * notes/architecture_weeks_5_to_8.md §1.6). Backend route:
+ * GET /voyages/{id}/citations. Returns null when the dispute analysis has
+ * not landed yet (409) or the voyage is unknown (404). An empty list means
+ * the picker ran but no candidate survived verification for any event.
+ */
+export async function fetchCitations(
+  voyageId: string,
+  signal?: AbortSignal,
+): Promise<FlaggedEventCitations[] | null> {
+  const res = await apiFetch(`/voyages/${voyageId}/citations`, { signal });
+  if (res.status === 404 || res.status === 409) return null;
+  if (!res.ok) throw new Error(`fetchCitations failed: ${res.status}`);
+  return (await res.json()) as FlaggedEventCitations[];
 }
 
 /**

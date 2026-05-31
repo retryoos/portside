@@ -41,6 +41,8 @@ from . import audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .analyst_citations import FlaggedEventCitations
+from .agents import analyst
 from .claim_strength import (
     FlaggedEventStrength,
     build_panels as build_strength_panels,
@@ -898,6 +900,59 @@ async def get_claim_strengths(
         days_until_time_bar=days,
         checklist=checklist,
     )
+
+
+@app.get("/voyages/{voyage_id}/citations")
+async def get_voyage_citations(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> list[FlaggedEventCitations]:
+    """Verified legal authorities per flagged event (W5,
+    notes/architecture_weeks_5_to_8.md §1.6).
+
+    First read: runs the analyst's per-event picker pass against the curated
+    corpus, validates with ``legal.verify.validate_authorities``, persists
+    the result. Later reads serve the cache. 404 / 409 mirror the other
+    sibling routes; an event for which no authority survives verification
+    simply does not appear in the response.
+
+    The picker call uses the model; if no ANTHROPIC_API_KEY is present the
+    per-event helper returns ``[]`` and the route degrades to an empty list
+    rather than 5xx. Production deploys must have the key configured.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.dispute is None:
+        raise HTTPException(
+            status_code=409, detail="voyage has no dispute analysis yet"
+        )
+
+    cached = await store.list_citations(voyage_id, user.id)
+    if cached:
+        return cached
+
+    bundles: list[FlaggedEventCitations] = []
+    for event in state.dispute.flagged_events:
+        try:
+            cited = await analyst._citations_for_event(event)
+        except Exception:  # noqa: BLE001 - boundary handler
+            # A picker call failure (no key, network error, model refusal)
+            # must not 5xx the whole list. Skip the event; another call can
+            # retry, and the cache stays empty so retry actually re-runs.
+            logger.warning(
+                "citations: per-event picker failed for %s/%s",
+                voyage_id, event.event_id,
+            )
+            continue
+        if cited:
+            bundles.append(
+                FlaggedEventCitations(event_id=event.event_id, cited_authorities=cited)
+            )
+
+    if bundles:
+        await store.record_citations(voyage_id, bundles)
+    return bundles
 
 
 async def _run_pipeline_bg(

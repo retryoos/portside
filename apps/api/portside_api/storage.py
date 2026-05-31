@@ -42,6 +42,8 @@ from .db.mapping import (
     update_orm_from_state,
 )
 from .objects import StoredDocument
+from .analyst_citations import FlaggedEventCitations
+from .legal.models import CitedAuthority
 from .researcher import EvidenceItem
 from .schemas import VesselSummary, VoyageState, VoyageSummary
 
@@ -135,6 +137,14 @@ class VoyageStore(Protocol):
         self, voyage_id: str, owner_user_id: str | None = None
     ) -> list[EvidenceItem]: ...
 
+    async def record_citations(
+        self, voyage_id: str, items: list[FlaggedEventCitations]
+    ) -> None: ...
+
+    async def list_citations(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[FlaggedEventCitations]: ...
+
 
 class InMemoryStore:
     """In-process dict implementation. No persistence (process restart clears it)."""
@@ -143,6 +153,7 @@ class InMemoryStore:
         self._voyages: dict[str, VoyageState] = {}
         self._documents: dict[str, list[StoredDocument]] = {}
         self._evidence: dict[str, list[EvidenceItem]] = {}
+        self._citations: dict[str, list[FlaggedEventCitations]] = {}
         self._lock = asyncio.Lock()
 
     async def save(
@@ -180,6 +191,7 @@ class InMemoryStore:
         async with self._lock:
             self._documents.pop(voyage_id, None)
             self._evidence.pop(voyage_id, None)
+            self._citations.pop(voyage_id, None)
             return self._voyages.pop(voyage_id, None) is not None
 
     async def record_documents(
@@ -206,6 +218,17 @@ class InMemoryStore:
         self, voyage_id: str, owner_user_id: str | None = None
     ) -> list[EvidenceItem]:
         return list(self._evidence.get(voyage_id, []))
+
+    async def record_citations(
+        self, voyage_id: str, items: list[FlaggedEventCitations]
+    ) -> None:
+        async with self._lock:
+            self._citations.setdefault(voyage_id, []).extend(items)
+
+    async def list_citations(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[FlaggedEventCitations]:
+        return list(self._citations.get(voyage_id, []))
 
 
 class SqlVoyageStore:
@@ -408,6 +431,60 @@ class SqlVoyageStore:
                 summary=r.summary,
             )
             for r in rows
+        ]
+
+    async def record_citations(
+        self, voyage_id: str, items: list[FlaggedEventCitations]
+    ) -> None:
+        async with self._sm() as session:
+            async with session.begin():
+                for bundle in items:
+                    for authority in bundle.cited_authorities:
+                        session.add(
+                            m.VoyageCitationRow(
+                                voyage_id=voyage_id,
+                                event_id=bundle.event_id,
+                                citation=authority.citation,
+                                tool_used=authority.tool_used,
+                                proposition=authority.proposition,
+                                url=authority.url,
+                            )
+                        )
+
+    async def list_citations(
+        self, voyage_id: str, owner_user_id: str | None = None
+    ) -> list[FlaggedEventCitations]:
+        async with self._sm() as session:
+            if owner_user_id is not None:
+                voyage = await session.get(m.Voyage, voyage_id)
+                if voyage is None or voyage.owner_user_id != owner_user_id:
+                    return []
+            rows = (
+                await session.execute(
+                    select(m.VoyageCitationRow)
+                    .where(m.VoyageCitationRow.voyage_id == voyage_id)
+                    .order_by(m.VoyageCitationRow.id)
+                )
+            ).scalars().all()
+
+        # Re-bucket the flat row list back into per-event bundles. Order is
+        # preserved within an event (insertion order) and the events appear
+        # in first-seen order, which mirrors how the route would have
+        # iterated state.dispute.flagged_events.
+        by_event: dict[str, list[CitedAuthority]] = {}
+        for r in rows:
+            by_event.setdefault(r.event_id, []).append(
+                CitedAuthority(
+                    citation=r.citation,
+                    verified_via_tool=True,
+                    tool_used=r.tool_used,  # type: ignore[arg-type]
+                    proposition=r.proposition,
+                    url=r.url,
+                )
+            )
+        return [
+            FlaggedEventCitations(event_id=event_id, cited_authorities=authorities)
+            for event_id, authorities in by_event.items()
         ]
 
     async def reap_stale_processing(self, older_than_seconds: int) -> int:

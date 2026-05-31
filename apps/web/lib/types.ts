@@ -293,3 +293,31 @@ export interface FlaggedEventStrength {
   event_id: string;
   sub_scores: ClaimStrengthSubScores;
 }
+
+// ---------------------------------------------------------------------------
+// Legal citations (W5, notes/architecture_weeks_5_to_8.md §1.6)
+// ---------------------------------------------------------------------------
+
+// Mirrors portside_api/legal/models.py. ``verified_via_tool`` is always true
+// on the wire: the backend's verify gate drops anything that did not pass.
+// ``tool_used`` carries the channel (currently always "corpus"; "imo" and
+// "eur_lex" are wired but not yet emitting).
+export type CitedAuthorityTool =
+  | "corpus"
+  | "lookup"
+  | "eur_lex"
+  | "imo"
+  | "bailii";
+
+export interface CitedAuthority {
+  citation: string;
+  verified_via_tool: boolean;
+  tool_used: CitedAuthorityTool;
+  proposition: string;
+  url?: string | null;
+}
+
+export interface FlaggedEventCitations {
+  event_id: string;
+  cited_authorities: CitedAuthority[];
+}

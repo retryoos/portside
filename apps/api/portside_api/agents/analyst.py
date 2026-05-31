@@ -33,6 +33,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from ..analyst_citations import EnrichedDisputeAnalysis, FlaggedEventCitations
 from ..legal import corpus as legal_corpus
 from ..legal import verify as legal_verify
 from ..legal.models import CitedAuthority
@@ -45,6 +46,16 @@ from ..schemas import (
 )
 from ..prompts import load_prompt
 from .llm import cached_system, extract_structured
+
+# Wire models re-exported for callers that import them from ``agents.analyst``;
+# their canonical home is ``analyst_citations`` so storage + route layers can
+# import the shapes without dragging in the LLM client at module load.
+__all__ = [
+    "EnrichedDisputeAnalysis",
+    "FlaggedEventCitations",
+    "run",
+    "run_with_citations",
+]
 
 _PROMPT = (Path(__file__).resolve().parent.parent / "prompts" / "analyst.md").read_text()
 # Shared cross-cutting rules prepended to the analyst system prompt.
@@ -59,26 +70,8 @@ _CITATIONS_PER_EVENT_CAP = 3
 
 
 # ---------------------------------------------------------------------------
-# Feature-local wire models
+# Picker output (kept local because the picker prompt is local too)
 # ---------------------------------------------------------------------------
-
-
-class FlaggedEventCitations(BaseModel):
-    """Per-flagged-event citation bundle.
-
-    Sibling to the existing ``DisputeAnalysis.flagged_events`` list keyed by
-    ``event_id`` so the frozen ``FlaggedEvent`` schema is untouched. The route
-    layer (next PR) surfaces these alongside the dispute response."""
-
-    event_id: str
-    cited_authorities: list[CitedAuthority]
-
-
-class EnrichedDisputeAnalysis(BaseModel):
-    """``DisputeAnalysis`` plus the verified citations per flagged event."""
-
-    analysis: DisputeAnalysis
-    citations: list[FlaggedEventCitations]
 
 
 # Picker output: the model returns case_ids (must come from the candidate

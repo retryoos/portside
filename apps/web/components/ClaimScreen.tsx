@@ -11,10 +11,10 @@
 // processing stepper sits in a grid-rows collapse band above the two-column
 // layout; it folds away when stage hits "done" (or any negotiation stage).
 import { useEffect, useState } from "react";
-import { pollVoyage } from "@/lib/api";
+import { fetchCitations, pollVoyage } from "@/lib/api";
 import { demoVoyage } from "@/lib/demo";
 import { formatEur } from "@/lib/format";
-import type { VoyageState } from "@/lib/types";
+import type { FlaggedEventCitations, VoyageState } from "@/lib/types";
 import AgentSteps from "@/components/AgentSteps";
 import BackArrowButton from "@/components/BackArrowButton";
 import ClaimLetter from "@/components/ClaimLetter";
@@ -27,6 +27,12 @@ export default function ClaimScreen({ id }: { id?: string }) {
 
   const [voyage, setVoyage] = useState<VoyageState>(demoVoyage);
   const [error, setError] = useState<string | null>(null);
+  // Legal authorities for the voyage, lazy-fetched once when the dispute
+  // analysis is on the state. null === fetched but empty / 404 / 409;
+  // undefined === not yet fetched.
+  const [citations, setCitations] = useState<
+    FlaggedEventCitations[] | null | undefined
+  >(undefined);
 
   useEffect(() => {
     if (!voyageId) {
@@ -44,6 +50,21 @@ export default function ClaimScreen({ id }: { id?: string }) {
     });
     return () => controller.abort();
   }, [voyageId]);
+
+  // Lazy-fetch citations once the dispute is on state. Voyage id stays
+  // stable for the page lifetime so we key the effect off it + the
+  // dispute-ready bit; the fetch is single-shot (no polling) because the
+  // backend caches first-call results.
+  const disputeReady = Boolean(voyage.dispute);
+  useEffect(() => {
+    if (!disputeReady) return;
+    if (citations !== undefined) return;
+    const controller = new AbortController();
+    fetchCitations(voyage.voyage_id, controller.signal)
+      .then((rows) => setCitations(rows))
+      .catch(() => setCitations(null));
+    return () => controller.abort();
+  }, [disputeReady, voyage.voyage_id, citations]);
 
   const cp = voyage.extraction?.charter_party;
   const vesselLine = cp
@@ -124,10 +145,11 @@ export default function ClaimScreen({ id }: { id?: string }) {
             loading={!readyPacket}
             voyageId={voyage.voyage_id}
             vesselName={cp?.vessel_name ?? null}
+            citations={citations}
           />
         </div>
         <div>
-          <SourcesTabs voyage={voyage} />
+          <SourcesTabs voyage={voyage} citations={citations} />
         </div>
       </div>
     </main>
