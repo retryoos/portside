@@ -41,6 +41,11 @@ from . import audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
+from .evidence_checklist import (
+    EvidenceChecklist,
+    build_checklist as build_evidence_checklist,
+)
+from .researcher import EvidenceBundle
 from .email import (
     EmailErrorCode,
     EmailSendError,
@@ -814,6 +819,35 @@ async def list_voyage_evidence(
     if bundle.items:
         await store.record_evidence(voyage_id, bundle.items)
     return bundle.items
+
+
+@app.get("/voyages/{voyage_id}/evidence-checklist")
+async def get_evidence_checklist(
+    voyage_id: str,
+    user: Annotated[Principal, Depends(get_current_user)],
+) -> EvidenceChecklist:
+    """Recipient-facing evidence checklist (W3, notes/architecture_weeks_5_to_8.md §1.4).
+
+    Composes ``evidence_checklist.build_checklist`` against the current voyage
+    state: flagged events + uploaded document roles + any cached
+    research-agent evidence bundle. ``attached`` per row is deterministic
+    here, not model-owned. 409 when no dispute is on the state yet.
+    """
+    state = await store.load(voyage_id, user.id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="voyage not found")
+    if state.dispute is None:
+        raise HTTPException(
+            status_code=409, detail="voyage has no dispute analysis yet"
+        )
+    docs = await store.list_documents(voyage_id, user.id)
+    cached_evidence = await store.list_evidence(voyage_id, user.id)
+    bundle = EvidenceBundle(items=cached_evidence) if cached_evidence else None
+    return build_evidence_checklist(
+        state.dispute.flagged_events,
+        voyage_documents=[d.role for d in docs],
+        evidence_bundle=bundle,
+    )
 
 
 async def _run_pipeline_bg(

@@ -2,6 +2,7 @@
 
 import type {
   EmailSendError,
+  EvidenceChecklist,
   LetterEmailRequest,
   Perspective,
   PipelineStage,
@@ -147,6 +148,23 @@ export async function sendClaimLetter(
   }
   const err: EmailSendError = { code, message, status: res.status };
   throw err;
+}
+
+/**
+ * Recipient-facing evidence checklist (W3,
+ * notes/architecture_weeks_5_to_8.md §1.4). Backend route:
+ * GET /voyages/{id}/evidence-checklist. Returns null when the dispute
+ * analysis has not landed yet (409) or the voyage is unknown (404) so the
+ * tab can render an empty/loading state instead of an error.
+ */
+export async function fetchEvidenceChecklist(
+  voyageId: string,
+  signal?: AbortSignal,
+): Promise<EvidenceChecklist | null> {
+  const res = await apiFetch(`/voyages/${voyageId}/evidence-checklist`, { signal });
+  if (res.status === 404 || res.status === 409) return null;
+  if (!res.ok) throw new Error(`fetchEvidenceChecklist failed: ${res.status}`);
+  return (await res.json()) as EvidenceChecklist;
 }
 
 /**

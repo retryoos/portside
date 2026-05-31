@@ -11,15 +11,17 @@
 import { useState } from "react";
 import Reveal from "@/components/Reveal";
 import { demoVoyage } from "@/lib/demo";
+import EvidenceChecklistTab from "@/components/EvidenceChecklistTab";
 import LaytimeSummary from "@/components/LaytimeSummary";
 import SoFTable from "@/components/SoFTable";
 import type { VoyageState } from "@/lib/types";
 
-type Tab = "sources" | "calculation" | "documents";
+type Tab = "sources" | "calculation" | "documents" | "evidence";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "sources", label: "Sources" },
   { id: "calculation", label: "Calculation" },
+  { id: "evidence", label: "Evidence" },
   { id: "documents", label: "Documents" },
 ];
 
@@ -94,6 +96,13 @@ export default function SourcesTabs({
           ) : (
             <ClausesSkeleton />
           ))}
+
+        {active === "evidence" && (
+          <EvidenceChecklistTab
+            voyageId={voyage.voyage_id}
+            active={active === "evidence"}
+          />
+        )}
 
         {active === "documents" &&
           (readyDocuments ? (

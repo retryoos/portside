@@ -239,3 +239,35 @@ export interface EmailSendError {
   message: string;
   status: number;
 }
+
+// ---------------------------------------------------------------------------
+// Evidence checklist (W3, notes/architecture_weeks_5_to_8.md §1.4)
+// ---------------------------------------------------------------------------
+
+// Wire model mirror of portside_api/evidence_checklist.py. ``attached`` is
+// deterministic on the backend (uploaded CP -> cp_excerpt rows attached;
+// research bundle covering an event -> the weather row attached); the UI just
+// renders it.
+export type EvidenceRole =
+  | "cp_excerpt"
+  | "nor"
+  | "sof"
+  | "bunker_note"
+  | "port_log"
+  | "weather_observation"
+  | "agent_correspondence"
+  | "other";
+
+export interface EvidenceItem {
+  role: EvidenceRole;
+  label: string;
+  supports_event_id: string | null;
+  supports_clause: string | null;
+  attached: boolean;
+  source_voyage_doc_id?: string | null;
+  note?: string | null;
+}
+
+export interface EvidenceChecklist {
+  items: EvidenceItem[];
+}
