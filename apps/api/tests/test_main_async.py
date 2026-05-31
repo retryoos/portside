@@ -18,6 +18,7 @@ from fastapi.testclient import TestClient
 
 from portside_api import main as main_mod
 from portside_api.objects import LocalObjectStore
+from portside_api.pipeline import GENERIC_PIPELINE_ERROR
 from portside_api.schemas import Perspective, VoyageState
 from portside_api.storage import InMemoryStore, VoyageStore
 
@@ -163,8 +164,9 @@ def test_get_voyage_404_for_unknown_id(client: TestClient) -> None:
 def test_pipeline_exception_records_error_state(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """If pipeline.run raises, the background task should record
-    stage='error' with the exception message visible in `error`."""
+    """If pipeline.run raises an unexpected error, the background task records
+    stage='error' with a generic message; internal exception type/message must
+    NOT leak to the polled client state (verbose-error hardening)."""
 
     async def boom_pipeline(
         voyage_id: str,
@@ -184,6 +186,6 @@ def test_pipeline_exception_records_error_state(
 
     final = _wait_until_terminal(client, voyage_id, timeout_s=2.0)
     assert final.stage == "error"
-    assert final.error is not None
-    assert "boom" in final.error
-    assert "RuntimeError" in final.error
+    assert final.error == GENERIC_PIPELINE_ERROR
+    assert "boom" not in final.error
+    assert "RuntimeError" not in final.error

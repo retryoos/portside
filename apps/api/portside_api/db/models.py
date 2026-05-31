@@ -52,6 +52,79 @@ class User(Base):
     )
 
 
+# --- workspaces (W7/§2.1) --------------------------------------------------
+
+
+class WorkspaceRow(Base):
+    """A team workspace. Each user has at least one (their personal
+    workspace, named after them, created lazily on first auth). Real teams
+    add more members via invitations.
+
+    Voyages, audit events, and email-in addresses are workspace-scoped once
+    the WORKSPACES_UI feature flag is on; until then everything routes to
+    the caller's personal workspace by default.
+    """
+
+    __tablename__ = "workspaces"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    plan: Mapped[str] = mapped_column(String, default="self_serve")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+class MembershipRow(Base):
+    """One user's role within one workspace.
+
+    Roles (closed vocabulary): owner / admin / member / viewer. Enforced at
+    the route boundary by ``require_workspace_role(min_role)``.
+    """
+
+    __tablename__ = "memberships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    user_sub: Mapped[str] = mapped_column(String, index=True)
+    role: Mapped[str] = mapped_column(String)
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+
+
+class InvitationRow(Base):
+    """Pending workspace invitation by email.
+
+    ``token`` is a URL-safe random string; the invite URL is
+    ``https://laytimely.com/invite/<token>``. ``expires_at`` is enforced at
+    the accept route.
+    """
+
+    __tablename__ = "invitations"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workspace_id: Mapped[str] = mapped_column(
+        ForeignKey("workspaces.id", ondelete="CASCADE"), index=True
+    )
+    email: Mapped[str] = mapped_column(String, index=True)
+    role: Mapped[str] = mapped_column(String)
+    token: Mapped[str] = mapped_column(String, unique=True, index=True)
+    invited_by_sub: Mapped[str] = mapped_column(String)
+    invited_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 # --- top-level voyage ------------------------------------------------------
 
 

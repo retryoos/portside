@@ -15,6 +15,7 @@ done) so the polling frontend can animate live progress (notes/02-architecture.m
 
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 from . import pdf
@@ -28,6 +29,25 @@ from .schemas import (
     VoyageState,
 )
 from .storage import VoyageStore
+
+logger = logging.getLogger("portside_api.pipeline")
+
+# Shown to the client when an *unexpected* failure aborts the pipeline. The real
+# exception is logged server-side; the client only ever sees this so internal
+# types, messages, and paths don't leak through the polled VoyageState.
+GENERIC_PIPELINE_ERROR = (
+    "Processing failed unexpectedly. Please try again or contact support."
+)
+
+
+class PipelineError(Exception):
+    """A pipeline failure whose message is safe to show the end user.
+
+    Use this for actionable, non-sensitive conditions (e.g. an unusable upload)
+    that we *want* to surface verbatim. Anything that is not a ``PipelineError``
+    is treated as an unexpected internal fault: logged, then reported to the
+    client as :data:`GENERIC_PIPELINE_ERROR`.
+    """
 
 
 async def run(
@@ -73,9 +93,9 @@ async def run(
         # the upload is unusable (likely scanned/image PDFs without OCR). Fail
         # loudly instead of silently serving the canonical demo fixture.
         if not any(t.strip() for t in texts.values()):
-            raise ValueError(
+            raise PipelineError(
                 "No text could be extracted from the uploaded PDFs. "
-                "They may be scanned images — please upload text-native PDFs."
+                "They may be scanned images; please upload text-native PDFs."
             )
 
         extraction = await extractor.run(texts, voyage_id, perspective)
@@ -89,8 +109,14 @@ async def run(
 
         await emit("drafting", extraction=extraction, laytime=laytime, dispute=dispute)
         packet = await drafter.run(extraction, laytime, dispute, perspective)
-    except Exception as exc:  # noqa: BLE001 — surface boundary failures honestly
-        return await emit("error", error=f"{type(exc).__name__}: {exc}")
+    except PipelineError as exc:
+        # Expected, safe-to-surface failure: show the message verbatim.
+        return await emit("error", error=str(exc))
+    except Exception:  # noqa: BLE001 — boundary handler
+        # Unexpected fault: log the detail, surface only a generic message so
+        # internal exception types/messages never reach the client.
+        logger.exception("pipeline failed for voyage %s", voyage_id)
+        return await emit("error", error=GENERIC_PIPELINE_ERROR)
 
     return await emit(
         "done",

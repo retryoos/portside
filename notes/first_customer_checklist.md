@@ -208,10 +208,17 @@ the same.
 
 These are not optional once a customer is paying:
 
-- Rate limit `POST /api/auth/login` and `POST /voyages` (App Runner / API
-  Gateway layer, or in-process slowapi).
-- Upload size limit (FastAPI middleware: 25 MB max per file).
-- Content-type allowlist (`application/pdf` only).
+- [x] Rate limit `POST /voyages` — done in-process (`SlidingWindowRateLimiter`
+  in `apps/api/portside_api/limits.py`, default 30/60s per caller, tune via
+  `RATE_LIMIT_MAX_REQUESTS` / `RATE_LIMIT_WINDOW_SECONDS`). Still TODO: rate
+  limit `POST /api/auth/login` (lives in the Next.js app, not the API).
+- [x] Upload size limit (25 MiB/file) + content-type allowlist
+  (`application/pdf`) — done in `apps/api/portside_api/limits.py`.
+- [x] Security headers on both tiers — done (API middleware in `main.py`;
+  Next.js `headers()` in `apps/web/next.config.mjs`). See §11.
+- [x] Verbose-error hardening — done (generic client messages, full detail
+  logged server-side; `apps/api/portside_api/pipeline.py`, `auth.py`,
+  `main.py`). See §11.
 - Pipeline timeout audit: every `await` has a deadline, every retry has a cap.
 - DB backup policy: automated daily snapshot, 30 day retention.
 - Sentry SDK in both apps with release tagging.
@@ -315,3 +322,82 @@ Tier 3 (per customer ask)       ≈ 1-2 days each
 The Tier 1 auth-swap PR can be drafted against the dev Cognito pool before the
 prod pool exists, then re-pointed via env at cutover. That keeps it off the
 critical path.
+
+---
+
+## 11. Security hardening (vibe-check audit, 2026-05-31)
+
+Audit against the 17 vibe-check categories
+(github.com/benavlabs/vibe-check). The code-side fixes below are already
+landed on this branch; the remaining items are deploy-time configuration and
+one Tier 1 code change.
+
+### Fixed in code (this branch)
+
+- **Removed a duplicate unauthenticated `DELETE /voyages/{id}`.** Only the
+  owner-scoped delete remains (`main.py`).
+- **Rate limiting on `POST /voyages`** (the paid Anthropic pipeline trigger):
+  `SlidingWindowRateLimiter`, default 30 requests / 60s per caller, `429` +
+  `Retry-After`, `X-Forwarded-For`-aware. Tune via `RATE_LIMIT_MAX_REQUESTS`
+  / `RATE_LIMIT_WINDOW_SECONDS`; `0` disables.
+- **Security headers.** API middleware (`X-Content-Type-Options`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`, `default-src 'none'` CSP, HSTS)
+  and Next.js `headers()` (page-appropriate CSP that allows the API origin in
+  `connect-src`, plus nosniff / frame DENY / Referrer-Policy /
+  Permissions-Policy / HSTS).
+- **Verbose-error hardening.** Unexpected failures are logged server-side and
+  surfaced to the client only as a generic message; expected, safe messages
+  (e.g. unusable upload) still show via the new `PipelineError`. Auth returns a
+  generic `invalid token` and logs the PyJWT detail.
+- **`AUTH_SECRET` fails closed in production.** `apps/web/lib/auth/session.ts`
+  throws in `NODE_ENV=production` when `AUTH_SECRET` is unset/short instead of
+  silently signing cookies with a public dev value.
+
+### Deploy-time configuration (set these; no code change)
+
+| Variable | Pre-customer demo (now) | First customer (Tier 1) |
+| --- | --- | --- |
+| `DEV_AUTH` | `1` (admin/admin stub; no Cognito yet) | `0` once Cognito is provisioned |
+| `COGNITO_*` | unset | set (Tier 1, §1a) — turns on real JWT verification automatically |
+| `AUTH_SECRET` (web) | random 32+ chars, even for the demo deploy (app throws in prod without it) | same |
+| `CORS_ORIGINS` (api) | `http://localhost:3000` locally; the Vercel URL on the demo deploy | the real app domain. Never `*` with credentials on |
+| `RATE_LIMIT_MAX_REQUESTS` / `_WINDOW_SECONDS` | defaults (30 / 60) are fine | tune to real traffic |
+
+> `DEV_AUTH` stays `1` until Cognito exists: flipping to `0` with no pool
+> configured makes every request fail (`auth is not configured`). The flip is
+> Tier 1 step 11; the CI assertion in §9 guards against shipping `1` to prod.
+
+### Tier 1 code change: propagate the JWT from the browser to the API
+
+Today the browser calls the API directly (`apps/web/lib/api.ts`) with no
+`Authorization` header, so the API is the real auth boundary and is only as
+safe as `DEV_AUTH`. After the Cognito swap (§4), wire the token through. Exact
+steps:
+
+1. **Expose the token to the client.** Add `apps/web/app/api/auth/token/route.ts`
+   (a server route) that reads the session cookie and returns
+   `{ token: <Cognito IdToken> }`. The cookie stays HttpOnly; only this
+   same-origin route can read it.
+2. **Attach it on every API call.** In `apps/web/lib/api.ts` add a helper:
+   ```ts
+   async function authHeader(): Promise<HeadersInit> {
+     const res = await fetch("/api/auth/token");
+     if (!res.ok) return {};
+     const { token } = (await res.json()) as { token?: string };
+     return token ? { Authorization: `Bearer ${token}` } : {};
+   }
+   ```
+   then merge `...(await authHeader())` into the `headers` of `createVoyage`,
+   `listVoyages`, `listVessels`, `getVoyage`, `deleteVoyage`, `setVoyageStatus`,
+   and the revise/rebut/evidence/export calls.
+3. **Verify** with `DEV_AUTH=0` + a real Cognito user: a call without the header
+   returns `401`; with it, `200` and data scoped to that user's `sub`.
+
+### Verify the CSP in a browser (after deploy)
+
+The Next.js CSP keeps `'unsafe-inline'` for scripts/styles (and `'unsafe-eval'`
+in dev) so Next's inline bootstrap is not blocked. After deploying, open the
+app and check the browser console for `Content-Security-Policy` violations —
+especially if analytics, web fonts, or third-party scripts get added later
+(extend `script-src` / `connect-src` / `font-src` accordingly). Tightening to
+per-request nonces is a good follow-up but not required for launch.
