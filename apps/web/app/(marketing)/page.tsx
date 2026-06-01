@@ -8,28 +8,26 @@ import PipelineDiagram from "@/components/marketing/PipelineDiagram";
 import CTASection from "@/components/marketing/CTASection";
 import Link from "next/link";
 
-// SEO metadata for the landing surface. Open Graph carries the hero
-// photograph (with the deep-ink fallback if the asset is missing).
+// SEO metadata for the landing surface. Open Graph + Twitter cards pull the
+// generated AI social image from app/(marketing)/opengraph-image.tsx.
 export const metadata: Metadata = {
-  title: "Laytimely · Recover the demurrage you're owed",
+  title: "Laytimely · AI workflows for maritime operations",
   description:
-    "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
+    "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
   openGraph: {
-    title: "Laytimely · Recover the demurrage you're owed",
+    title: "Laytimely · AI workflows for maritime operations",
     description:
-      "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
+      "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
     url: "https://laytimely.com/",
     siteName: "Laytimely",
-    images: ["/photography/hero-landing.jpg"],
     locale: "en_GB",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laytimely",
+    title: "Laytimely · AI workflows for maritime operations",
     description:
-      "Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
-    images: ["/photography/hero-landing.jpg"],
+      "AI workflows for maritime operations, starting with the demurrage claims that used to take days.",
   },
 };
 
@@ -164,7 +162,7 @@ export default function LandingPage() {
         <ScrollReveal>
           <p className="text-eyebrow text-secondary">Under the hood</p>
           <h2 className="text-display mt-6 max-w-4xl text-primary">
-            Four agents. One pipeline. Every figure cited.
+            Four AI agents. One pipeline. Every figure cited.
           </h2>
           <p className="mt-6 max-w-2xl text-body-lg text-secondary">
             A small fleet of specialised agents reads the documents, calculates
