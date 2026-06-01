@@ -1,10 +1,13 @@
-"""Auth (A2): resolve the current user from a Cognito JWT.
+"""Auth (A2): resolve the current user from the request's bearer token.
 
-``dev_auth`` bypasses verification and returns a fixed dev user — the
-non-blocking path used in tests and locally until Panos provisions the Cognito
-pool (notes/19). When ``dev_auth`` is off, the bearer token is verified against
-the pool's JWKS (RS256, issuer + audience); going live is then purely a config
-swap (set COGNITO_* and DEV_AUTH=0), no code change.
+Three verification paths, tried in order (see ``get_current_user``):
+
+1. ``dev_auth`` on returns a fixed dev user, the non-blocking path used in
+   tests and zero-config local dev.
+2. A first-party app session token (HS256, minted by /auth/login and
+   /auth/signup). This is the real multi-user identity layer.
+3. A Cognito IdToken verified against the pool JWKS (RS256), available when a
+   pool is configured so a managed-pool migration needs no call-site changes.
 """
 
 from __future__ import annotations
@@ -67,6 +70,25 @@ async def get_current_user(
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="missing bearer token")
     token = authorization.split(" ", 1)[1].strip()
+
+    # 1) First-party app session token. Imported lazily to avoid an import
+    # cycle (accounts -> settings; auth is imported very early in app boot).
+    from . import accounts
+
+    try:
+        claims = accounts.verify_app_token(token)
+    except jwt.PyJWTError:
+        claims = None
+    if claims is not None:
+        sub = claims.get("sub")
+        if not sub:
+            raise HTTPException(status_code=401, detail="token missing sub")
+        return Principal(id=sub, email=claims.get("email"))
+
+    # 2) Cognito IdToken, only if a pool is configured. Otherwise the app
+    # token was the only valid option and it failed, so reject.
+    if not settings.cognito_issuer:
+        raise HTTPException(status_code=401, detail="invalid token")
     claims = _verify_cognito_jwt(token)
     sub = claims.get("sub")
     if not sub:

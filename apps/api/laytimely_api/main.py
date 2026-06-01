@@ -38,7 +38,7 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import audit, defense, pipeline, researcher, reviser, workspaces
+from . import accounts, audit, defense, pipeline, researcher, reviser, workspaces
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
@@ -263,6 +263,80 @@ async def enforce_invitation_rate_limit(request: Request) -> None:
 @app.get("/healthz")
 async def healthz() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# First-party auth: email/password accounts (real multi-user identity).
+#
+# /auth/signup and /auth/login mint a short HS256 session token the web app
+# stores in its httpOnly cookie and replays as the Bearer header. A brute-force
+# guard caps attempts per client; the credential check itself is constant-time.
+# ---------------------------------------------------------------------------
+
+
+auth_rate_limiter = SlidingWindowRateLimiter(max_requests=10, window_seconds=60)
+
+
+async def enforce_auth_rate_limit(request: Request) -> None:
+    if not auth_rate_limiter.allow(client_key(request)):
+        raise HTTPException(
+            status_code=429,
+            detail="too many attempts; please wait and retry",
+            headers={"Retry-After": "60"},
+        )
+
+
+@app.post("/auth/signup", dependencies=[Depends(enforce_auth_rate_limit)])
+async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
+    """Create an account, mint its personal workspace, and return a session
+    token. 409 if the email is already registered."""
+    async with _sessionmaker() as session:
+        try:
+            user = await accounts.create_account(
+                session, email=req.email, password=req.password, name=req.name
+            )
+        except accounts.AccountError as exc:
+            status = 409 if exc.code == "email_taken" else 400
+            raise HTTPException(
+                status_code=status,
+                detail={"code": exc.code, "message": exc.message},
+            )
+        # Capture primitives before commit expires the ORM attributes.
+        sub, email, name = user.id, user.email, user.name
+        await workspaces.ensure_personal_workspace(
+            session, user_sub=sub, display_name=name or email
+        )
+        await session.commit()
+    token = accounts.issue_app_token(sub=sub, email=email, name=name)
+    return accounts.AuthResponse(
+        token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)
+    )
+
+
+@app.post("/auth/login", dependencies=[Depends(enforce_auth_rate_limit)])
+async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
+    """Verify credentials and return a session token. 401 on bad credentials.
+    Ensures the account has its personal workspace (older accounts, safety)."""
+    async with _sessionmaker() as session:
+        try:
+            user = await accounts.authenticate(
+                session, email=req.email, password=req.password
+            )
+        except accounts.AccountError as exc:
+            raise HTTPException(
+                status_code=401,
+                detail={"code": exc.code, "message": exc.message},
+            )
+        sub, email, name = user.id, user.email, user.name
+        _wid, created = await workspaces.ensure_personal_workspace(
+            session, user_sub=sub, display_name=name or email
+        )
+        if created:
+            await session.commit()
+    token = accounts.issue_app_token(sub=sub, email=email, name=name)
+    return accounts.AuthResponse(
+        token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)
+    )
 
 
 @app.get("/me")

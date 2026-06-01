@@ -47,6 +47,16 @@ class User(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
     email: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Real-auth credential fields (added with the multi-user auth work). Both
+    # are nullable so pre-existing seed/dev rows (which never had a password)
+    # keep validating; only accounts created via /auth/signup carry a hash.
+    # ``email_lower`` is the case-folded unique key used for login + dup checks;
+    # ``email`` keeps the original casing for display.
+    email_lower: Mapped[str | None] = mapped_column(
+        String, nullable=True, unique=True, index=True
+    )
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow
     )

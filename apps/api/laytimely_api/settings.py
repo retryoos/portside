@@ -47,6 +47,14 @@ class Settings:
     cognito_region: str | None
     cognito_user_pool_id: str | None
     cognito_client_id: str | None
+    # First-party email/password auth (the real multi-user path that does not
+    # depend on Cognito). ``app_jwt_secret`` signs the HS256 session token the
+    # /auth/signup + /auth/login routes mint and that get_current_user verifies.
+    # A dev default keeps localhost working with zero config; production MUST
+    # set APP_JWT_SECRET to a long random value (openssl rand -hex 32) so the
+    # token cannot be forged. ``app_jwt_ttl_seconds`` is the token lifetime.
+    app_jwt_secret: str
+    app_jwt_ttl_seconds: int
     # Object storage (A3). S3 in production; a local directory otherwise.
     s3_bucket: str | None
     s3_region: str | None
@@ -135,6 +143,13 @@ class Settings:
             cognito_region=os.environ.get("COGNITO_REGION") or None,
             cognito_user_pool_id=pool_id,
             cognito_client_id=os.environ.get("COGNITO_CLIENT_ID") or None,
+            app_jwt_secret=(
+                os.environ.get("APP_JWT_SECRET")
+                or "dev-insecure-app-jwt-secret-change-me"
+            ),
+            app_jwt_ttl_seconds=int(
+                os.environ.get("APP_JWT_TTL_SECONDS") or str(60 * 60 * 24 * 7)
+            ),
             s3_bucket=os.environ.get("S3_BUCKET") or None,
             s3_region=os.environ.get("S3_REGION") or None,
             s3_endpoint_url=os.environ.get("S3_ENDPOINT_URL") or None,
