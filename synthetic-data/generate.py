@@ -114,11 +114,14 @@ def _write_expected_json(path: Path) -> None:
 
 def main() -> None:
     _OUT.mkdir(parents=True, exist_ok=True)
-    _write_pdf(CHARTER_PARTY, _OUT / "cp.pdf")
-    _write_pdf(NOTICE_OF_READINESS, _OUT / "nor.pdf")
-    _write_pdf(STATEMENT_OF_FACTS, _OUT / "sof.pdf")
+    _write_pdf(CHARTER_PARTY, _OUT / "Charter Party.pdf")
+    _write_pdf(NOTICE_OF_READINESS, _OUT / "Notice of Readiness.pdf")
+    _write_pdf(STATEMENT_OF_FACTS, _OUT / "Statement of Facts.pdf")
     _write_expected_json(_OUT / "expected.json")
-    print(f"Wrote cp.pdf, nor.pdf, sof.pdf, expected.json to {_OUT}")
+    print(
+        "Wrote 'Charter Party.pdf', 'Notice of Readiness.pdf', "
+        f"'Statement of Facts.pdf', expected.json to {_OUT}"
+    )
 
 
 if __name__ == "__main__":
