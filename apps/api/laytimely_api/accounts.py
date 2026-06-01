@@ -180,7 +180,7 @@ async def create_account(
     *,
     email: str,
     password: str,
-    name: str | None,
+    name: str | None = None,
 ) -> User:
     """Create a new account. Raises ``AccountError('email_taken')`` if the
     case-folded email already exists. Caller commits."""

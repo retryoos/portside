@@ -47,11 +47,10 @@ def sessionmaker(tmp_path: Path):
 
 
 def test_role_lattice_is_strict_ordering() -> None:
-    assert workspaces.role_at_least("owner", "viewer")
+    assert workspaces.role_at_least("owner", "member")
     assert workspaces.role_at_least("admin", "member")
-    assert workspaces.role_at_least("member", "viewer")
-    assert workspaces.role_at_least("viewer", "viewer")
-    assert not workspaces.role_at_least("viewer", "member")
+    assert workspaces.role_at_least("member", "member")
+    assert workspaces.role_at_least("owner", "admin")
     assert not workspaces.role_at_least("member", "admin")
     assert not workspaces.role_at_least("admin", "owner")
 

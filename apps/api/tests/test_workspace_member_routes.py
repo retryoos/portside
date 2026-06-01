@@ -154,10 +154,10 @@ def test_change_role_promotes_member_to_admin(client: TestClient) -> None:
     _seed_admin_membership(wid, other_sub)  # seed at admin
     resp = client.patch(
         f"/workspaces/{wid}/members/{other_sub}",
-        json={"role": "viewer"},
+        json={"role": "member"},
     )
     assert resp.status_code == 200, resp.text
-    assert resp.json()["role"] == "viewer"
+    assert resp.json()["role"] == "member"
 
 
 def test_change_role_refuses_demoting_last_owner(client: TestClient) -> None:

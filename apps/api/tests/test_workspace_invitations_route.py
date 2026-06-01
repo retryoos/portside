@@ -244,7 +244,7 @@ def test_invitation_token_persists_in_db(client: TestClient) -> None:
     wid = _seed_personal_workspace_for_dev_user()
     resp = client.post(
         f"/workspaces/{wid}/invitations",
-        json={"email": "row@example.com", "role": "viewer"},
+        json={"email": "row@example.com", "role": "admin"},
     )
     token = resp.json()["token"]
 
@@ -258,4 +258,4 @@ def test_invitation_token_persists_in_db(client: TestClient) -> None:
 
     row = asyncio.run(_read())
     assert row is not None
-    assert row.role == "viewer"
+    assert row.role == "admin"
