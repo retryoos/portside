@@ -32,6 +32,11 @@ RUN uv sync --frozen --no-dev
 # Copy the application package.
 COPY portside_api /app/portside_api
 
+# Alembic runs on startup (main.py lifespan, SQL store), so the migration
+# scripts + config must ship in the image alongside the package.
+COPY alembic.ini /app/alembic.ini
+COPY alembic /app/alembic
+
 # App Runner sets PORT=8000; Heroku injects a dynamic $PORT the web process must
 # bind. Shell form expands ${PORT:-8000} so the same image runs on both.
 ENV PORT=8000
