@@ -461,9 +461,15 @@ async def auth_demo() -> accounts.AuthResponse:
     non-empty production database (where the startup seed-if-empty never ran)."""
     await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)
     async with _sessionmaker() as session:
-        _wid, created = await workspaces.ensure_personal_workspace(
+        wid, created = await workspaces.ensure_personal_workspace(
             session, user_sub=DEV_USER_ID, display_name=DEMO_USER_NAME
         )
+        # Force the demo workspace name even if the row predates the rename, so
+        # the members/invitations pages never surface a stale "dev@..." label.
+        ws_row = await session.get(_WorkspaceRow, wid)
+        if ws_row is not None and ws_row.name != DEMO_USER_NAME:
+            ws_row.name = DEMO_USER_NAME
+            created = True
         if created:
             await session.commit()
     if not await store.list(owner_user_id=DEV_USER_ID):
