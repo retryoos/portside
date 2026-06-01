@@ -25,6 +25,7 @@ import { verifySession } from "@/lib/auth/session";
 // Marketing surfaces. Visitors reach these without a session.
 const PUBLIC_EXACT = new Set<string>([
   "/",
+  "/about",
   "/security",
   "/privacy",
   "/terms",
