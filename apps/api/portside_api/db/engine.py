@@ -13,12 +13,28 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import NullPool
 
 from .models import Base
 
 
 def make_engine(database_url: str) -> AsyncEngine:
-    engine = create_async_engine(database_url, future=True)
+    engine_kwargs: dict[str, object] = {"future": True}
+    if "+asyncpg" in database_url:
+        # Postgres-on-asyncpg config, tuned for Neon's pooled (PgBouncer,
+        # transaction-pooling) endpoint:
+        #   - NullPool: never reuse a connection across event loops. SQLAlchemy's
+        #     default pool caches connections, and an asyncpg connection bound to
+        #     one loop and reused on another raises "got Future attached to a
+        #     different loop" (hit under asyncio.run() in tests and on cold-start
+        #     work that runs on a different loop than request handling). A fresh
+        #     connection per checkout sidesteps it; Neon fronts a pooler anyway.
+        #   - statement_cache_size=0: PgBouncer transaction pooling is
+        #     incompatible with asyncpg's server-side prepared-statement cache,
+        #     which otherwise surfaces as intermittent 500s on query endpoints.
+        engine_kwargs["poolclass"] = NullPool
+        engine_kwargs["connect_args"] = {"statement_cache_size": 0}
+    engine = create_async_engine(database_url, **engine_kwargs)
     if database_url.startswith("sqlite"):
 
         @event.listens_for(engine.sync_engine, "connect")
