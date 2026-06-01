@@ -226,6 +226,21 @@
     z-index: 0;
   }
 
+  /* The ship photograph: deepest, slowest layer. Overscanned by 8% so the
+     parallax never reveals an edge; darkened so the screen-blend ink lifts as
+     coloured light rather than washing the scene out. */
+  .hero-ink-photo {
+    position: absolute;
+    inset: -8%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6;
+    transform: scale(1.02);
+    translate: calc(var(--px) * -6px)
+      calc(var(--py) * -5px + var(--sy) * 0.03px);
+    will-change: translate;
+  }
+
   .hero-ink-blob {
     position: absolute;
     border-radius: 50%;
@@ -395,6 +410,7 @@
   }
   /* Hero resolves to its finished composition with no entrance or drift. */
   .hero-ink-blob,
+  .hero-ink-photo,
   .hero-scroll-cue {
     animation: none !important;
     translate: none !important;

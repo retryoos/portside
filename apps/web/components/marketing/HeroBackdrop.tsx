@@ -66,6 +66,14 @@ export default function HeroBackdrop() {
       className="hero-ink absolute inset-0 overflow-hidden"
       style={{ ["--px" as string]: 0, ["--py" as string]: 0, ["--sy" as string]: 0 }}
     >
+      {/* Deepest layer: the ship photograph, darkened and overscanned so it
+          rides the slowest parallax without showing an edge. The ink blobs
+          screen-blend over it, reading as coloured light across the scene.
+          Silently absent if the asset is missing; the near-black base shows. */}
+      <span
+        className="hero-ink-photo"
+        style={{ backgroundImage: "url('/photography/hero-landing.jpg')" }}
+      />
       {/* Three depth layers. Each drifts on its own long loop; parallax depth
           (data-depth) scales how far pointer/scroll nudge it. */}
       <span className="hero-ink-blob hero-ink-blob--a" data-depth="1" />
