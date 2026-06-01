@@ -7,8 +7,9 @@ import PipelineDiagram from "@/components/marketing/PipelineDiagram";
 import CTASection from "@/components/marketing/CTASection";
 import Link from "next/link";
 
-// SEO metadata for the landing surface. Open Graph + Twitter cards pull the
-// generated AI social image from app/(marketing)/opengraph-image.tsx.
+// SEO metadata for the landing surface. Open Graph + Twitter cards use the
+// hero photograph (/photography/hero-landing.jpg) as the link-preview image;
+// the title/description keep the AI-forward positioning.
 export const metadata: Metadata = {
   title: "Laytimely · AI workflows for maritime operations",
   description:
@@ -21,12 +22,14 @@ export const metadata: Metadata = {
     siteName: "Laytimely",
     locale: "en_GB",
     type: "website",
+    images: ["/photography/hero-landing.jpg"],
   },
   twitter: {
     card: "summary_large_image",
     title: "Laytimely · AI workflows for maritime operations",
     description:
       "AI workflows for maritime operations, starting with the demurrage claims that used to take days.",
+    images: ["/photography/hero-landing.jpg"],
   },
 };
 
