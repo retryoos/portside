@@ -313,6 +313,37 @@ async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
     )
 
 
+DEMO_USER_NAME = "Laytimely Demo"
+
+
+@app.post("/auth/demo", dependencies=[Depends(enforce_auth_rate_limit)])
+async def auth_demo() -> accounts.AuthResponse:
+    """One-click demo. Returns a session token for a shared demo identity that
+    owns the seeded Rotterdam case data, so a prospect can explore a fully
+    populated app without signing up. The demo identity, its workspace, and its
+    seed cases are provisioned lazily here so the endpoint works even on a
+    non-empty production database (where the startup seed-if-empty never ran)."""
+    await store.ensure_user(DEV_USER_ID, DEV_USER_EMAIL)
+    async with _sessionmaker() as session:
+        _wid, created = await workspaces.ensure_personal_workspace(
+            session, user_sub=DEV_USER_ID, display_name=DEMO_USER_NAME
+        )
+        if created:
+            await session.commit()
+    if not await store.list(owner_user_id=DEV_USER_ID):
+        for state in seed_voyages():
+            await store.save(state, owner_user_id=DEV_USER_ID)
+    token = accounts.issue_app_token(
+        sub=DEV_USER_ID, email=DEV_USER_EMAIL, name=DEMO_USER_NAME
+    )
+    return accounts.AuthResponse(
+        token=token,
+        user=accounts.AuthUser(
+            sub=DEV_USER_ID, email=DEV_USER_EMAIL, name=DEMO_USER_NAME
+        ),
+    )
+
+
 @app.post("/auth/login", dependencies=[Depends(enforce_auth_rate_limit)])
 async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
     """Verify credentials and return a session token. 401 on bad credentials.
