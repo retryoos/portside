@@ -1,0 +1,72 @@
+# Auto-deploy the FastAPI backend to Heroku when backend changes land on main.
+# Mirrors how Vercel auto-deploys the frontend, with the same path filtering so
+# web-only changes don't trigger a backend deploy (and vice versa).
+#
+# Runs on a SELF-HOSTED runner by default (set the repo variable RUNNER_LABEL to
+# 'ubuntu-latest' to switch to GitHub-hosted once your Actions minutes reset).
+# The self-hosted runner must:
+#   - be registered to retryoos/portside and online
+#     (repo Settings -> Actions -> Runners),
+#   - have Docker running (OrbStack) and the Heroku CLI installed.
+#
+# No migration step: the app runs `alembic upgrade head` on startup (lifespan),
+# so a container release migrates itself.
+#
+# Required repo secret:
+#   HEROKU_API_KEY   (get it locally with: heroku auth:token)
+
+name: Deploy API (Heroku)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - '.github/workflows/deploy-api-heroku.yml'
+  workflow_dispatch:
+
+concurrency:
+  # A newer push to main cancels an older in-flight/queued deploy so we never
+  # release stale code over newer code.
+  group: deploy-api-heroku
+  cancel-in-progress: true
+
+env:
+  HEROKU_APP: laytimely-api
+  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+jobs:
+  deploy:
+    name: Build, push, and release to Heroku
+    runs-on: ${{ vars.RUNNER_LABEL || 'self-hosted' }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure Heroku CLI is available
+        run: heroku --version || curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Log in to the Heroku container registry
+        run: heroku container:login
+
+      - name: Build, push, and release the image
+        # Build context MUST be apps/api (the Dockerfile's COPY paths assume it).
+        working-directory: apps/api
+        run: |
+          heroku container:push web -a "$HEROKU_APP"
+          heroku container:release web -a "$HEROKU_APP"
+
+      - name: Smoke test /healthz
+        run: |
+          set -euo pipefail
+          url="https://laytimely-api-8518111d1ef8.herokuapp.com/healthz"
+          for i in $(seq 1 18); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
+            if [ "$code" = "200" ]; then echo "healthy"; exit 0; fi
+            echo "waiting for boot... (got $code)"; sleep 5
+          done
+          echo "::error::/healthz did not return 200 after release"
+          exit 1

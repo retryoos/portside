@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Section from "@/components/marketing/Section";
+import ContactForm from "@/components/marketing/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact · Laytimely",
@@ -49,11 +50,17 @@ export default function ContactPage() {
           Get in touch.
         </h1>
         <p className="mt-6 max-w-2xl text-body-lg text-secondary">
-          The team reads every email. Choose the channel below that matches
-          your question.
+          The team reads every message. Send a note below, or use one of the
+          direct channels that matches your question.
         </p>
 
-        <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="mt-16 max-w-2xl">
+          <ContactForm />
+        </div>
+
+        <p className="mt-20 text-eyebrow text-secondary">Direct channels</p>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
           {CHANNELS.map((c) => (
             <div
               key={c.email}
