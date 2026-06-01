@@ -29,7 +29,7 @@
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
-    "vitest": "3.2.4"
+    "vitest": "^4.1.0"
   },
   "overrides": {
     "jspdf": "^4.2.1",
