@@ -359,6 +359,23 @@ async def enforce_auth_rate_limit(request: Request) -> None:
         )
 
 
+async def _seed_demo_cases_for(owner_sub: str) -> None:
+    """Give a demo-share account its OWN private copy of the seeded demo cases.
+
+    Founder-designated accounts (settings.demo_share_emails, set in Doppler)
+    get a fully populated dashboard they can hand out as a credentialed demo
+    login, isolated from the anonymous "Try live demo" identity and from each
+    other (the copies are owned by the account, so its own uploads sit
+    alongside them). Idempotent: the per-account voyage ids are deterministic,
+    so the seed runs once and every later login is a cheap no-op."""
+    marker = f"v_demo_{owner_sub[:12]}_0"
+    if await store.load(marker, owner_sub) is not None:
+        return  # already seeded for this account
+    for i, state in enumerate(seed_voyages()):
+        copy = state.model_copy(update={"voyage_id": f"v_demo_{owner_sub[:12]}_{i}"})
+        await store.save(copy, owner_user_id=owner_sub)
+
+
 @app.post("/auth/signup", dependencies=[Depends(enforce_auth_rate_limit)])
 async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
     """Invite-only account creation (cost control).
@@ -442,6 +459,11 @@ async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
             payload={"via": "invite" if invitation is not None else "bootstrap"},
         )
         await session.commit()
+
+    # Founder-designated demo-share accounts land pre-populated so they can be
+    # handed out as a credentialed, fully populated demo login.
+    if email_lower in settings.demo_share_emails:
+        await _seed_demo_cases_for(sub)
 
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
@@ -531,6 +553,10 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
             target_id=sub,
         )
         await session.commit()
+    # Seed (idempotently) so an existing demo-share account that predates the
+    # allowlist also gets its populated copy on its next login.
+    if email.strip().lower() in settings.demo_share_emails:
+        await _seed_demo_cases_for(sub)
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
         token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)
