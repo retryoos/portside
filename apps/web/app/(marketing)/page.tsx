@@ -155,6 +155,18 @@ export default function LandingPage() {
             />
           </ScrollReveal>
         </div>
+        <ScrollReveal delayMs={320}>
+          <div className="mt-12 text-center">
+            <a
+              href="/sample-claim-letter.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-lift inline-flex items-center gap-2 rounded-pill border border-on-primary/30 px-5 py-2.5 text-body-sm font-semibold text-on-primary hover:bg-on-primary/10"
+            >
+              See a finished sample letter (PDF)
+            </a>
+          </div>
+        </ScrollReveal>
       </Section>
 
       {/* Section 4 - How it works */}
