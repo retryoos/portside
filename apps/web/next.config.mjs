@@ -10,11 +10,15 @@ try {
   apiOrigin = "";
 }
 
-const isProd = process.env.NODE_ENV === "production";
-
 // Next.js injects inline bootstrap scripts (and inline styles via styled-jsx /
-// the framework), so script-src/style-src keep 'unsafe-inline'. Dev also needs
-// 'unsafe-eval' for React Fast Refresh. Tightening to nonces is a follow-up.
+// the framework), so script-src/style-src keep 'unsafe-inline'.
+//
+// 'unsafe-eval' is required in production too: the client-side PDF export
+// (html2pdf.js -> jsPDF) calls the Function() constructor, and html2canvas
+// spawns a worker from a blob: URL. Without these, "Download PDF" silently
+// throws in prod (it worked in dev only because Fast Refresh already enabled
+// unsafe-eval). Tightening to nonces / moving PDF generation server-side is a
+// follow-up; for now the demo needs the client export to work.
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -26,7 +30,9 @@ const csp = [
   // gstatic.com. Without these the Fraunces/Inter/JetBrains faces are blocked.
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  // html2canvas (bundled in html2pdf.js) renders via a blob: worker.
+  "worker-src 'self' blob:",
   // 'self' + the API origin + Web3Forms (the marketing contact form endpoint).
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.web3forms.com`,
 ].join("; ");
