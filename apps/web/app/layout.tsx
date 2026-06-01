@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Providers from "./Providers";
+
+// The ActiveWorkspaceProvider used to live here, wrapping every page.
+// That meant marketing visits triggered a ``/api/auth/token`` probe + a
+// ``/me/workspaces`` fetch they had no business making. The provider now
+// lives under ``app/(app)/layout.tsx`` so only authed product routes mount
+// it; marketing and login stay server-only.
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://laytimely.com";
 
@@ -29,9 +34,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <Providers>{children}</Providers>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
