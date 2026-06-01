@@ -22,10 +22,13 @@ const csp = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "style-src 'self' 'unsafe-inline'",
+  // Google Fonts: the <link> stylesheet is googleapis.com, the font files are
+  // gstatic.com. Without these the Fraunces/Inter/JetBrains faces are blocked.
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""}`,
+  // 'self' + the API origin + Web3Forms (the marketing contact form endpoint).
+  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.web3forms.com`,
 ].join("; ");
 
 const securityHeaders = [
