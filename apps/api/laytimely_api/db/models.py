@@ -88,8 +88,8 @@ class WorkspaceRow(Base):
 class MembershipRow(Base):
     """One user's role within one workspace.
 
-    Roles (closed vocabulary): owner / admin / member / viewer. Enforced at
-    the route boundary by ``require_workspace_role(min_role)``.
+    Roles (closed vocabulary): owner / admin / member. Enforced at the route
+    boundary by ``require_workspace_role(min_role)``.
     """
 
     __tablename__ = "memberships"

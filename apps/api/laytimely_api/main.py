@@ -402,18 +402,27 @@ async def list_workspace_members(
     workspace_id: str,
     _principal: Annotated[Principal, Depends(_require_admin)],
 ) -> list[workspaces.Member]:
-    """Admin-only: list the membership rows for a workspace."""
+    """Admin-only: list the workspace's members, each joined to its user row
+    so the UI can show an email/name rather than an opaque id."""
     from sqlalchemy import select as _select
-    from .db.models import MembershipRow as _MembershipRow
+    from .db.models import MembershipRow as _MembershipRow, User as _User
 
     async with _sessionmaker() as session:
         result = await session.execute(
-            _select(_MembershipRow).where(_MembershipRow.workspace_id == workspace_id)
+            _select(_MembershipRow, _User)
+            .join(_User, _User.id == _MembershipRow.user_sub, isouter=True)
+            .where(_MembershipRow.workspace_id == workspace_id)
+            .order_by(_MembershipRow.accepted_at)
         )
-        rows = result.scalars().all()
+        rows = result.all()
     return [
-        workspaces.Member(user_sub=row.user_sub, role=row.role)  # type: ignore[arg-type]
-        for row in rows
+        workspaces.Member(
+            user_sub=mem.user_sub,
+            role=mem.role,  # type: ignore[arg-type]
+            email=(user.email if user is not None else None),
+            name=(user.name if user is not None else None),
+        )
+        for (mem, user) in rows
     ]
 
 
@@ -589,7 +598,7 @@ async def get_workspace_inbox_address(
 
     Computed deterministically from the workspace id + the ``INBOX_DOMAIN``
     setting; no row to read. Admin-only because the address is the inbound
-    write surface for the workspace; viewer-level members do not need it.
+    write surface for the workspace; regular members do not manage it.
     """
     return InboxAddressResponse(
         address=workspaces.inbox_address(workspace_id, settings.inbox_domain),

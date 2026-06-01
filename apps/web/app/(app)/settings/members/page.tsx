@@ -67,12 +67,12 @@ export default function MembersPage() {
             <p className="text-eyebrow text-secondary">Settings</p>
             <h1 className="text-hero mt-4 text-primary">Members.</h1>
             <p className="mt-6 max-w-xl text-body-lg text-secondary">
-              Who has access to{" "}
+              Everyone with access to{" "}
               <span className="font-medium text-primary">
                 {active?.workspace.name ?? "this workspace"}
               </span>
-              . Promote, demote, or revoke. Workspaces always keep at least
-              one owner.
+              . Change a person&apos;s role or remove them. Every workspace
+              keeps at least one owner.
             </p>
           </div>
         </section>

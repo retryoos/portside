@@ -20,7 +20,6 @@ const ROLE_TONE: Record<WorkspaceRole, string> = {
   owner: "bg-primary text-on-primary",
   admin: "bg-success-container text-success",
   member: "bg-surface-muted text-primary",
-  viewer: "bg-surface-muted text-secondary",
 };
 
 export default function InvitationsTable({

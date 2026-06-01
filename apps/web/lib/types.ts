@@ -381,7 +381,7 @@ export interface InboxAddress {
 // Workspaces + memberships + invitations (W8 + W9, §2.1)
 // ---------------------------------------------------------------------------
 
-export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
+export type WorkspaceRole = "owner" | "admin" | "member";
 
 export interface Workspace {
   id: string;
@@ -392,6 +392,8 @@ export interface Workspace {
 export interface WorkspaceMember {
   user_sub: string;
   role: WorkspaceRole;
+  email?: string | null;
+  name?: string | null;
 }
 
 export interface MyWorkspaceEntry {

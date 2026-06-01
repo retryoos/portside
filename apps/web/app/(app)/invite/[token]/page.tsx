@@ -29,7 +29,6 @@ const ROLE_TONE: Record<WorkspaceRole, string> = {
   owner: "bg-primary text-on-primary",
   admin: "bg-success-container text-success",
   member: "bg-surface-muted text-primary",
-  viewer: "bg-surface-muted text-secondary",
 };
 
 type Status = "idle" | "busy" | "success" | "error";
@@ -126,9 +125,7 @@ function SuccessBlock({ invite }: { invite: WorkspaceInvitation }) {
     <>
       <h1 className="mt-4 text-h1 text-primary">You are in.</h1>
       <p className="mt-6 text-body text-secondary">
-        Joined workspace{" "}
-        <span className="font-medium text-primary">{invite.workspace_id}</span>{" "}
-        as a{" "}
+        You joined the workspace as a{" "}
         <span
           className={`inline-flex rounded-pill px-2.5 py-0.5 text-label-caps ${ROLE_TONE[invite.role]}`}
         >

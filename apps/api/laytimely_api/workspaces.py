@@ -8,10 +8,11 @@ ships the backend contract so the UI can build against it.
 Roles (closed)
 --------------
 
-``owner``   - one per workspace; cannot be removed; can do everything.
-``admin``   - manage members and settings; cannot remove the owner.
-``member``  - day-to-day use; manage own voyages.
-``viewer``  - read-only.
+``owner``   - one per workspace at minimum; cannot be removed while last;
+              can do everything including billing.
+``admin``   - manage members, invitations, and settings; cannot remove the
+              last owner.
+``member``  - day-to-day use; create and manage voyages.
 
 The ordering is a strict lattice: every higher role can do everything a lower
 role can. ``require_workspace_role(min_role)`` enforces by integer index.
@@ -42,8 +43,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from .auth import Principal, get_current_user
 from .db.models import InvitationRow, MembershipRow, WorkspaceRow
 
-Role = Literal["owner", "admin", "member", "viewer"]
-_ROLE_ORDER: tuple[Role, ...] = ("viewer", "member", "admin", "owner")
+Role = Literal["owner", "admin", "member"]
+_ROLE_ORDER: tuple[Role, ...] = ("member", "admin", "owner")
 _ROLE_LEVEL: dict[Role, int] = {role: i for i, role in enumerate(_ROLE_ORDER)}
 
 # 14-day invitation TTL. After this, the accept route 410s.
@@ -64,6 +65,12 @@ class Workspace(BaseModel):
 class Member(BaseModel):
     user_sub: str
     role: Role
+    # Populated by the members route via a join on the users table so the
+    # admin UI shows a human (email/name) instead of an opaque id. Both stay
+    # optional: a membership can in principle reference a user row that has no
+    # email (legacy/seed), and the UI falls back to a shortened id.
+    email: str | None = None
+    name: str | None = None
 
 
 class Invitation(BaseModel):
