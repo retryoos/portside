@@ -19,6 +19,7 @@ import {
   NEXT_PARAM,
   POST_LOGIN_PATH,
   SESSION_COOKIE,
+  SIGNUP_PATH,
 } from "@/lib/auth/constants";
 import { verifySession } from "@/lib/auth/session";
 
@@ -43,15 +44,14 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = await verifySession(token);
 
-  const isLoginRoute = pathname === LOGIN_PATH;
-  // /invite/<token> (W9) is technically open to any authed user (even one
-  // who is not yet a member of any workspace), but the existing default
-  // flow already handles that: unauthed -> redirected to /login with the
-  // invite path preserved as `next`, signed-in -> page renders + the
-  // accept POST mints the workspace membership. No allowlist change
-  // needed; this comment documents the intent for the next reviewer.
+  // /login and /signup are the public auth pages: an unauthed visitor passes
+  // through, a signed-in one is bounced to the app. /invite/<token> (W9) stays
+  // gated by the default branch below, so an unauthed visitor is sent to
+  // /login?next=/invite/<token>, signs in or signs up, and bounces back to
+  // accept as a real member.
+  const isAuthPage = pathname === LOGIN_PATH || pathname === SIGNUP_PATH;
 
-  if (isLoginRoute) {
+  if (isAuthPage) {
     if (session) {
       const url = request.nextUrl.clone();
       url.pathname = POST_LOGIN_PATH;

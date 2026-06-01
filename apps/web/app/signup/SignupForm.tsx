@@ -1,9 +1,10 @@
 "use client";
 
-// Sign-in form. Submits email + password to /api/auth/login (which proxies the
-// backend and sets the session cookie), surfaces the server's error inline,
-// and on success routes to `next` (or /cases). `router.refresh()` flushes
-// server-component caches so the layout picks up the new session.
+// Account creation form. Posts name + email + password to /api/auth/signup
+// (which proxies the backend and sets the session cookie), then routes to
+// `next` (or /cases). Client-side validation mirrors the backend so obvious
+// mistakes are caught before the round trip; the server stays the source of
+// truth (duplicate email, rate limit).
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,37 +16,54 @@ const FIELD_CLASSES =
   "focus:border-primary focus:outline-none " +
   "disabled:cursor-not-allowed disabled:opacity-60";
 
-export default function LoginForm({ next }: { next: string | null }) {
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const MIN_PASSWORD = 8;
+
+export default function SignupForm({ next }: { next: string | null }) {
   const router = useRouter();
+  const nameId = useId();
   const emailId = useId();
   const passwordId = useId();
   const errorId = useId();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const signupHref = next
-    ? `/signup?next=${encodeURIComponent(next)}`
-    : "/signup";
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    setBusy(true);
     setError(null);
 
+    const trimmedEmail = email.trim();
+    if (!EMAIL_RE.test(trimmedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < MIN_PASSWORD) {
+      setError(`Password must be at least ${MIN_PASSWORD} characters.`);
+      return;
+    }
+
+    setBusy(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          name: name.trim() || null,
+        }),
       });
 
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(body.error ?? "Sign in failed. Please try again.");
+        setError(body.error ?? "Could not create the account. Try again.");
         setBusy(false);
         return;
       }
@@ -62,6 +80,25 @@ export default function LoginForm({ next }: { next: string | null }) {
     <form noValidate onSubmit={handleSubmit} className="space-y-5">
       <div>
         <label
+          htmlFor={nameId}
+          className="mb-2 block text-body-sm font-semibold text-primary"
+        >
+          Name <span className="font-normal text-secondary">(optional)</span>
+        </label>
+        <input
+          id={nameId}
+          name="name"
+          type="text"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          disabled={busy}
+          className={FIELD_CLASSES}
+        />
+      </div>
+
+      <div>
+        <label
           htmlFor={emailId}
           className="mb-2 block text-body-sm font-semibold text-primary"
         >
@@ -76,7 +113,6 @@ export default function LoginForm({ next }: { next: string | null }) {
           autoCorrect="off"
           spellCheck={false}
           required
-          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={busy}
@@ -97,8 +133,9 @@ export default function LoginForm({ next }: { next: string | null }) {
           id={passwordId}
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           required
+          minLength={MIN_PASSWORD}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={busy}
@@ -106,6 +143,9 @@ export default function LoginForm({ next }: { next: string | null }) {
           aria-describedby={error ? errorId : undefined}
           className={FIELD_CLASSES}
         />
+        <p className="mt-1.5 text-body-sm text-secondary">
+          At least {MIN_PASSWORD} characters.
+        </p>
       </div>
 
       {error && (
@@ -123,16 +163,16 @@ export default function LoginForm({ next }: { next: string | null }) {
         disabled={busy}
         className="btn-lift mt-2 w-full rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {busy ? "Signing in…" : "Sign in"}
+        {busy ? "Creating account…" : "Create account"}
       </button>
 
       <p className="pt-2 text-center text-body-sm text-secondary">
-        New to Laytimely?{" "}
+        Already have an account?{" "}
         <Link
-          href={signupHref}
+          href={loginHref}
           className="font-semibold text-primary underline-offset-4 hover:underline"
         >
-          Create an account
+          Sign in
         </Link>
       </p>
     </form>

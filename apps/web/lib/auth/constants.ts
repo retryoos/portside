@@ -11,6 +11,9 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 // Where unauthenticated users are sent.
 export const LOGIN_PATH = "/login";
 
+// Account creation. Public like /login; both bounce signed-in users to the app.
+export const SIGNUP_PATH = "/signup";
+
 // Where authenticated users land after sign-in (and where they're bounced if
 // they hit /login while already signed in).
 export const POST_LOGIN_PATH = "/cases";
