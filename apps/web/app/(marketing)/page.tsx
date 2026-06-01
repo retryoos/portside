@@ -11,11 +11,11 @@ import Link from "next/link";
 // hero photograph (/photography/hero-landing.jpg) as the link-preview image;
 // the title/description keep the AI-forward positioning.
 export const metadata: Metadata = {
-  title: "Laytimely · AI workflows for maritime operations",
+  title: "Laytimely, AI workflows for maritime operations",
   description:
     "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
   openGraph: {
-    title: "Laytimely · AI workflows for maritime operations",
+    title: "Laytimely, AI workflows for maritime operations",
     description:
       "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
     url: "https://laytimely.com/",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laytimely · AI workflows for maritime operations",
+    title: "Laytimely, AI workflows for maritime operations",
     description:
       "AI workflows for maritime operations, starting with the demurrage claims that used to take days.",
     images: ["/photography/hero-landing.jpg"],
@@ -158,7 +158,7 @@ export default function LandingPage() {
           <p className="mt-6 max-w-2xl text-body-lg text-secondary">
             A small fleet of specialised agents reads the documents, calculates
             the laytime, builds the legal argument, and drafts the letter. The
-            math is in plain code; the arguments are cited line by line.
+            math is in plain code. The arguments are cited line by line.
           </p>
         </ScrollReveal>
         <div className="mt-16">

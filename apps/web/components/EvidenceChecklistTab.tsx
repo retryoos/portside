@@ -165,7 +165,7 @@ function EvidenceRow({ item }: { item: EvidenceItem }) {
               Supports{" "}
               {[item.supports_clause, item.supports_event_id]
                 .filter(Boolean)
-                .join(" · ")}
+                .join(", ")}
             </button>
           </p>
         )}

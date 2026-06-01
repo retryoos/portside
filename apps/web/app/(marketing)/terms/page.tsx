@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Terms · Laytimely",
+  title: "Terms, Laytimely",
   description:
     "The contract between you and Laytimely for use of the demurrage claims service.",
 };
@@ -30,7 +30,7 @@ const SECTIONS: { eyebrow: string; body: string }[] = [
   },
   {
     eyebrow: "Fees and payment",
-    body: "Paid plans are billed in advance on the cadence stated at sign-up. Fees are non-refundable except where required by law. We may change pricing on thirty days written notice; changes take effect at your next renewal.",
+    body: "Paid plans are billed in advance on the cadence stated at sign-up. Fees are non-refundable except where required by law. We may change pricing on thirty days written notice. Changes take effect at your next renewal.",
   },
   {
     eyebrow: "Termination",

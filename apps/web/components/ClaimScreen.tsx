@@ -68,7 +68,7 @@ export default function ClaimScreen({ id }: { id?: string }) {
 
   const cp = voyage.extraction?.charter_party;
   const vesselLine = cp
-    ? `${cp.vessel_name} · ${cp.load_port} / ${cp.discharge_port}`
+    ? `${cp.vessel_name}, ${cp.load_port} / ${cp.discharge_port}`
     : null;
 
   const readyExtraction = Boolean(voyage.extraction);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Security · Laytimely",
+  title: "Security, Laytimely",
   description:
     "How Laytimely handles identity, data at rest, data in transit, access control, audit logging, and incident response.",
 };
@@ -44,7 +44,7 @@ export default function SecurityPage() {
 
           <p className="text-eyebrow text-secondary">Access control</p>
           <p className="text-body-lg text-secondary">
-            Every voyage carries the Cognito user identifier of the owner; the
+            Every voyage carries the Cognito user identifier of the owner. The
             backend filters every list and detail endpoint against the
             requesting principal. Admin access is short-lived and audited.
           </p>

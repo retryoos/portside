@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Section from "@/components/marketing/Section";
 
 export const metadata: Metadata = {
-  title: "Privacy · Laytimely",
+  title: "Privacy, Laytimely",
   description:
     "What Laytimely collects, how we use it, who we share it with, and the rights you retain over your data.",
 };

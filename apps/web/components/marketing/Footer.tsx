@@ -38,7 +38,7 @@ export default function Footer() {
               AI workflows for demurrage, laytime, freight disputes, and beyond.
             </p>
             <p className="mt-8 text-body-sm text-secondary">
-              Athens · Greece
+              Athens, Greece
             </p>
           </div>
 

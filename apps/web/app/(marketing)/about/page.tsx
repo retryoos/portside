@@ -3,7 +3,7 @@ import Section from "@/components/marketing/Section";
 import CTASection from "@/components/marketing/CTASection";
 
 export const metadata: Metadata = {
-  title: "About · Laytimely",
+  title: "About, Laytimely",
   description:
     "Laytimely is an AI-first claims platform for maritime operations, built by Dimitris Kalligaridis and Roman Dolgopolyi at the ACG AI Lab.",
 };
@@ -25,18 +25,18 @@ type Founder = {
 const FOUNDERS: Founder[] = [
   {
     name: "Dimitris Kalligaridis",
-    role: "Incoming SDE @ Amazon · AI research at the ACG AI Lab",
+    role: "Software engineer at Amazon, AI research at the ACG AI Lab",
     image: "/founders/dimitris.png",
     imagePosition: "object-top",
-    bio: "A software engineer focused on distributed systems, optimization, and applied machine learning. He returns to Amazon as an SDE after building backend infrastructure, authorization, and production performance there, and is a 2026 Google Summer of Code contributor at the Eclipse Foundation. At the ACG AI Lab he researches reinforcement-learning agents that make decisions under uncertainty. That same instinct, make the math explicit and let every number trace back to its source, is what powers Laytimely's engine.",
+    bio: "A software engineer focused on distributed systems, optimization, and applied machine learning. He has built backend infrastructure, authorization, and production performance at Amazon, and contributes to the Eclipse Foundation through Google Summer of Code 2026. At the ACG AI Lab he researches reinforcement-learning agents that make decisions under uncertainty. That same instinct, make the math explicit and let every number trace back to its source, is what powers Laytimely's engine.",
     linkedin: "https://www.linkedin.com/in/dimitrios-kalligaridis",
   },
   {
     name: "Roman Dolgopolyi",
-    role: "Explainable AI & cybersecurity researcher · Incoming PhD @ Northeastern",
+    role: "Explainable AI and cybersecurity researcher, incoming PhD at Northeastern",
     image: "/founders/roman.png",
     imagePosition: "object-center",
-    bio: "A researcher in Explainable AI and cybersecurity at the ACG AI Lab, and an incoming PhD student at Northeastern University. His published work on explaining AI decisions in cancer-cell diagnosis and his benchmarks for AI safety compliance share one conviction that carries straight into Laytimely: AI trusted with high-stakes decisions has to be transparent and verifiable, never a black box.",
+    bio: "A researcher in Explainable AI and cybersecurity at the ACG AI Lab, and an incoming PhD student at Northeastern University. His published work on explaining AI decisions in cancer-cell diagnosis and his benchmarks for AI safety compliance share one conviction that carries straight into Laytimely. AI trusted with high-stakes decisions has to be transparent and verifiable, never a black box.",
     linkedin: "https://www.linkedin.com/in/dolgopolyiroman/",
   },
 ];
@@ -54,8 +54,8 @@ export default function AboutPage() {
           turn voyage paperwork into a finished, fully cited demurrage claim in
           under a minute, with the arithmetic in plain code rather than the
           model so every figure traces back to the line it came from. Demurrage
-          is where we started; the same approach applies anywhere maritime work
-          is still done by hand on paper and email.
+          is where we started. The same approach applies anywhere maritime work
+          is still done by hand, on paper and email.
         </p>
       </Section>
 
