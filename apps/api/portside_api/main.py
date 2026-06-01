@@ -175,7 +175,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await _engine.dispose()
 
 
-app = FastAPI(title="Papership.Ai API", version="0.1.0", lifespan=lifespan)
+app = FastAPI(
+    title="Papership.Ai API",
+    version="0.1.0",
+    lifespan=lifespan,
+    # Interactive docs + schema are off unless EXPOSE_DOCS=1 so a production
+    # deploy does not hand out a clickable map of its (currently open) surface.
+    docs_url="/docs" if settings.expose_docs else None,
+    redoc_url="/redoc" if settings.expose_docs else None,
+    openapi_url="/openapi.json" if settings.expose_docs else None,
+)
 
 # CORS allowlist comes from settings.cors_origins (notes/02-architecture.md §12):
 # local dev defaults to http://localhost:3000; add the Amplify domain on deploy

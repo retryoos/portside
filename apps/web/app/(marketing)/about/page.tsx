@@ -37,6 +37,7 @@ const FOUNDERS: Founder[] = [
     image: "/founders/roman.png",
     imagePosition: "object-center",
     bio: "A researcher in Explainable AI and cybersecurity at the ACG AI Lab, and an incoming PhD student at Northeastern University. His published work on explaining AI decisions in cancer-cell diagnosis and his benchmarks for AI safety compliance share one conviction that carries straight into Laytimely: AI trusted with high-stakes decisions has to be transparent and verifiable, never a black box.",
+    linkedin: "https://www.linkedin.com/in/dolgopolyiroman/",
   },
 ];
 

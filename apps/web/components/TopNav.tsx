@@ -11,12 +11,10 @@ import { useActiveWorkspace } from "@/lib/use-active-workspace";
 // tabs centred, account chip on the right. Shared chrome across every screen.
 // Back navigation on detail pages is handled by BackArrowButton in the page
 // content, not here.
-const NAV = [
-  { label: "Demurrage claim", href: "/cases" },
-  { label: "Doc 2", href: "/doc-2" },
-  { label: "Doc 3", href: "/doc-3" },
-  { label: "Doc 4", href: "/doc-4" },
-];
+// Only ship tabs that resolve to real routes. The "/doc-2..4" placeholders
+// 404'd (and triggered Next prefetch errors in the console); additional
+// workflow tabs return here as those products ship.
+const NAV = [{ label: "Demurrage claim", href: "/cases" }];
 
 interface CurrentUser {
   sub: string;

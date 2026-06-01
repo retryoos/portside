@@ -109,6 +109,10 @@ class Settings:
     # are generous so admins can paste-batch invites.
     invitation_rate_limit_max: int
     invitation_rate_limit_window_seconds: int
+    # Interactive API docs (/docs, /redoc, /openapi.json). Off by default so a
+    # production deploy does not self-document its (currently open) surface to
+    # the world. Set EXPOSE_DOCS=1 for local development.
+    expose_docs: bool
 
     @classmethod
     def load(cls) -> "Settings":
@@ -177,6 +181,10 @@ class Settings:
             invitation_rate_limit_window_seconds=int(
                 os.environ.get("INVITATION_RATE_LIMIT_WINDOW_SECONDS") or "3600"
             ),
+            expose_docs=(os.environ.get("EXPOSE_DOCS") or "")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"},
         )
 
     @property
