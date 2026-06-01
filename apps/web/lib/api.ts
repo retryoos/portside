@@ -21,7 +21,13 @@ import type {
   WorkspaceMember,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Trailing slashes are stripped so a NEXT_PUBLIC_API_URL configured with one
+// (e.g. "https://api.example.com/") can't produce a double slash in request
+// URLs ("https://api.example.com//voyages"), which the backend 404s.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(
+  /\/+$/,
+  "",
+);
 
 // Bearer token for the backend, fetched from the same-origin token route (the
 // session cookie is HttpOnly). Cached briefly so the ~1s voyage poll doesn't
