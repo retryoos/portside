@@ -960,8 +960,38 @@ async def list_audit_events(
 async def list_voyages(
     user: Annotated[Principal, Depends(get_current_user)],
 ) -> list[VoyageSummary]:
-    """Return the caller's voyages as lightweight summaries, newest-first."""
-    return await store.list(user.id)
+    """Voyages visible to the caller, newest-first. Workspace-shared: every
+    member of a workspace sees the voyages owned by any member of that
+    workspace (so an invited teammate sees the shared cases, not an empty
+    dashboard)."""
+    async with _sessionmaker() as session:
+        owners = await workspaces.co_member_subs(session, user_sub=user.id)
+    rows = await store.list_for_owners(owners)
+    # Hide failed runs from the dashboard: a voyage that errored is noise, not a
+    # case to act on. It stays reachable by direct URL (which renders the clean
+    # "Run failed" panel), but does not clutter the list (this is also what
+    # keeps the shared demo tidy as visitors try uploads).
+    return [r for r in rows if r.stage != "error"]
+
+
+# The shared demo identity is browse-only: blocking writes stops every visitor's
+# uploads/edits from piling up in the one demo workspace. Real accounts are
+# unaffected.
+async def forbid_demo_mutation(
+    principal: Annotated[Principal, Depends(get_current_user)],
+) -> Principal:
+    # Only the *production* demo (real auth, shared dev-user token from
+    # /auth/demo) is read-only. Under dev_auth, dev-user is just the local/test
+    # principal, so we must not block it there.
+    if not settings.dev_auth and principal.id == DEV_USER_ID:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "demo_read_only",
+                "message": "The demo is read-only. Sign up to run your own claims.",
+            },
+        )
+    return principal
 
 
 @app.get("/vessels")
@@ -976,6 +1006,7 @@ async def list_vessels(
     "/voyages",
     status_code=201,
     dependencies=[
+        Depends(forbid_demo_mutation),
         Depends(enforce_voyage_rate_limit),
         Depends(enforce_pipeline_quota),
     ],
@@ -1042,8 +1073,13 @@ async def get_voyage(
     voyage_id: str,
     user: Annotated[Principal, Depends(get_current_user)],
 ) -> VoyageState:
-    """Return the caller's VoyageState (the frontend polls this)."""
-    state = await store.load(voyage_id, user.id)
+    """Return a VoyageState the caller may view (the frontend polls this).
+    Workspace-shared: any member of the owning workspace can open the case.
+    Mutating routes stay owner-scoped, so members view shared cases but only
+    the owner edits them."""
+    async with _sessionmaker() as session:
+        owners = await workspaces.co_member_subs(session, user_sub=user.id)
+    state = await store.load_for_owners(voyage_id, owners)
     if state is None:
         raise HTTPException(status_code=404, detail="voyage not found")
     return state
@@ -1052,7 +1088,7 @@ async def get_voyage(
 @app.delete("/voyages/{voyage_id}", status_code=204)
 async def delete_voyage(
     voyage_id: str,
-    user: Annotated[Principal, Depends(get_current_user)],
+    user: Annotated[Principal, Depends(forbid_demo_mutation)],
 ) -> None:
     """Delete one of the caller's voyages. 404 if it is missing or not theirs."""
     if not await store.delete(voyage_id, user.id):

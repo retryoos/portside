@@ -274,14 +274,9 @@ function AccountMenu() {
           >
             Invitations
           </Link>
-          <Link
-            href="/settings/inbox"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-left text-body-sm font-semibold text-primary transition-colors hover:bg-surface-muted"
-          >
-            Email-in setup
-          </Link>
+          {/* Email-in setup is hidden until inbound mail (in.laytimely.com
+              MX + SES) is provisioned; the forward-to address it shows is not
+              functional yet. Re-add this link once ingestion is live. */}
           <Link
             href="/settings/audit"
             role="menuitem"
