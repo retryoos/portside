@@ -47,7 +47,7 @@ export default function AboutPage() {
       <Section>
         <p className="text-eyebrow text-secondary">About us</p>
         <h1 className="text-display mt-6 max-w-3xl text-primary">
-          Built by two engineers tired of watching valid claims expire.
+          Built by two engineers bringing AI to an industry still run on paper.
         </h1>
         <p className="mt-8 max-w-2xl text-body-lg text-secondary">
           Laytimely is an AI-first claims platform for maritime operations. We
