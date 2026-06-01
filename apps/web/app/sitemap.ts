@@ -6,7 +6,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://laytimely.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  const ROUTES = ["", "/security", "/privacy", "/terms", "/contact"];
+  const ROUTES = ["", "/about", "/security", "/privacy", "/terms", "/contact"];
   return ROUTES.map((path) => ({
     url: `${SITE}${path}`,
     lastModified,

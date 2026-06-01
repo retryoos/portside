@@ -14,7 +14,7 @@ export default function LoopVideo({
 }: {
   src?: string;
   webmSrc?: string;
-  poster: string;
+  poster?: string;
   caption: string;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
@@ -52,14 +52,14 @@ export default function LoopVideo({
               {src && <source src={src} type="video/mp4" />}
             </video>
           ) : (
-            // Poster-only fallback. Background-image used so we don't fail the
-            // build when the asset is missing; the browser silently 404s and
-            // the surrounding card still reads.
+            // Poster-only fallback. The backgroundImage is set only when a
+            // poster is actually provided, so a missing asset renders a clean
+            // muted panel instead of firing a 404 for a non-existent file.
             <div
               role="img"
               aria-label={caption}
               className="h-full w-full bg-surface-muted bg-cover bg-center"
-              style={{ backgroundImage: `url(${poster})` }}
+              style={poster ? { backgroundImage: `url(${poster})` } : undefined}
             />
           )}
         </div>

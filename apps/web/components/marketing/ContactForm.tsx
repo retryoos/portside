@@ -37,6 +37,24 @@ export default function ContactForm() {
     }
   }
 
+  // No access key configured (e.g. a local build without the env var). Submits
+  // would just 400 from Web3Forms, so show the direct email instead of a form
+  // that silently fails.
+  if (!ACCESS_KEY) {
+    return (
+      <div className="rounded-card border border-border bg-surface p-8">
+        <p className="text-h2 text-primary">Email us directly</p>
+        <p className="mt-4 text-body text-secondary">
+          The contact form is not configured in this environment. Reach us at{" "}
+          <a className="underline" href="mailto:sales@laytimely.com">
+            sales@laytimely.com
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
   if (status === "success") {
     return (
       <div className="rounded-card border border-border bg-surface p-8">
