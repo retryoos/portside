@@ -5,15 +5,13 @@
 // Unlike the PDF and Word buttons (which render client-side from the live
 // letter DOM), the workbook is rendered server-side by the backend so the
 // laytime ledger numbers, total quantum, and letter copy come from one
-// authoritative pipeline. We just fetch the bytes and hand them to
-// file-saver. The active route requires an authenticated voyage; the api.ts
-// helper attaches the bearer token.
-//
-// file-saver is dynamically imported on click so the marketing bundle never
-// pulls it in, matching the pattern in ExportDocxButton + ExportPdfButton.
+// authoritative pipeline. We just fetch the bytes and trigger the download via
+// the native saveBlob helper. The active route requires an authenticated
+// voyage; the api.ts helper attaches the bearer token.
 
 import { useState } from "react";
 import { downloadLaytimeXlsx } from "@/lib/api";
+import { saveBlob } from "@/lib/save-blob";
 
 export default function ExportXlsxButton({
   voyageId,
@@ -29,11 +27,8 @@ export default function ExportXlsxButton({
     setFailed(false);
     setBusy(true);
     try {
-      const [blob, { saveAs }] = await Promise.all([
-        downloadLaytimeXlsx(voyageId),
-        import("file-saver"),
-      ]);
-      saveAs(blob, makeFilename(voyageId, vesselName));
+      const blob = await downloadLaytimeXlsx(voyageId);
+      saveBlob(blob, makeFilename(voyageId, vesselName));
     } catch (err) {
       console.error("Excel export failed", err);
       setFailed(true);
