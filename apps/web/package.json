@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "docx": "^9.7.1",
-    "file-saver": "^2.0.5",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
     "next": "^15.5.18",
@@ -24,7 +23,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
-    "@types/file-saver": "^2.0.7",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

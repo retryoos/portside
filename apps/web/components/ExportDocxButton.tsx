@@ -5,10 +5,12 @@
 // any browser edits flow through to the .docx, exactly as they flow through
 // to the PDF.
 //
-// docx + file-saver are dynamically imported on click so the marketing
-// bundle does not pull in either dependency. Same trick as the PDF export.
+// docx is dynamically imported on click so the marketing bundle does not pull
+// it in. The download itself uses the native saveBlob helper (file-saver's
+// dynamic import resolved to undefined in the prod bundle, see lib/save-blob).
 
 import { useState } from "react";
+import { saveBlob } from "@/lib/save-blob";
 
 export default function ExportDocxButton({ targetId }: { targetId: string }) {
   const [busy, setBusy] = useState(false);
@@ -25,13 +27,9 @@ export default function ExportDocxButton({ targetId }: { targetId: string }) {
     setFailed(false);
     setBusy(true);
     try {
-      const [{ letterToDocx }, { saveAs }] = await Promise.all([
-        import("./letter-to-docx"),
-        import("file-saver"),
-      ]);
+      const { letterToDocx } = await import("./letter-to-docx");
       const blob = await letterToDocx(node as HTMLElement);
-      const filename = makeFilename(node);
-      saveAs(blob, filename);
+      saveBlob(blob, makeFilename(node));
     } catch (err) {
       console.error("Word export failed", err);
       setFailed(true);

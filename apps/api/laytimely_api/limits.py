@@ -104,6 +104,11 @@ class SlidingWindowRateLimiter:
     def enabled(self) -> bool:
         return self.max_requests > 0
 
+    def reset(self) -> None:
+        """Drop all tracked hits. For tests, which share the process-global
+        limiter across cases and would otherwise accumulate toward the cap."""
+        self._hits.clear()
+
     def allow(self, key: str, *, now: float | None = None) -> bool:
         if not self.enabled:
             return True

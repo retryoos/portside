@@ -55,6 +55,11 @@ class Settings:
     # token cannot be forged. ``app_jwt_ttl_seconds`` is the token lifetime.
     app_jwt_secret: str
     app_jwt_ttl_seconds: int
+    # Demo-share accounts. Comma-separated emails (in Doppler) that should get
+    # their OWN private copy of the seeded demo cases on signup/login, so a
+    # founder can hand out a populated, credentialed demo login. Isolated from
+    # the anonymous "Try live demo" identity and from each other.
+    demo_share_emails: list[str]
     # Admin dashboard allowlist (cost/usage observability). Comma-separated
     # emails (in Doppler) that may reach the /admin endpoints. Checked
     # server-side against the verified token email on every admin route, so
@@ -176,6 +181,11 @@ class Settings:
             admin_emails=[
                 e.strip().lower()
                 for e in (os.environ.get("ADMIN_EMAILS") or "").split(",")
+                if e.strip()
+            ],
+            demo_share_emails=[
+                e.strip().lower()
+                for e in (os.environ.get("DEMO_SHARE_EMAILS") or "").split(",")
                 if e.strip()
             ],
             signup_bootstrap_code=os.environ.get("SIGNUP_BOOTSTRAP_CODE") or None,

@@ -91,8 +91,10 @@ const SEGMENTS = [
 
 export default function LandingPage() {
   // Preload the hero photograph at high priority so it paints with the page
-  // instead of popping in a beat later.
-  ReactDOM.preload("/photography/hero-landing.jpg", {
+  // instead of popping in a beat later. Optimised ~360KB WebP (down from a
+  // 3.9MB DSLR JPG); the JPG is retained only for the OG/social preview above,
+  // which scrapers fetch out-of-band.
+  ReactDOM.preload("/photography/hero-landing.webp", {
     as: "image",
     fetchPriority: "high",
   });

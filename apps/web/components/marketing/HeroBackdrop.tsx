@@ -72,7 +72,7 @@ export default function HeroBackdrop() {
           Silently absent if the asset is missing; the near-black base shows. */}
       <span
         className="hero-ink-photo"
-        style={{ backgroundImage: "url('/photography/hero-landing.jpg')" }}
+        style={{ backgroundImage: "url('/photography/hero-landing.webp')" }}
       />
       {/* Three depth layers. Each drifts on its own long loop; parallax depth
           (data-depth) scales how far pointer/scroll nudge it. */}

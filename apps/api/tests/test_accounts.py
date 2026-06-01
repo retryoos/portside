@@ -16,6 +16,9 @@ from tests.conftest import run_wipe
 @pytest.fixture
 def client() -> Iterator[TestClient]:
     run_wipe()
+    # The auth rate limiter is process-global and not wiped by run_wipe; reset
+    # it so cases don't accumulate toward the per-IP cap and spuriously 429.
+    main_mod.auth_rate_limiter.reset()
     with TestClient(main_mod.app) as c:
         yield c
     run_wipe()
@@ -214,6 +217,53 @@ def test_signup_with_matching_invite_joins_workspace(client) -> None:
         m["email"] == "invitee@acme.com" and m["role"] == "member"
         for m in members
     )
+
+
+def test_demo_share_email_lands_populated_and_is_idempotent(client, monkeypatch) -> None:
+    """An email in DEMO_SHARE_EMAILS gets its OWN copy of the seeded demo cases
+    on signup (a credentialed, populated demo login), and a later login does not
+    duplicate them. Verified at the store level by the token's sub, because
+    dev_auth makes the HTTP GETs resolve to the dev user, not the new account."""
+    import dataclasses
+
+    monkeypatch.setattr(
+        main_mod,
+        "settings",
+        dataclasses.replace(main_mod.settings, demo_share_emails=["share@acme.com"]),
+    )
+
+    s = client.post(
+        "/auth/signup",
+        json={
+            "email": "share@acme.com",
+            "password": "password1",
+            "name": "Share",
+            **_BOOT,
+        },
+    )
+    assert s.status_code == 200, s.text
+    sub = accounts.verify_app_token(s.json()["token"])["sub"]
+
+    seeded = _run(main_mod.store.list(owner_user_id=sub))
+    assert len(seeded) >= 5, f"expected seeded demo cases, got {len(seeded)}"
+    assert all(v.id.startswith("v_demo_") for v in seeded)
+    count = len(seeded)
+
+    # Logging in again is an idempotent no-op (deterministic per-account ids).
+    login = client.post(
+        "/auth/login", json={"email": "share@acme.com", "password": "password1"}
+    )
+    assert login.status_code == 200
+    again = _run(main_mod.store.list(owner_user_id=sub))
+    assert len(again) == count
+
+    # A normal (non-share) signup stays empty.
+    n = client.post(
+        "/auth/signup",
+        json={"email": "normal@acme.com", "password": "password1", **_BOOT},
+    )
+    normal_sub = accounts.verify_app_token(n.json()["token"])["sub"]
+    assert _run(main_mod.store.list(owner_user_id=normal_sub)) == []
 
 
 def test_signup_invite_email_mismatch_rejected(client) -> None:

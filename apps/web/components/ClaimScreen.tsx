@@ -21,11 +21,33 @@ import ClaimLetter from "@/components/ClaimLetter";
 import Reveal from "@/components/Reveal";
 import SourcesTabs from "@/components/SourcesTabs";
 
+// A fresh, still-processing voyage. Used as the initial state for a LIVE
+// voyage so the page renders the skeleton + processing band immediately,
+// instead of briefly flashing the finished demo fixture (with its EUR 84,375
+// quantum) before the first poll replaces it.
+function processingVoyage(voyageId: string): VoyageState {
+  return {
+    voyage_id: voyageId,
+    perspective: "owner",
+    stage: "uploaded",
+    error: null,
+    created_at: new Date().toISOString(),
+    extraction: null,
+    laytime: null,
+    dispute: null,
+    packet: null,
+  };
+}
+
 export default function ClaimScreen({ id }: { id?: string }) {
   const voyageId = id && id !== "demo" ? id : null;
   const live = Boolean(voyageId);
 
-  const [voyage, setVoyage] = useState<VoyageState>(demoVoyage);
+  // Seed live voyages with an empty processing state (not the demo fixture)
+  // so the finished demo letter/quantum never flashes before the first poll.
+  const [voyage, setVoyage] = useState<VoyageState>(() =>
+    voyageId ? processingVoyage(voyageId) : demoVoyage,
+  );
   const [error, setError] = useState<string | null>(null);
   // Legal authorities for the voyage, lazy-fetched once when the dispute
   // analysis is on the state. null === fetched but empty / 404 / 409;
