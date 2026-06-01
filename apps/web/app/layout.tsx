@@ -12,11 +12,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://laytimely.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Laytimely · Recover the demurrage you're owed",
+    default: "Laytimely · AI workflows for maritime operations",
     template: "%s · Laytimely",
   },
   description:
-    "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
+    "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
 };
 
 export default function RootLayout({

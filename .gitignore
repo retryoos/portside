@@ -54,3 +54,6 @@ apps/web/tsconfig.tsbuildinfo
 # Inspirational screenshots for the frontend revamp (Revolut refs).
 # Local-only; deleted after the redesign lands.
 apps/web/example_for_rebarnding/
+
+# Entire session-capture tool (disabled/removed)
+.entire/

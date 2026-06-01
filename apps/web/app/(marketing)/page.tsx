@@ -1,35 +1,32 @@
 import type { Metadata } from "next";
 import Hero from "@/components/marketing/Hero";
 import Section from "@/components/marketing/Section";
-import Container from "@/components/marketing/Container";
 import ScrollReveal from "@/components/marketing/ScrollReveal";
 import LoopVideo from "@/components/marketing/LoopVideo";
 import PipelineDiagram from "@/components/marketing/PipelineDiagram";
 import CTASection from "@/components/marketing/CTASection";
 import Link from "next/link";
 
-// SEO metadata for the landing surface. Open Graph carries the hero
-// photograph (with the deep-ink fallback if the asset is missing).
+// SEO metadata for the landing surface. Open Graph + Twitter cards pull the
+// generated AI social image from app/(marketing)/opengraph-image.tsx.
 export const metadata: Metadata = {
-  title: "Laytimely · Recover the demurrage you're owed",
+  title: "Laytimely · AI workflows for maritime operations",
   description:
-    "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
+    "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
   openGraph: {
-    title: "Laytimely · Recover the demurrage you're owed",
+    title: "Laytimely · AI workflows for maritime operations",
     description:
-      "AI workflows for maritime claims. Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
+      "AI workflows for maritime operations, starting with the demurrage claims that used to take days. Three documents in, a cited claim out, in under a minute.",
     url: "https://laytimely.com/",
     siteName: "Laytimely",
-    images: ["/photography/hero-landing.jpg"],
     locale: "en_GB",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laytimely",
+    title: "Laytimely · AI workflows for maritime operations",
     description:
-      "Three voyage documents in. A finished, cited demurrage claim out, in under a minute.",
-    images: ["/photography/hero-landing.jpg"],
+      "AI workflows for maritime operations, starting with the demurrage claims that used to take days.",
   },
 };
 
@@ -51,41 +48,39 @@ const TRUST_POINTS = [
   },
 ];
 
-const PRICING_TIERS = [
+// Segment cards for the "Built for" section. No prices, no per-card CTAs:
+// we are deliberately pre-public-pricing and route every reader to the
+// single "Pilot programme" CTA below the grid. The cards exist to tell a
+// self-qualifying visitor whether the product fits their workflow.
+const SEGMENTS = [
   {
-    name: "Operator",
+    name: "Operators",
     audience: "Single-ship operators and small fleets",
     bullets: [
-      "Unlimited voyages, one workspace",
-      "Edit with AI and PDF export",
-      "Email support",
+      "One workspace for every voyage and every claim",
+      "Three documents in, a cited claim out, in under a minute",
+      "Edit with AI and export to PDF, Word, or Excel",
     ],
-    cta: "Start a trial",
-    href: "/contact",
     accent: false,
   },
   {
-    name: "Partner",
-    audience: "Claims lawyers and maritime advisors",
+    name: "Advisors",
+    audience: "Claims lawyers and maritime consultants",
     bullets: [
-      "Multi-client workspaces",
-      "Both sides of the deal (defence + claim)",
-      "Priority support",
+      "Run multiple clients side by side in dedicated workspaces",
+      "Build both sides of the dispute (claim and rebuttal)",
+      "Hand a cited letter to the partner, ready to file",
     ],
-    cta: "Talk to us",
-    href: "/contact",
     accent: true,
   },
   {
-    name: "Enterprise",
+    name: "Enterprises",
     audience: "Large owners, charterers, and brokers",
     bullets: [
-      "SSO, audit log, custom retention",
-      "Research agents with external data",
-      "Dedicated account engineer",
+      "Workspace per desk, audit log on every action",
+      "SSO, custom retention, dedicated account engineer",
+      "Research agents tied to your fleet feeds",
     ],
-    cta: "Contact sales",
-    href: "/contact",
     accent: false,
   },
 ];
@@ -164,7 +159,7 @@ export default function LandingPage() {
         <ScrollReveal>
           <p className="text-eyebrow text-secondary">Under the hood</p>
           <h2 className="text-display mt-6 max-w-4xl text-primary">
-            Four agents. One pipeline. Every figure cited.
+            Four AI agents. One pipeline. Every figure cited.
           </h2>
           <p className="mt-6 max-w-2xl text-body-lg text-secondary">
             A small fleet of specialised agents reads the documents, calculates
@@ -200,82 +195,87 @@ export default function LandingPage() {
         </div>
       </Section>
 
-      {/* Section 7 - Pricing */}
+      {/* Section 7 - Built for (three audiences, one CTA) */}
       <Section id="pricing">
         <ScrollReveal>
-          <p className="text-eyebrow text-secondary">Pricing</p>
+          <p className="text-eyebrow text-secondary">Built for</p>
           <h2 className="text-display mt-6 max-w-4xl text-primary">
-            Pay for what you recover.
+            One workflow. Three kinds of teams who use it daily.
           </h2>
           <p className="mt-6 max-w-2xl text-body-lg text-secondary">
-            Subscriptions for teams that file claims week in, week out, and a
-            success-fee track for those who only want to pay on a win. Final
-            numbers land with the first customer.
+            From a single-ship operator filing one claim a quarter to a global
+            broker's claims desk running hundreds, Laytimely is the same
+            pipeline, scaled to the team in front of it.
           </p>
         </ScrollReveal>
         <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {PRICING_TIERS.map((tier, i) => (
-            <ScrollReveal key={tier.name} delayMs={80 * (i + 1)}>
+          {SEGMENTS.map((segment, i) => (
+            <ScrollReveal key={segment.name} delayMs={80 * (i + 1)}>
               <div
                 className={`flex h-full flex-col rounded-card border p-8 ${
-                  tier.accent
+                  segment.accent
                     ? "border-primary bg-primary text-on-primary"
                     : "border-border bg-surface text-primary"
                 }`}
               >
                 <p
                   className={`text-eyebrow ${
-                    tier.accent ? "text-on-primary/70" : "text-secondary"
+                    segment.accent ? "text-on-primary/70" : "text-secondary"
                   }`}
                 >
-                  {tier.name}
+                  {segment.name}
                 </p>
                 <p
                   className={`mt-5 text-h2 ${
-                    tier.accent ? "text-on-primary" : "text-primary"
+                    segment.accent ? "text-on-primary" : "text-primary"
                   }`}
                 >
-                  {tier.audience}
+                  {segment.audience}
                 </p>
                 <ul
                   className={`mt-6 flex-1 space-y-3 text-body ${
-                    tier.accent ? "text-on-primary/85" : "text-secondary"
+                    segment.accent ? "text-on-primary/85" : "text-secondary"
                   }`}
                 >
-                  {tier.bullets.map((b) => (
+                  {segment.bullets.map((b) => (
                     <li key={b} className="flex items-start gap-3">
                       <span
                         aria-hidden
                         className={`mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
-                          tier.accent ? "bg-on-primary/70" : "bg-primary/60"
+                          segment.accent ? "bg-on-primary/70" : "bg-primary/60"
                         }`}
                       />
                       {b}
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={tier.href}
-                  className={`btn-lift mt-10 rounded-pill px-5 py-3 text-center text-body-sm font-semibold ${
-                    tier.accent
-                      ? "bg-cta-inverse text-on-cta-inverse hover:bg-cta-inverse-hover"
-                      : "bg-cta text-on-cta hover:bg-cta-hover"
-                  }`}
-                >
-                  {tier.cta}
-                </Link>
               </div>
             </ScrollReveal>
           ))}
         </div>
-        <div className="mt-12">
-          <Container>
-            <p className="mx-auto max-w-3xl text-center text-body-sm text-secondary">
-              Subscriptions billed annually. The success-fee track is offered
-              alongside the partner and enterprise plans on request.
+
+        {/* Single pilot-programme CTA. No tiered prices, one route to a
+            real conversation. Frames the lack of public pricing as a
+            deliberate pilot-programme posture rather than indecision. */}
+        <ScrollReveal delayMs={320}>
+          <div className="mt-16 flex flex-col items-center gap-6 rounded-card border border-border bg-surface px-8 py-12 text-center md:px-12">
+            <p className="text-eyebrow text-secondary">Pilot programme</p>
+            <h3 className="text-h2 max-w-2xl text-primary">
+              We're working with a small number of teams before broader release.
+            </h3>
+            <p className="max-w-xl text-body text-secondary">
+              Tell us about your fleet or your claims practice. We will set up
+              a workspace, walk you through a live voyage on your own
+              documents, and discuss commercials in private.
             </p>
-          </Container>
-        </div>
+            <Link
+              href="/contact"
+              className="btn-lift rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
+            >
+              Talk to us
+            </Link>
+          </div>
+        </ScrollReveal>
       </Section>
 
       <CTASection />

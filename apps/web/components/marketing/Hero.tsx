@@ -32,15 +32,16 @@ export default function Hero() {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
             <div className="max-w-2xl">
               <p className="text-eyebrow text-on-primary/80">
-                Maritime claims, automated
+                AI for maritime operations
               </p>
               <h1 className="text-hero mt-6 text-on-primary">
-                Recover the demurrage you&apos;re owed.
+                AI workflows for maritime operations.
               </h1>
               <p className="mt-7 max-w-xl text-body-lg text-on-primary/85">
-                Three voyage documents in. A finished, cited demurrage claim
-                out, in under a minute. Built for ship owners, charterers, and
-                the lawyers who file their claims.
+                Starting with the claims that used to take days. Three voyage
+                documents in, a finished, cited demurrage claim out, in under a
+                minute. Built for ship owners, charterers, and the lawyers who
+                file their claims.
               </p>
               <div className="mt-10 flex flex-wrap items-center gap-4">
                 <Link
