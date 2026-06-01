@@ -38,7 +38,17 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from . import accounts, audit, defense, pipeline, researcher, reviser, workspaces
+from . import (
+    accounts,
+    admin as admin_mod,
+    audit,
+    defense,
+    pipeline,
+    researcher,
+    reviser,
+    usage as token_usage,
+    workspaces,
+)
 from .audit import AuditEvent
 from .auth import DEV_USER_EMAIL, DEV_USER_ID, Principal, get_current_user
 from .defense import RebuttalPacket
@@ -103,6 +113,9 @@ logger = logging.getLogger("laytimely_api")
 _engine = make_engine(settings.database_url)
 _sessionmaker = make_sessionmaker(_engine)
 store: VoyageStore = SqlVoyageStore(_sessionmaker)
+# Let the token-usage capture persist via the same sessionmaker (it cannot
+# import main without a cycle, so we hand it the maker here).
+token_usage.bind_sessionmaker(_sessionmaker)
 
 
 async def _audit(
@@ -420,6 +433,14 @@ async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
             await workspaces.ensure_personal_workspace(
                 session, user_sub=sub, display_name=name or email
             )
+        await audit.record(
+            session,
+            actor_sub=sub,
+            action="auth.signup",
+            target_type="user",
+            target_id=sub,
+            payload={"via": "invite" if invitation is not None else "bootstrap"},
+        )
         await session.commit()
 
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
@@ -448,6 +469,15 @@ async def auth_demo() -> accounts.AuthResponse:
     if not await store.list(owner_user_id=DEV_USER_ID):
         for state in seed_voyages():
             await store.save(state, owner_user_id=DEV_USER_ID)
+    async with _sessionmaker() as session:
+        await audit.record(
+            session,
+            actor_sub=DEV_USER_ID,
+            action="auth.demo",
+            target_type="user",
+            target_id=DEV_USER_ID,
+        )
+        await session.commit()
     token = accounts.issue_app_token(
         sub=DEV_USER_ID, email=DEV_USER_EMAIL, name=DEMO_USER_NAME
     )
@@ -469,6 +499,16 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
                 session, email=req.email, password=req.password
             )
         except accounts.AccountError as exc:
+            # Record the failed attempt (no actor; the attempted email is the
+            # target) so the admin dashboard can spot brute-force patterns.
+            await audit.record(
+                session,
+                actor_sub=None,
+                action="auth.login_failed",
+                target_type="user",
+                target_id=req.email.strip().lower()[:120],
+            )
+            await session.commit()
             raise HTTPException(
                 status_code=401,
                 detail={"code": exc.code, "message": exc.message},
@@ -477,8 +517,14 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
         _wid, created = await workspaces.ensure_personal_workspace(
             session, user_sub=sub, display_name=name or email
         )
-        if created:
-            await session.commit()
+        await audit.record(
+            session,
+            actor_sub=sub,
+            action="auth.login",
+            target_type="user",
+            target_id=sub,
+        )
+        await session.commit()
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
         token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)
@@ -489,6 +535,52 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
 async def me(user: Annotated[Principal, Depends(get_current_user)]) -> Principal:
     """The current authenticated principal (id + email)."""
     return user
+
+
+# ---------------------------------------------------------------------------
+# Admin observability (gated to the ADMIN_EMAILS allowlist from Doppler).
+#
+# Read-only usage + auth rollups for the founders' dashboard. The allowlist is
+# checked server-side on every route, so nothing in the UI can bypass it.
+# ---------------------------------------------------------------------------
+
+
+async def require_admin(
+    principal: Annotated[Principal, Depends(get_current_user)],
+) -> Principal:
+    email = (principal.email or "").strip().lower()
+    if not settings.admin_emails or email not in settings.admin_emails:
+        raise HTTPException(status_code=403, detail="admin access required")
+    return principal
+
+
+@app.get("/admin/overview")
+async def admin_overview(
+    principal: Annotated[Principal, Depends(require_admin)],
+    days: int = 30,
+) -> admin_mod.AdminOverview:
+    """Aggregated token usage + auth activity over the last ``days`` (1-365)."""
+    days = max(1, min(days, 365))
+    async with _sessionmaker() as session:
+        await audit.record(
+            session,
+            actor_sub=principal.id,
+            action="admin.view",
+            target_type="admin",
+            target_id="overview",
+        )
+        await session.commit()
+    return await admin_mod.overview(_sessionmaker, days=days)
+
+
+@app.get("/admin/events")
+async def admin_events(
+    _principal: Annotated[Principal, Depends(require_admin)],
+    limit: int = 50,
+) -> list[admin_mod.AuthEvent]:
+    """Most recent sign-ups / sign-ins / failed logins / demo starts."""
+    limit = max(1, min(limit, 200))
+    return await admin_mod.recent_auth_events(_sessionmaker, limit=limit)
 
 
 class _MyWorkspaceEntry(BaseModel):
@@ -921,6 +1013,9 @@ async def create_voyage(
             )
         )
     await store.record_documents(voyage_id, documents)
+    # Attribute the pipeline's model usage to this caller + voyage. create_task
+    # snapshots the current context, so the background pipeline inherits this.
+    token_usage.set_context(actor_sub=user.id, voyage_id=voyage_id)
     # Fire-and-forget the pipeline; hold a strong reference until it completes.
     task = asyncio.create_task(_run_pipeline_bg(voyage_id, perspective, files))
     _BACKGROUND_TASKS.add(task)

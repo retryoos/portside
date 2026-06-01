@@ -692,3 +692,37 @@ class AuditEventRow(Base):
     # to JSONB in a follow-up; the helper writes JSON-encoded strings either
     # way so the call sites do not change).
     payload_redacted: Mapped[str] = mapped_column(Text, default="{}")
+
+
+# --- token usage (admin observability) -------------------------------------
+
+
+class TokenUsageRow(Base):
+    """One Anthropic call's token usage, captured at the single LLM chokepoint
+    (``agents.llm.extract_structured``) so the admin dashboard can aggregate
+    spend by user, feature, model, and API key.
+
+    ``actor_sub`` / ``voyage_id`` come from a ContextVar set by the request or
+    pipeline that triggered the call. ``feature`` is the structured output
+    model name (e.g. ``ExtractionResult``), a free per-stage label. ``key_fp``
+    is a non-reversible fingerprint of the active API key (sha256 prefix), so
+    usage can be attributed across the two rotating keys without ever storing
+    the key itself; ``key_label`` is an optional human name from Doppler.
+    """
+
+    __tablename__ = "token_usage"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    actor_sub: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    voyage_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    feature: Mapped[str] = mapped_column(String, index=True)
+    model: Mapped[str] = mapped_column(String, index=True)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    cache_read_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    cache_creation_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    key_fp: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    key_label: Mapped[str | None] = mapped_column(String, nullable=True)
