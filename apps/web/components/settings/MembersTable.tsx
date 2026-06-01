@@ -23,7 +23,7 @@ import {
   removeWorkspaceMember,
 } from "@/lib/api";
 
-const ROLE_OPTIONS: WorkspaceRole[] = ["owner", "admin", "member", "viewer"];
+const ROLE_OPTIONS: WorkspaceRole[] = ["owner", "admin", "member"];
 
 const TOAST_TTL_MS = 5000;
 
@@ -31,7 +31,6 @@ const ROLE_TONE: Record<WorkspaceRole, string> = {
   owner: "bg-primary text-on-primary",
   admin: "bg-success-container text-success",
   member: "bg-surface-muted text-primary",
-  viewer: "bg-surface-muted text-secondary",
 };
 
 export default function MembersTable({
@@ -127,12 +126,21 @@ export default function MembersTable({
               return (
                 <tr key={m.user_sub} className="border-b border-border last:border-b-0">
                   <td className="px-4 py-3 align-middle text-body-sm text-primary">
-                    <span className="font-medium">{shortSub(m.user_sub)}</span>
-                    {isSelf ? (
-                      <span className="ml-2 text-label-caps text-secondary">
-                        You
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        {m.name || m.email || shortSub(m.user_sub)}
+                        {isSelf ? (
+                          <span className="ml-2 text-label-caps text-secondary">
+                            You
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
+                      {m.email && m.name ? (
+                        <span className="text-body-sm text-secondary">
+                          {m.email}
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-4 py-3 align-middle">
                     <select

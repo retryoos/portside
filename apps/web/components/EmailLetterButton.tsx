@@ -31,8 +31,8 @@ export default function EmailLetterButton({
   }, [toast]);
 
   const defaultSubject = vesselName
-    ? `Demurrage Claim — ${vesselName} (${voyageId})`
-    : `Demurrage Claim — ${voyageId}`;
+    ? `Demurrage Claim: ${vesselName} (${voyageId})`
+    : `Demurrage Claim: ${voyageId}`;
 
   return (
     <>

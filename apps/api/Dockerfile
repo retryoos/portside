@@ -1,4 +1,4 @@
-# Papership.Ai API runtime — slim Python image with no native deps.
+# Laytimely API runtime — slim Python image with no native deps.
 # Build context expected at apps/api (i.e. `docker build apps/api` from repo root).
 # See notes/02-architecture.md §12 (App Runner deploy) and notes/16-aws-deploy.md.
 #
@@ -30,7 +30,7 @@ COPY pyproject.toml uv.lock /app/
 RUN uv sync --frozen --no-dev
 
 # Copy the application package.
-COPY portside_api /app/portside_api
+COPY laytimely_api /app/laytimely_api
 
 # Alembic runs on startup (main.py lifespan, SQL store), so the migration
 # scripts + config must ship in the image alongside the package.
@@ -43,4 +43,4 @@ ENV PORT=8000
 EXPOSE 8000
 
 # CMD form (not ENTRYPOINT) so App Runner / Docker can override for ops.
-CMD ["sh", "-c", "uv run --no-dev uvicorn portside_api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uv run --no-dev uvicorn laytimely_api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

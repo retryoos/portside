@@ -4,7 +4,7 @@
 // the to / cc / bcc fields. Commit a chip on Enter, comma, tab, blur, or
 // paste of a comma/whitespace-separated list. Backspace on an empty input
 // deletes the last chip. Validation mirrors the backend's pragmatic RFC 5322
-// subset (apps/api/portside_api/email/models.py); rejections render inline
+// subset (apps/api/laytimely_api/email/models.py); rejections render inline
 // with the offending text re-entered so the user can edit.
 
 import { useState, type ClipboardEvent, type KeyboardEvent } from "react";

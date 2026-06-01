@@ -14,6 +14,6 @@ export async function GET(): Promise<Response> {
     return NextResponse.json({ user: null }, { status: 401 });
   }
   return NextResponse.json({
-    user: { sub: session.sub, name: session.name },
+    user: { sub: session.sub, name: session.name, email: session.email },
   });
 }

@@ -16,17 +16,17 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import defense, main as main_mod
-from portside_api.defense import (
+from laytimely_api import defense, main as main_mod
+from laytimely_api.defense import (
     RebuttalPoint,
     build_rebuttal_points,
     recompute_after_concessions,
     won_event_ids,
     _template_letter,
 )
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.objects import LocalObjectStore
-from portside_api.storage import InMemoryStore
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.objects import LocalObjectStore
+from laytimely_api.storage import InMemoryStore
 
 
 def test_won_event_ids_on_demo_is_just_the_weather_stoppage() -> None:
@@ -110,7 +110,7 @@ def test_rebut_endpoint_returns_locked_swing(client: TestClient) -> None:
 
 def test_rebut_endpoint_409_when_not_ready(client: TestClient) -> None:
     # Seed an upload-stage voyage with no analysis tree yet.
-    from portside_api.schemas import VoyageState
+    from laytimely_api.schemas import VoyageState
 
     async def _seed() -> None:
         await main_mod.store.save(

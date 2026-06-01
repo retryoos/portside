@@ -4,4 +4,4 @@
 # otherwise causes a reload storm. Override the port with PORT=8001 ./dev.sh
 set -euo pipefail
 cd "$(dirname "$0")"
-exec uv run uvicorn portside_api.main:app --reload --reload-dir portside_api --port "${PORT:-8000}"
+exec uv run uvicorn laytimely_api.main:app --reload --reload-dir laytimely_api --port "${PORT:-8000}"

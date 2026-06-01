@@ -901,7 +901,7 @@ wheels = [
 ]
 
 [[package]]
-name = "portside-api"
+name = "laytimely-api"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

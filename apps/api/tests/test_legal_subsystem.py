@@ -26,9 +26,9 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.legal import corpus, eur_lex, imo, verify  # noqa: E402
-from portside_api.legal.models import CitedAuthority  # noqa: E402
-from portside_api.legal.outbound import LiveCallDisabled, OutboundClient  # noqa: E402
+from laytimely_api.legal import corpus, eur_lex, imo, verify  # noqa: E402
+from laytimely_api.legal.models import CitedAuthority  # noqa: E402
+from laytimely_api.legal.outbound import LiveCallDisabled, OutboundClient  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

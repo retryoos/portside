@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end smoke for the Papership.Ai API + agent fleet.
+# End-to-end smoke for the Laytimely API + agent fleet.
 #
 # GATED — do not run until the user has authorized Anthropic API spend. This
 # script POSTs the Rotterdam demo PDFs and lets the live pipeline run, which
@@ -45,10 +45,10 @@ json_field() {
   if command -v jq >/dev/null 2>&1; then
     jq -r ".${path}" "${file}"
   else
-    PORTSIDE_JSON_PATH="${path}" python3 - "${file}" <<'PYEOF'
+    LAYTIMELY_JSON_PATH="${path}" python3 - "${file}" <<'PYEOF'
 import json, os, sys
 v = json.load(open(sys.argv[1]))
-for k in os.environ["PORTSIDE_JSON_PATH"].split("."):
+for k in os.environ["LAYTIMELY_JSON_PATH"].split("."):
     v = v.get(k) if isinstance(v, dict) else None
 print(v)
 PYEOF
@@ -64,7 +64,7 @@ done
 
 # 2. Boot uvicorn in the background from apps/api/.
 echo "Booting uvicorn on :8000..."
-(cd "${API_DIR}" && uv run uvicorn portside_api.main:app --port 8000) &
+(cd "${API_DIR}" && uv run uvicorn laytimely_api.main:app --port 8000) &
 UVICORN_PID=$!
 
 # 3. Wait up to 10s for /healthz to return 200.

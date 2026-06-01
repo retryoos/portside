@@ -1,4 +1,4 @@
-# App Runner config for the Papership.Ai API.
+# App Runner config for the Laytimely API.
 # Repo source: GitHub. Source dir: apps/api. Runtime: docker (uses the
 # Dockerfile sibling). See notes/16-aws-deploy.md and
 # notes/22-tier-0-deploy-plan.md for the step-by-step.
@@ -15,7 +15,7 @@ build:
       # The Dockerfile in this directory is the build instruction.
       - echo "Build step handled by Dockerfile; no extra commands."
 run:
-  command: uv run --no-dev uvicorn portside_api.main:app --host 0.0.0.0 --port 8000
+  command: uv run --no-dev uvicorn laytimely_api.main:app --host 0.0.0.0 --port 8000
   network:
     port: 8000
     env: PORT

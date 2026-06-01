@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import asyncio
 
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.schemas import VoyageState
-from portside_api.storage import InMemoryStore
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.schemas import VoyageState
+from laytimely_api.storage import InMemoryStore
 
 
 def _minimal_state(

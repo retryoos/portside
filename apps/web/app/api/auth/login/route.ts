@@ -1,20 +1,20 @@
-// POST /api/auth/login. Verify credentials, mint a signed session cookie.
+// POST /api/auth/login. Proxies email/password to the backend /auth/login,
+// then stores the backend-issued JWT in the httpOnly session cookie so the
+// middleware, /api/auth/me, and /api/auth/token all see the same real session.
 //
-// On bad credentials we return a generic 401 with a stable shape so the client
-// renders the same message regardless of which field was wrong (don't leak
-// whether the username exists). On success we set the cookie via the response,
-// not via cookies().set(), so it ships on this exact response.
+// The backend token is never exposed to client JS: it is set HttpOnly here and
+// only read back by same-origin server routes. Bad credentials return a
+// generic 401 so we don't leak whether an email is registered.
 
 import { NextResponse } from "next/server";
 import {
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
 } from "@/lib/auth/constants";
-import { verifyCredentials } from "@/lib/auth/credentials";
-import { signSession } from "@/lib/auth/session";
+import { apiBaseUrl, setSessionCookie } from "@/lib/auth/api-bridge";
 
 interface LoginBody {
-  username?: unknown;
+  email?: unknown;
   password?: unknown;
 }
 
@@ -26,36 +26,50 @@ export async function POST(request: Request): Promise<Response> {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const username = typeof body.username === "string" ? body.username : "";
+  const email = typeof body.email === "string" ? body.email.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
-
-  if (!username || !password) {
+  if (!email || !password) {
     return NextResponse.json(
-      { error: "Username and password are required." },
+      { error: "Email and password are required." },
       { status: 400 },
     );
   }
 
-  const user = verifyCredentials(username, password);
-  if (!user) {
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${apiBaseUrl()}/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch {
     return NextResponse.json(
-      { error: "Invalid username or password." },
-      { status: 401 },
+      { error: "Could not reach the server. Try again." },
+      { status: 502 },
     );
   }
 
-  const token = await signSession({ sub: user.sub, name: user.name });
-  const response = NextResponse.json({
-    user: { sub: user.sub, name: user.name },
-  });
-  response.cookies.set({
-    name: SESSION_COOKIE,
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE_SECONDS,
-  });
+  if (!upstream.ok) {
+    const status = upstream.status === 429 ? 429 : 401;
+    const message =
+      status === 429
+        ? "Too many attempts. Please wait a moment and try again."
+        : "Invalid email or password.";
+    return NextResponse.json({ error: message }, { status });
+  }
+
+  const data = (await upstream.json()) as {
+    token?: string;
+    user?: { sub: string; email: string | null; name: string | null };
+  };
+  if (!data.token) {
+    return NextResponse.json(
+      { error: "Sign in failed. Please try again." },
+      { status: 502 },
+    );
+  }
+
+  const response = NextResponse.json({ user: data.user ?? null });
+  setSessionCookie(response, SESSION_COOKIE, data.token, SESSION_MAX_AGE_SECONDS);
   return response;
 }

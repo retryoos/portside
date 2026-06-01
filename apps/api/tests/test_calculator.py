@@ -7,8 +7,8 @@ used, 45h on demurrage at EUR 1,875/hr -> EUR 84,375.00.
 If this fails, do not merge — the quantum is the demo's headline number.
 """
 
-from portside_api.agents.calculator import calculate_laytime
-from portside_api.fixtures import demo_voyage_fixture
+from laytimely_api.agents.calculator import calculate_laytime
+from laytimely_api.fixtures import demo_voyage_fixture
 
 
 def _inputs():

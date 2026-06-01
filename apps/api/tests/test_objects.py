@@ -13,12 +13,12 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import main as main_mod
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.objects import LocalObjectStore, StoredDocument, build_key
-from portside_api.schemas import Perspective, VoyageState
-from portside_api.storage import InMemoryStore, SqlVoyageStore
+from laytimely_api import main as main_mod
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.objects import LocalObjectStore, StoredDocument, build_key
+from laytimely_api.schemas import Perspective, VoyageState
+from laytimely_api.storage import InMemoryStore, SqlVoyageStore
 
 
 def test_build_key_shape() -> None:

@@ -1,4 +1,4 @@
-"""Tests for portside_api.prompts.load_prompt.
+"""Tests for laytimely_api.prompts.load_prompt.
 
 These tests are pure: no network, no Anthropic SDK. They verify the helper
 loads files from the prompts directory, that the cross-cutting prefix carries
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from portside_api.prompts import load_prompt
+from laytimely_api.prompts import load_prompt
 
 
 def test_load_cross_cutting_non_empty() -> None:

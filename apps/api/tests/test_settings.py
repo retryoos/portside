@@ -1,4 +1,4 @@
-"""Tests for portside_api.settings — defaults, CORS parsing, .env loader.
+"""Tests for laytimely_api.settings — defaults, CORS parsing, .env loader.
 
 No network calls. No Anthropic SDK use. We exercise the loader by monkeypatching
 ``_find_repo_root`` (or directly resetting ``_LOADED``) so each test gets a
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from portside_api import settings as settings_module
-from portside_api.settings import Settings, _parse_cors_origins
+from laytimely_api import settings as settings_module
+from laytimely_api.settings import Settings, _parse_cors_origins
 
 
 _TRACKED_ENV_VARS = (

@@ -14,13 +14,13 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import main as main_mod
-from portside_api.agents.tools import get_weather
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.objects import LocalObjectStore
-from portside_api.researcher import EvidenceItem, gather_evidence
-from portside_api.storage import InMemoryStore, SqlVoyageStore
+from laytimely_api import main as main_mod
+from laytimely_api.agents.tools import get_weather
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.objects import LocalObjectStore
+from laytimely_api.researcher import EvidenceItem, gather_evidence
+from laytimely_api.storage import InMemoryStore, SqlVoyageStore
 
 
 def test_get_weather_fixture_for_rotterdam() -> None:
@@ -53,7 +53,7 @@ def test_evidence_persists_through_sql_store(tmp_path: Path) -> None:
         engine = make_engine(f"sqlite+aiosqlite:///{tmp_path / 'e.db'}")
         await create_all(engine)
         store = SqlVoyageStore(make_sessionmaker(engine))
-        from portside_api.schemas import VoyageState
+        from laytimely_api.schemas import VoyageState
 
         await store.save(
             VoyageState(voyage_id="v_e", perspective="owner", stage="done")
@@ -94,7 +94,7 @@ def test_evidence_endpoint_lazy_gather_and_cache(client: TestClient) -> None:
 
 
 def test_evidence_endpoint_409_when_not_ready(client: TestClient) -> None:
-    from portside_api.schemas import VoyageState
+    from laytimely_api.schemas import VoyageState
 
     async def _seed() -> None:
         await main_mod.store.save(

@@ -27,9 +27,9 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api import main as main_mod, workspaces  # noqa: E402
-from portside_api.auth import DEV_USER_ID  # noqa: E402
-from portside_api.db.models import InvitationRow, MembershipRow  # noqa: E402
+from laytimely_api import main as main_mod, workspaces  # noqa: E402
+from laytimely_api.auth import DEV_USER_ID  # noqa: E402
+from laytimely_api.db.models import InvitationRow, MembershipRow  # noqa: E402
 from sqlalchemy import select  # noqa: E402
 
 from tests.conftest import run_wipe  # noqa: E402
@@ -244,7 +244,7 @@ def test_invitation_token_persists_in_db(client: TestClient) -> None:
     wid = _seed_personal_workspace_for_dev_user()
     resp = client.post(
         f"/workspaces/{wid}/invitations",
-        json={"email": "row@example.com", "role": "viewer"},
+        json={"email": "row@example.com", "role": "admin"},
     )
     token = resp.json()["token"]
 
@@ -258,4 +258,4 @@ def test_invitation_token_persists_in_db(client: TestClient) -> None:
 
     row = asyncio.run(_read())
     assert row is not None
-    assert row.role == "viewer"
+    assert row.role == "admin"

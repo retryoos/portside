@@ -1,4 +1,4 @@
-// TypeScript mirror of apps/api/portside_api/schemas.py (notes/04-schemas.md).
+// TypeScript mirror of apps/api/laytimely_api/schemas.py (notes/04-schemas.md).
 // Field names match the wire JSON (snake_case; from/to on laytime rows).
 
 export type Perspective = "owner" | "charterer";
@@ -201,7 +201,7 @@ export interface VesselSummary {
 // Email subsystem (W2, notes/architecture_weeks_5_to_8.md §1.3)
 // ---------------------------------------------------------------------------
 
-// Wire model mirror of portside_api/email/models.py. The PDF attachment is a
+// Wire model mirror of laytimely_api/email/models.py. The PDF attachment is a
 // stretch and is uploaded as multipart in a future variant of the route; v0.1
 // emails the markdown letter body inline.
 export interface LetterEmailRequest {
@@ -244,7 +244,7 @@ export interface EmailSendError {
 // Evidence checklist (W3, notes/architecture_weeks_5_to_8.md §1.4)
 // ---------------------------------------------------------------------------
 
-// Wire model mirror of portside_api/evidence_checklist.py. ``attached`` is
+// Wire model mirror of laytimely_api/evidence_checklist.py. ``attached`` is
 // deterministic on the backend (uploaded CP -> cp_excerpt rows attached;
 // research bundle covering an event -> the weather row attached); the UI just
 // renders it.
@@ -276,7 +276,7 @@ export interface EvidenceChecklist {
 // Claim strength sub-scores (W4, notes/architecture_weeks_5_to_8.md §1.5)
 // ---------------------------------------------------------------------------
 
-// Wire model mirror of portside_api/claim_strength.py. Two of the four
+// Wire model mirror of laytimely_api/claim_strength.py. Two of the four
 // sub-scores are deterministic backend-side (time_bar_risk + evidence_completeness);
 // the UI never needs to know which, since they all arrive as the same closed
 // vocabulary word.
@@ -298,7 +298,7 @@ export interface FlaggedEventStrength {
 // Legal citations (W5, notes/architecture_weeks_5_to_8.md §1.6)
 // ---------------------------------------------------------------------------
 
-// Mirrors portside_api/legal/models.py. ``verified_via_tool`` is always true
+// Mirrors laytimely_api/legal/models.py. ``verified_via_tool`` is always true
 // on the wire: the backend's verify gate drops anything that did not pass.
 // ``tool_used`` carries the channel (currently always "corpus"; "imo" and
 // "eur_lex" are wired but not yet emitting).
@@ -326,7 +326,7 @@ export interface FlaggedEventCitations {
 // Audit log (W6, notes/architecture_weeks_5_to_8.md §2.2)
 // ---------------------------------------------------------------------------
 
-// Closed action vocabulary mirroring portside_api/audit.py. A backend
+// Closed action vocabulary mirroring laytimely_api/audit.py. A backend
 // addition trips tsc here so the UI never silently renders an unknown
 // action.
 export type AuditAction =
@@ -381,7 +381,7 @@ export interface InboxAddress {
 // Workspaces + memberships + invitations (W8 + W9, §2.1)
 // ---------------------------------------------------------------------------
 
-export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
+export type WorkspaceRole = "owner" | "admin" | "member";
 
 export interface Workspace {
   id: string;
@@ -392,6 +392,8 @@ export interface Workspace {
 export interface WorkspaceMember {
   user_sub: string;
   role: WorkspaceRole;
+  email?: string | null;
+  name?: string | null;
 }
 
 export interface MyWorkspaceEntry {

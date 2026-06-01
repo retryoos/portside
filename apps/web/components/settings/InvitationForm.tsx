@@ -1,12 +1,12 @@
 "use client";
 
-// Workspace invitation form (W9). Email + role select + Mint button. The
-// "share link" output sits inline beneath the form once the mint succeeds,
-// with a Copy button: SES delivery is a separate path tracked in the
-// production checklist, but the admin can always paste the link manually
-// in the meantime.
+// Workspace invitation form (W9). A compact single row: a fixed-width email
+// field, a small role select, and the Mint button, with the selected role's
+// description as a quiet hint beneath. Once a mint succeeds the share link
+// appears inline with a Copy button (SES delivery is a separate path; the
+// admin can always paste the link in the meantime).
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type {
   WorkspaceError,
@@ -17,10 +17,20 @@ import { createWorkspaceInvitation } from "@/lib/api";
 
 const TOAST_TTL_MS = 5000;
 
-const ROLE_OPTIONS: { value: WorkspaceRole; label: string }[] = [
-  { value: "viewer", label: "Viewer — read-only" },
-  { value: "member", label: "Member — day-to-day use" },
-  { value: "admin", label: "Admin — manage members + settings" },
+// Invitations are minted as Member or Admin. Owner is reached by promotion on
+// the members page, never by invite, so a workspace can't accidentally hand
+// out billing control through a pasted link.
+const ROLE_OPTIONS: { value: WorkspaceRole; label: string; hint: string }[] = [
+  {
+    value: "member",
+    label: "Member",
+    hint: "Day-to-day use: create and manage voyages.",
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    hint: "Manage members, invitations, and settings.",
+  },
 ];
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -38,6 +48,11 @@ export default function InvitationForm({
   const [error, setError] = useState<string | null>(null);
   const [lastMinted, setLastMinted] = useState<WorkspaceInvitation | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
+
+  const roleHint = useMemo(
+    () => ROLE_OPTIONS.find((o) => o.value === role)?.hint ?? "",
+    [role],
+  );
 
   useEffect(() => {
     if (copyState === "idle") return;
@@ -73,46 +88,63 @@ export default function InvitationForm({
 
   async function handleCopyLink() {
     if (!lastMinted) return;
-    const link = buildAcceptLink(lastMinted.token);
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(buildAcceptLink(lastMinted.token));
       setCopyState("copied");
     } catch {
       setCopyState("failed");
     }
   }
 
+  const invalid = Boolean(error);
+
   return (
     <section
-      aria-label="Mint invitation"
+      aria-label="Invite a teammate"
       className="rounded-card border border-border bg-surface p-6"
     >
-      <p className="text-eyebrow text-secondary">Mint invitation</p>
-      <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-        <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-          <div>
-            <label htmlFor="invite-email" className="text-label-caps text-secondary">
+      <p className="text-eyebrow text-secondary">Invite a teammate</p>
+
+      <form onSubmit={handleSubmit} className="mt-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+          <div className="sm:w-72">
+            <label
+              htmlFor="invite-email"
+              className="text-label-caps text-secondary"
+            >
               Email
             </label>
             <input
               id="invite-email"
               type="email"
+              inputMode="email"
+              autoComplete="off"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError(null);
+              }}
               required
               placeholder="teammate@example.com"
-              className="mt-2 w-full rounded-card border border-border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary"
+              aria-invalid={invalid || undefined}
+              className={`mt-2 w-full rounded-md border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary ${
+                invalid ? "border-danger" : "border-border"
+              }`}
             />
           </div>
+
           <div>
-            <label htmlFor="invite-role" className="text-label-caps text-secondary">
+            <label
+              htmlFor="invite-role"
+              className="text-label-caps text-secondary"
+            >
               Role
             </label>
             <select
               id="invite-role"
               value={role}
               onChange={(e) => setRole(e.target.value as WorkspaceRole)}
-              className="mt-2 rounded-card border border-border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary"
+              className="mt-2 rounded-md border border-border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary"
             >
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -121,25 +153,28 @@ export default function InvitationForm({
               ))}
             </select>
           </div>
-        </div>
-        {error ? (
-          <p role="alert" className="text-body-sm text-danger">
-            {error}
-          </p>
-        ) : null}
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-body-sm text-secondary">
-            Invitations expire in 14 days. We do not email yet — copy the
-            link from the row below to share it.
-          </p>
+
           <button
             type="submit"
             disabled={busy}
-            className="btn-lift rounded-pill bg-cta px-5 py-2 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:opacity-60"
+            className="btn-lift rounded-pill bg-cta px-5 py-2 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:opacity-60 sm:ml-auto"
           >
-            {busy ? "Minting…" : "Mint invitation"}
+            {busy ? "Inviting…" : "Send invite"}
           </button>
         </div>
+
+        <p className="mt-2 text-body-sm text-secondary">{roleHint}</p>
+
+        {error ? (
+          <p role="alert" className="mt-2 text-body-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+
+        <p className="mt-4 text-body-sm text-secondary">
+          Invitations expire in 14 days. We do not email them yet: copy the
+          link below to share it.
+        </p>
       </form>
 
       {lastMinted ? (

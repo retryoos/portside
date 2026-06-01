@@ -1,6 +1,6 @@
 """Tests for the inbox-address helpers + route (W7).
 
-The deterministic address derivation lives in ``portside_api/workspaces.py``;
+The deterministic address derivation lives in ``laytimely_api/workspaces.py``;
 these tests pin both the helper and the route surface so the W7 frontend can
 rely on it.
 """
@@ -22,8 +22,8 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api import main as main_mod, workspaces  # noqa: E402
-from portside_api.auth import DEV_USER_ID  # noqa: E402
+from laytimely_api import main as main_mod, workspaces  # noqa: E402
+from laytimely_api.auth import DEV_USER_ID  # noqa: E402
 from tests.conftest import run_wipe  # noqa: E402
 
 

@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.reviser import (
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.reviser import (
     ReviseRequest,
     ReviseSegment,
     revise,

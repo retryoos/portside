@@ -21,11 +21,11 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import main as main_mod
-from portside_api.limits import MAX_UPLOAD_BYTES
-from portside_api.objects import LocalObjectStore
-from portside_api.schemas import Perspective, VoyageState
-from portside_api.storage import InMemoryStore, VoyageStore
+from laytimely_api import main as main_mod
+from laytimely_api.limits import MAX_UPLOAD_BYTES
+from laytimely_api.objects import LocalObjectStore
+from laytimely_api.schemas import Perspective, VoyageState
+from laytimely_api.storage import InMemoryStore, VoyageStore
 
 
 @pytest.fixture(autouse=True)

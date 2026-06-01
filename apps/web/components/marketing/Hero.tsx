@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import Container from "./Container";
+import DemoButton from "./DemoButton";
 import HeroBackdrop from "./HeroBackdrop";
 
 // Marketing hero. A full-bleed deep-ink surface carrying the "living ink"
@@ -90,17 +91,12 @@ export default function Hero() {
                 className={`hero-stage ${state} mt-10 flex flex-wrap items-center gap-4`}
                 style={{ ["--stage-delay" as string]: "460ms" }}
               >
+                <DemoButton className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover disabled:opacity-60" />
                 <Link
                   href="/contact"
-                  className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover"
-                >
-                  Book a demo
-                </Link>
-                <Link
-                  href="#product"
                   className="btn-lift rounded-pill border border-on-primary/30 px-6 py-3 text-body-sm font-semibold text-on-primary hover:bg-on-primary/10"
                 >
-                  See the product
+                  Book a demo
                 </Link>
               </div>
             </div>

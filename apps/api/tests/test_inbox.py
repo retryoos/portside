@@ -26,7 +26,7 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.inbox import (  # noqa: E402
+from laytimely_api.inbox import (  # noqa: E402
     InboundError,
     InboundErrorCode,
     InboundMessage,

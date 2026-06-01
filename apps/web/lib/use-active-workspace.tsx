@@ -8,7 +8,7 @@
 // stored). React 19 surfaces such mismatches as "Invalid hook call" /
 // "Cannot read properties of null" further down the tree. We therefore
 // initialize null on both server and client, then sync from localStorage
-// inside a client-only useEffect — standard hydration-safe pattern.
+// inside a client-only useEffect, standard hydration-safe pattern.
 
 "use client";
 

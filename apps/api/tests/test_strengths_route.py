@@ -27,12 +27,12 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api import main as main_mod  # noqa: E402
-from portside_api.claim_strength import Strength  # noqa: E402
-from portside_api.fixtures import demo_voyage_fixture  # noqa: E402
-from portside_api.objects import LocalObjectStore  # noqa: E402
-from portside_api.schemas import VoyageState  # noqa: E402
-from portside_api.storage import InMemoryStore  # noqa: E402
+from laytimely_api import main as main_mod  # noqa: E402
+from laytimely_api.claim_strength import Strength  # noqa: E402
+from laytimely_api.fixtures import demo_voyage_fixture  # noqa: E402
+from laytimely_api.objects import LocalObjectStore  # noqa: E402
+from laytimely_api.schemas import VoyageState  # noqa: E402
+from laytimely_api.storage import InMemoryStore  # noqa: E402
 
 
 @pytest.fixture
