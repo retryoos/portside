@@ -55,6 +55,23 @@ class Settings:
     # token cannot be forged. ``app_jwt_ttl_seconds`` is the token lifetime.
     app_jwt_secret: str
     app_jwt_ttl_seconds: int
+    # Signup gating (cost control). Signup is invite-only: a new account needs a
+    # valid matching invitation token. ``signup_bootstrap_code``, when set,
+    # additionally lets a founder self-serve a first account without an invite
+    # (the bootstrap that mints the first owner who can then invite others).
+    # Unset disables the bootstrap path entirely (pure invite-only).
+    signup_bootstrap_code: str | None
+    # Per-account quota on the expensive (Anthropic-calling) actions: at most
+    # ``per_account_pipeline_max`` cost actions per
+    # ``per_account_pipeline_window_seconds`` per account, counted from the
+    # audit log so it survives restarts and is shared across instances. The
+    # shared demo identity gets the tighter ``demo_pipeline_max``. A global
+    # daily ceiling (``global_pipeline_daily_max``, 0 disables) bounds total
+    # spend across every account as a hard budget kill-switch.
+    per_account_pipeline_max: int
+    per_account_pipeline_window_seconds: int
+    demo_pipeline_max: int
+    global_pipeline_daily_max: int
     # Object storage (A3). S3 in production; a local directory otherwise.
     s3_bucket: str | None
     s3_region: str | None
@@ -149,6 +166,17 @@ class Settings:
             ),
             app_jwt_ttl_seconds=int(
                 os.environ.get("APP_JWT_TTL_SECONDS") or str(60 * 60 * 24 * 7)
+            ),
+            signup_bootstrap_code=os.environ.get("SIGNUP_BOOTSTRAP_CODE") or None,
+            per_account_pipeline_max=int(
+                os.environ.get("PER_ACCOUNT_PIPELINE_MAX") or "5"
+            ),
+            per_account_pipeline_window_seconds=int(
+                os.environ.get("PER_ACCOUNT_PIPELINE_WINDOW_SECONDS") or "3600"
+            ),
+            demo_pipeline_max=int(os.environ.get("DEMO_PIPELINE_MAX") or "3"),
+            global_pipeline_daily_max=int(
+                os.environ.get("GLOBAL_PIPELINE_DAILY_MAX") or "0"
             ),
             s3_bucket=os.environ.get("S3_BUCKET") or None,
             s3_region=os.environ.get("S3_REGION") or None,

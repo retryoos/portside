@@ -297,6 +297,30 @@ async def accept_invitation(
     return inv
 
 
+async def get_pending_invitation(
+    session: AsyncSession,
+    *,
+    token: str,
+) -> Optional[InvitationRow]:
+    """Return the invitation for ``token`` iff it is still usable (not
+    accepted, not revoked, not expired). Used by the invite-only signup gate to
+    validate a token before creating an account. Does not consume the invite;
+    acceptance happens separately."""
+    inv = (
+        await session.execute(
+            select(InvitationRow).where(InvitationRow.token == token)
+        )
+    ).scalar_one_or_none()
+    if inv is None or inv.accepted_at is not None or inv.revoked_at is not None:
+        return None
+    expires_at = inv.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < _now_utc():
+        return None
+    return inv
+
+
 async def list_pending_invitations(
     session: AsyncSession,
     *,

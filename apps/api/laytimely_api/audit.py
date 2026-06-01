@@ -126,6 +126,45 @@ async def reap_older_than(
     return result.rowcount or 0
 
 
+# The Anthropic-calling ("spend") actions. The per-account and global quotas
+# count rows with these actions in a rolling window to bound model cost. Adding
+# a new model-calling route means adding its action here so it counts.
+COST_ACTIONS: tuple[str, ...] = (
+    "voyage.create",
+    "voyage.revise_apply",
+    "voyage.rebuttal",
+    "voyage.evidence_refresh",
+    "voyage.from_email",
+)
+
+
+async def count_actions_since(
+    sessionmaker: async_sessionmaker[AsyncSession],
+    *,
+    actions: tuple[str, ...],
+    since: "datetime",
+    actor_sub: str | None = None,
+) -> int:
+    """Count audit rows with one of ``actions`` recorded at/after ``since``.
+
+    When ``actor_sub`` is given the count is scoped to that account (the
+    per-account quota); when None it counts every account (the global daily
+    budget cap). One cheap indexed COUNT; both ``action`` and ``at`` are
+    indexed columns.
+    """
+    from sqlalchemy import func
+
+    stmt = (
+        select(func.count())
+        .select_from(AuditEventRow)
+        .where(AuditEventRow.action.in_(actions), AuditEventRow.at >= since)
+    )
+    if actor_sub is not None:
+        stmt = stmt.where(AuditEventRow.actor_sub == actor_sub)
+    async with sessionmaker() as session:
+        return int((await session.execute(stmt)).scalar_one())
+
+
 async def list_for_actor(
     sessionmaker: async_sessionmaker[AsyncSession],
     actor_sub: str,
