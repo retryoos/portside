@@ -129,18 +129,27 @@ def test_authenticate_success_and_failure() -> None:
 # --- HTTP routes ------------------------------------------------------------
 
 
+_BOOT = {"bootstrap_code": "test-bootstrap"}
+
+
 def test_signup_then_login_routes(client) -> None:
     s = client.post(
         "/auth/signup",
-        json={"email": "route@acme.com", "password": "password1", "name": "R"},
+        json={
+            "email": "route@acme.com",
+            "password": "password1",
+            "name": "R",
+            **_BOOT,
+        },
     )
     assert s.status_code == 200, s.text
     assert s.json()["token"]
     assert s.json()["user"]["email"] == "route@acme.com"
 
-    # Duplicate signup is a 409.
+    # Duplicate signup is a 409 (gate passes, then email_taken).
     dup = client.post(
-        "/auth/signup", json={"email": "route@acme.com", "password": "password1"}
+        "/auth/signup",
+        json={"email": "route@acme.com", "password": "password1", **_BOOT},
     )
     assert dup.status_code == 409
 
@@ -159,7 +168,8 @@ def test_signup_then_login_routes(client) -> None:
 
 def test_signup_rejects_short_password(client) -> None:
     r = client.post(
-        "/auth/signup", json={"email": "short@acme.com", "password": "short"}
+        "/auth/signup",
+        json={"email": "short@acme.com", "password": "short", **_BOOT},
     )
     assert r.status_code == 422  # pydantic min_length on the request model
 
@@ -169,3 +179,131 @@ def test_demo_route_returns_token(client) -> None:
     assert r.status_code == 200, r.text
     assert r.json()["token"]
     assert r.json()["user"]["name"] == "Laytimely Demo"
+
+
+# --- invite-only gate -------------------------------------------------------
+
+
+def test_signup_requires_invite_or_code(client) -> None:
+    r = client.post(
+        "/auth/signup", json={"email": "no@gate.com", "password": "password1"}
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"]["code"] == "signup_invite_only"
+
+
+def test_signup_with_matching_invite_joins_workspace(client) -> None:
+    # dev-user (owner of its personal workspace) mints an invite; a new user
+    # signs up with the matching email + token and lands as a member.
+    wid = client.get("/me/workspaces").json()[0]["workspace"]["id"]
+    inv = client.post(
+        f"/workspaces/{wid}/invitations",
+        json={"email": "invitee@acme.com", "role": "member"},
+    ).json()
+    s = client.post(
+        "/auth/signup",
+        json={
+            "email": "invitee@acme.com",
+            "password": "password1",
+            "invite_token": inv["token"],
+        },
+    )
+    assert s.status_code == 200, s.text
+    members = client.get(f"/workspaces/{wid}/members").json()
+    assert any(
+        m["email"] == "invitee@acme.com" and m["role"] == "member"
+        for m in members
+    )
+
+
+def test_signup_invite_email_mismatch_rejected(client) -> None:
+    wid = client.get("/me/workspaces").json()[0]["workspace"]["id"]
+    inv = client.post(
+        f"/workspaces/{wid}/invitations",
+        json={"email": "right@acme.com", "role": "member"},
+    ).json()
+    s = client.post(
+        "/auth/signup",
+        json={
+            "email": "wrong@acme.com",
+            "password": "password1",
+            "invite_token": inv["token"],
+        },
+    )
+    assert s.status_code == 403
+    assert s.json()["detail"]["code"] == "invitation_email_mismatch"
+
+
+# --- pipeline quota ---------------------------------------------------------
+
+
+from types import SimpleNamespace
+
+
+def _quota_settings(per_account: int) -> SimpleNamespace:
+    """Minimal stand-in for the fields enforce_pipeline_quota reads, so a test
+    can pin a small limit without mutating the frozen global settings."""
+    return SimpleNamespace(
+        global_pipeline_daily_max=0,
+        demo_pipeline_max=3,
+        per_account_pipeline_max=per_account,
+        per_account_pipeline_window_seconds=3600,
+    )
+
+
+async def _seed_cost_rows(actor: str, n: int) -> None:
+    from datetime import datetime, timezone
+
+    from laytimely_api.db.models import AuditEventRow
+
+    async with main_mod._sessionmaker() as session:
+        for i in range(n):
+            session.add(
+                AuditEventRow(
+                    actor_sub=actor,
+                    action="voyage.create",
+                    target_type="voyage",
+                    target_id=f"{actor}-{i}",
+                    at=datetime.now(timezone.utc),
+                    payload_redacted="{}",
+                )
+            )
+        await session.commit()
+
+
+def test_pipeline_quota_blocks_account_over_limit(monkeypatch) -> None:
+    from fastapi import HTTPException
+
+    from laytimely_api.auth import Principal
+    from tests.conftest import run_wipe
+
+    monkeypatch.setattr(main_mod, "settings", _quota_settings(5))
+    try:
+        asyncio.run(_seed_cost_rows("quota-user", 5))
+        with pytest.raises(HTTPException) as exc:
+            asyncio.run(
+                main_mod.enforce_pipeline_quota(
+                    Principal(id="quota-user", email="q@acme.com")
+                )
+            )
+        assert exc.value.status_code == 429
+        assert exc.value.detail["code"] == "account_quota_reached"
+    finally:
+        run_wipe()
+
+
+def test_pipeline_quota_allows_under_limit(monkeypatch) -> None:
+    from laytimely_api.auth import Principal
+    from tests.conftest import run_wipe
+
+    monkeypatch.setattr(main_mod, "settings", _quota_settings(5))
+    try:
+        asyncio.run(_seed_cost_rows("under-user", 2))
+        principal = asyncio.run(
+            main_mod.enforce_pipeline_quota(
+                Principal(id="under-user", email="u@acme.com")
+            )
+        )
+        assert principal.id == "under-user"
+    finally:
+        run_wipe()

@@ -123,6 +123,12 @@ class SignupRequest(BaseModel):
     email: str
     password: str = Field(min_length=_MIN_PASSWORD, max_length=_MAX_PASSWORD)
     name: str | None = Field(default=None, max_length=120)
+    # Invite-only gate: signup is allowed only with a valid invitation token
+    # (the normal path, email must match the invite) OR a bootstrap access code
+    # (founder onboarding, when SIGNUP_BOOTSTRAP_CODE is configured). The route
+    # rejects with 403 when neither is present/valid.
+    invite_token: str | None = Field(default=None, max_length=256)
+    bootstrap_code: str | None = Field(default=None, max_length=256)
 
     @field_validator("email")
     @classmethod

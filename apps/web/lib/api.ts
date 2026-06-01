@@ -94,7 +94,21 @@ export async function createVoyage(
   form.append("perspective", perspective);
 
   const res = await apiFetch(`/voyages`, { method: "POST", body: form });
-  if (!res.ok) throw new Error(`createVoyage failed: ${res.status}`);
+  if (!res.ok) {
+    // Surface the backend's message for quota/limit rejections (429) and any
+    // other detailed error, so the upload UI can show why instead of a code.
+    let message = `createVoyage failed: ${res.status}`;
+    try {
+      const body = (await res.json()) as {
+        detail?: string | { message?: string };
+      };
+      if (typeof body.detail === "string") message = body.detail;
+      else if (body.detail?.message) message = body.detail.message;
+    } catch {
+      /* keep the default message */
+    }
+    throw new Error(message);
+  }
   const data = (await res.json()) as { voyage_id: string };
   return data.voyage_id;
 }

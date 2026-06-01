@@ -13,6 +13,8 @@ interface SignupBody {
   email?: unknown;
   password?: unknown;
   name?: unknown;
+  invite_token?: unknown;
+  bootstrap_code?: unknown;
 }
 
 const MIN_PASSWORD = 8;
@@ -29,6 +31,14 @@ export async function POST(request: Request): Promise<Response> {
   const password = typeof body.password === "string" ? body.password : "";
   const name =
     typeof body.name === "string" && body.name.trim() ? body.name.trim() : null;
+  const inviteToken =
+    typeof body.invite_token === "string" && body.invite_token.trim()
+      ? body.invite_token.trim()
+      : null;
+  const bootstrapCode =
+    typeof body.bootstrap_code === "string" && body.bootstrap_code.trim()
+      ? body.bootstrap_code.trim()
+      : null;
 
   if (!email || !password) {
     return NextResponse.json(
@@ -48,7 +58,13 @@ export async function POST(request: Request): Promise<Response> {
     upstream = await fetch(`${apiBaseUrl()}/auth/signup`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({
+        email,
+        password,
+        name,
+        invite_token: inviteToken,
+        bootstrap_code: bootstrapCode,
+      }),
     });
   } catch {
     return NextResponse.json(
@@ -68,6 +84,21 @@ export async function POST(request: Request): Promise<Response> {
       return NextResponse.json(
         { error: "Too many attempts. Please wait a moment and try again." },
         { status: 429 },
+      );
+    }
+    // Invite-only gate rejections (403 invite-only / email mismatch, 410
+    // expired/used invite). Surface the backend's specific message.
+    if (upstream.status === 403 || upstream.status === 410) {
+      const detail = (await upstream.json().catch(() => null)) as {
+        detail?: { message?: string };
+      } | null;
+      return NextResponse.json(
+        {
+          error:
+            detail?.detail?.message ??
+            "Signups are invite-only. Open your invitation link, or enter a valid access code.",
+        },
+        { status: upstream.status },
       );
     }
     return NextResponse.json(

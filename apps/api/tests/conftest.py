@@ -33,6 +33,14 @@ if str(_API_ROOT) not in sys.path:
 _TEST_DB_PATH = Path(tempfile.gettempdir()) / "portside_pytest.db"
 _TEST_DB_PATH.unlink(missing_ok=True)
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TEST_DB_PATH}"
+# Signup is invite-only; give the suite a bootstrap code so route-level signup
+# tests can create an account without first minting an invite.
+os.environ.setdefault("SIGNUP_BOOTSTRAP_CODE", "test-bootstrap")
+# Disable the per-account / demo pipeline quotas for the suite at large (the
+# shared dev/demo identity would otherwise trip them across the many upload
+# tests). The quota's own tests re-enable a small limit via monkeypatch.
+os.environ.setdefault("PER_ACCOUNT_PIPELINE_MAX", "100000")
+os.environ.setdefault("DEMO_PIPELINE_MAX", "100000")
 
 # pylint: disable=wrong-import-position
 from laytimely_api import main as main_mod  # noqa: E402

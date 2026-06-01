@@ -239,6 +239,66 @@ async def enforce_voyage_rate_limit(request: Request) -> None:
         )
 
 
+async def enforce_pipeline_quota(
+    principal: Annotated[Principal, Depends(get_current_user)],
+) -> Principal:
+    """Per-account (and global) quota on the expensive Anthropic-backed actions.
+
+    Counts the caller's prior cost actions in the rolling window from the audit
+    log (so the limit survives restarts and is shared across instances, unlike
+    the per-IP in-memory guard above). The shared demo identity gets the tighter
+    demo limit. A global daily ceiling caps total spend across all accounts.
+    Returns the principal so routes can reuse it without re-declaring the dep.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+
+    # Global daily budget kill-switch (0 disables).
+    if settings.global_pipeline_daily_max > 0:
+        total = await audit.count_actions_since(
+            _sessionmaker,
+            actions=audit.COST_ACTIONS,
+            since=now - timedelta(days=1),
+        )
+        if total >= settings.global_pipeline_daily_max:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "global_quota_reached",
+                    "message": "The service is at capacity for today. Please try again tomorrow.",
+                },
+                headers={"Retry-After": "3600"},
+            )
+
+    is_demo = principal.id == DEV_USER_ID
+    limit = (
+        settings.demo_pipeline_max if is_demo else settings.per_account_pipeline_max
+    )
+    if limit > 0:
+        window = settings.per_account_pipeline_window_seconds
+        used = await audit.count_actions_since(
+            _sessionmaker,
+            actions=audit.COST_ACTIONS,
+            since=now - timedelta(seconds=window),
+            actor_sub=principal.id,
+        )
+        if used >= limit:
+            minutes = max(1, window // 60)
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "code": "account_quota_reached",
+                    "message": (
+                        f"You have reached the limit of {limit} runs per "
+                        f"{minutes} minutes. Please try again later."
+                    ),
+                },
+                headers={"Retry-After": str(window)},
+            )
+    return principal
+
+
 # Per-caller rate limit for invitation mint (security hardening). A
 # compromised admin token could otherwise mint thousands of invites; the
 # limit is loose enough to support paste-batch invites and tight enough
@@ -288,25 +348,80 @@ async def enforce_auth_rate_limit(request: Request) -> None:
 
 @app.post("/auth/signup", dependencies=[Depends(enforce_auth_rate_limit)])
 async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
-    """Create an account, mint its personal workspace, and return a session
-    token. 409 if the email is already registered."""
+    """Invite-only account creation (cost control).
+
+    A new account is allowed only when the request carries EITHER:
+      * a valid, still-pending invitation token whose email matches the signup
+        email (the normal path; the invite is consumed so the new user lands as
+        a workspace member), OR
+      * the configured SIGNUP_BOOTSTRAP_CODE (founder onboarding; mints a
+        standalone account with just its personal workspace).
+
+    Anything else is 403. 409 if the email is already registered.
+    """
+    email_lower = req.email.strip().lower()
+    invite_token = (req.invite_token or "").strip()
+    bootstrap_code = (req.bootstrap_code or "").strip()
+
     async with _sessionmaker() as session:
+        invitation = None
+        if invite_token:
+            invitation = await workspaces.get_pending_invitation(
+                session, token=invite_token
+            )
+            if invitation is None:
+                raise HTTPException(
+                    status_code=410,
+                    detail={
+                        "code": "invitation_invalid",
+                        "message": "This invitation has expired or already been used. Ask for a fresh one.",
+                    },
+                )
+            if invitation.email.strip().lower() != email_lower:
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "invitation_email_mismatch",
+                        "message": "Use the email address this invitation was sent to.",
+                    },
+                )
+        else:
+            code = settings.signup_bootstrap_code
+            if not (code and bootstrap_code and bootstrap_code == code):
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "code": "signup_invite_only",
+                        "message": "Signups are invite-only. Open your invitation link, or enter a valid access code.",
+                    },
+                )
+
         try:
             user = await accounts.create_account(
                 session, email=req.email, password=req.password, name=req.name
             )
         except accounts.AccountError as exc:
+            await session.rollback()
             status = 409 if exc.code == "email_taken" else 400
             raise HTTPException(
                 status_code=status,
                 detail={"code": exc.code, "message": exc.message},
             )
-        # Capture primitives before commit expires the ORM attributes.
         sub, email, name = user.id, user.email, user.name
-        await workspaces.ensure_personal_workspace(
-            session, user_sub=sub, display_name=name or email
-        )
+
+        if invitation is not None:
+            # Consume the invite so the new user joins the inviting workspace
+            # immediately (the /invite page accept becomes an idempotent no-op).
+            await workspaces.accept_invitation(
+                session, token=invite_token, acceptor_sub=sub
+            )
+        else:
+            # Bootstrap account: just its own personal workspace.
+            await workspaces.ensure_personal_workspace(
+                session, user_sub=sub, display_name=name or email
+            )
         await session.commit()
+
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
         token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)
@@ -762,7 +877,10 @@ async def list_vessels(
 @app.post(
     "/voyages",
     status_code=201,
-    dependencies=[Depends(enforce_voyage_rate_limit)],
+    dependencies=[
+        Depends(enforce_voyage_rate_limit),
+        Depends(enforce_pipeline_quota),
+    ],
 )
 async def create_voyage(
     cp: UploadFile,
@@ -921,7 +1039,10 @@ async def set_voyage_status(
     return updated
 
 
-@app.post("/voyages/{voyage_id}/revise")
+@app.post(
+    "/voyages/{voyage_id}/revise",
+    dependencies=[Depends(enforce_pipeline_quota)],
+)
 async def revise_voyage(
     voyage_id: str,
     body: ReviseRequest,
@@ -943,7 +1064,10 @@ async def revise_voyage(
     return response
 
 
-@app.post("/voyages/{voyage_id}/revise/apply")
+@app.post(
+    "/voyages/{voyage_id}/revise/apply",
+    dependencies=[Depends(enforce_pipeline_quota)],
+)
 async def apply_revision(
     voyage_id: str,
     body: ApplyRevisionRequest,
@@ -973,7 +1097,10 @@ async def apply_revision(
     return updated
 
 
-@app.post("/voyages/{voyage_id}/rebut")
+@app.post(
+    "/voyages/{voyage_id}/rebut",
+    dependencies=[Depends(enforce_pipeline_quota)],
+)
 async def rebut_voyage(
     voyage_id: str,
     user: Annotated[Principal, Depends(get_current_user)],

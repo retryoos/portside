@@ -8,7 +8,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent } from "react";
+import { useId, useMemo, useState, type FormEvent } from "react";
 
 const FIELD_CLASSES =
   "w-full rounded-md border border-border bg-surface px-4 py-3 text-body text-primary " +
@@ -19,16 +19,28 @@ const FIELD_CLASSES =
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MIN_PASSWORD = 8;
 
+// Pull an invite token out of the post-login `next` path (e.g.
+// "/invite/abc123"), so an invited user signing up carries the token through.
+function inviteTokenFromNext(next: string | null): string | null {
+  if (!next) return null;
+  const m = next.match(/^\/invite\/([^/?#]+)/);
+  return m ? decodeURIComponent(m[1]!) : null;
+}
+
 export default function SignupForm({ next }: { next: string | null }) {
   const router = useRouter();
   const nameId = useId();
   const emailId = useId();
   const passwordId = useId();
+  const codeId = useId();
   const errorId = useId();
+
+  const inviteToken = useMemo(() => inviteTokenFromNext(next), [next]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -48,6 +60,10 @@ export default function SignupForm({ next }: { next: string | null }) {
       setError(`Password must be at least ${MIN_PASSWORD} characters.`);
       return;
     }
+    if (!inviteToken && !accessCode.trim()) {
+      setError("Open your invitation link, or enter an access code to sign up.");
+      return;
+    }
 
     setBusy(true);
     try {
@@ -58,6 +74,8 @@ export default function SignupForm({ next }: { next: string | null }) {
           email: trimmedEmail,
           password,
           name: name.trim() || null,
+          invite_token: inviteToken,
+          bootstrap_code: inviteToken ? null : accessCode.trim() || null,
         }),
       });
 
@@ -78,6 +96,18 @@ export default function SignupForm({ next }: { next: string | null }) {
 
   return (
     <form noValidate onSubmit={handleSubmit} className="space-y-5">
+      {inviteToken ? (
+        <p className="rounded-md border border-border bg-surface-muted px-3 py-2.5 text-body-sm text-secondary">
+          You have been invited. Sign up with the email your invitation was
+          sent to.
+        </p>
+      ) : (
+        <p className="rounded-md border border-border bg-surface-muted px-3 py-2.5 text-body-sm text-secondary">
+          Signups are invite-only. Open your invitation link, or enter an
+          access code below.
+        </p>
+      )}
+
       <div>
         <label
           htmlFor={nameId}
@@ -147,6 +177,28 @@ export default function SignupForm({ next }: { next: string | null }) {
           At least {MIN_PASSWORD} characters.
         </p>
       </div>
+
+      {!inviteToken && (
+        <div>
+          <label
+            htmlFor={codeId}
+            className="mb-2 block text-body-sm font-semibold text-primary"
+          >
+            Access code
+          </label>
+          <input
+            id={codeId}
+            name="access-code"
+            type="text"
+            autoComplete="off"
+            value={accessCode}
+            onChange={(e) => setAccessCode(e.target.value)}
+            disabled={busy}
+            placeholder="Provided by Laytimely"
+            className={FIELD_CLASSES}
+          />
+        </div>
+      )}
 
       {error && (
         <p
