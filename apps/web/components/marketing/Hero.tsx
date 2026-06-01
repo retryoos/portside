@@ -1,29 +1,48 @@
-import Link from "next/link";
-import Container from "./Container";
+"use client";
 
-// Marketing hero. Full-bleed deep-ink surface (so it works without a
-// committed photograph), an optional hero photograph behind a diagonal
-// ink scrim, and an asymmetric content block: eyebrow + huge editorial
-// headline + body + two pills on the left, breathing space on the right.
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import Container from "./Container";
+import HeroBackdrop from "./HeroBackdrop";
+
+// Marketing hero. A full-bleed deep-ink surface carrying the "living ink"
+// animated backdrop, a diagonal scrim for legibility, and an asymmetric
+// content block: eyebrow + huge editorial headline + body + two pills on the
+// left, a glass trust panel on the right.
 //
-// Once a real photograph lands at /photography/hero-landing.jpg the
-// background-image kicks in and the deep-ink base shows through the scrim.
+// The headline arrives as a per-line clip reveal (Linear-style wipe). The
+// surrounding elements stage in beneath it. Everything resolves to its final
+// static state instantly under prefers-reduced-motion.
 export default function Hero() {
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setShown(true);
+      return;
+    }
+    // Defer one frame so the initial (hidden) state paints before we flip,
+    // guaranteeing the transition actually runs.
+    const id = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const state = shown ? "is-shown" : "";
+
   return (
-    <section className="relative isolate min-h-[100vh] overflow-hidden bg-primary text-on-primary">
-      {/* Photograph layer, falls back to bg-primary if the asset is missing. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-cover bg-center opacity-70"
-        style={{ backgroundImage: "url('/photography/hero-landing.jpg')" }}
-      />
-      {/* Diagonal scrim so the headline always reads. */}
+    <section className="hero-root relative isolate min-h-[100vh] overflow-hidden bg-primary text-on-primary">
+      <HeroBackdrop />
+
+      {/* Diagonal scrim so the headline always reads against the moving ink. */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(135deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.12) 58%, rgba(0,0,0,0) 100%)",
         }}
       />
 
@@ -31,19 +50,46 @@ export default function Hero() {
         <Container>
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
             <div className="max-w-2xl">
-              <p className="text-eyebrow text-on-primary/80">
+              <p
+                className={`hero-stage ${state} text-eyebrow text-on-primary/80`}
+                style={{ ["--stage-delay" as string]: "60ms" }}
+              >
                 AI for maritime operations
               </p>
+
               <h1 className="text-hero mt-6 text-on-primary">
-                AI workflows for maritime operations.
+                <span className="hero-line">
+                  <span
+                    className={`hero-line-inner ${state}`}
+                    style={{ ["--stage-delay" as string]: "140ms" }}
+                  >
+                    AI workflows for
+                  </span>
+                </span>
+                <span className="hero-line">
+                  <span
+                    className={`hero-line-inner ${state}`}
+                    style={{ ["--stage-delay" as string]: "240ms" }}
+                  >
+                    maritime operations.
+                  </span>
+                </span>
               </h1>
-              <p className="mt-7 max-w-xl text-body-lg text-on-primary/85">
+
+              <p
+                className={`hero-stage ${state} mt-7 max-w-xl text-body-lg text-on-primary/85`}
+                style={{ ["--stage-delay" as string]: "360ms" }}
+              >
                 Starting with the claims that used to take days. Three voyage
                 documents in, a finished, cited demurrage claim out, in under a
                 minute. Built for ship owners, charterers, and the lawyers who
                 file their claims.
               </p>
-              <div className="mt-10 flex flex-wrap items-center gap-4">
+
+              <div
+                className={`hero-stage ${state} mt-10 flex flex-wrap items-center gap-4`}
+                style={{ ["--stage-delay" as string]: "460ms" }}
+              >
                 <Link
                   href="/contact"
                   className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover"
@@ -59,13 +105,14 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* The asymmetric trust panel: a small glass card that sits over
-                the photograph and carries one social-proof line. */}
+            {/* The asymmetric trust panel: a glass card over the moving ink,
+                carrying one social-proof line. Floats up last. */}
             <div className="hidden lg:flex lg:items-end lg:justify-end">
-              <div className="card-glass max-w-sm px-7 py-7 text-primary">
-                <p className="text-eyebrow text-secondary">
-                  Trusted approach
-                </p>
+              <div
+                className={`hero-stage hero-card ${state} card-glass max-w-sm px-7 py-7 text-primary`}
+                style={{ ["--stage-delay" as string]: "560ms" }}
+              >
+                <p className="text-eyebrow text-secondary">Trusted approach</p>
                 <p className="mt-4 text-h3 text-primary">
                   Every figure cited. Every claim auditable.
                 </p>
@@ -77,6 +124,16 @@ export default function Hero() {
             </div>
           </div>
         </Container>
+      </div>
+
+      {/* Scroll cue. Fades in once the entrance settles, gently bobs. */}
+      <div
+        className={`hero-stage ${state} pointer-events-none absolute inset-x-0 bottom-6 flex justify-center`}
+        style={{ ["--stage-delay" as string]: "760ms" }}
+      >
+        <span className="hero-scroll-cue text-label-caps text-on-primary/50">
+          Scroll
+        </span>
       </div>
     </section>
   );

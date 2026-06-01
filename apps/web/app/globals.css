@@ -213,6 +213,187 @@
   }
 }
 
+/* ============================================================= *
+ * Hero "living ink": animated maritime-ink backdrop + the staged
+ * editorial entrance. Scoped to the marketing hero only. All motion
+ * is neutralised in the prefers-reduced-motion block below; the
+ * static composition (blobs at rest, grain, vignette) still reads.
+ * ============================================================= */
+@layer utilities {
+  /* --- The drifting ink field --------------------------------- */
+  .hero-ink {
+    /* The parallax inputs are written by HeroBackdrop via rAF. */
+    z-index: 0;
+  }
+
+  /* The ship photograph: deepest, slowest layer. Overscanned by 8% so the
+     parallax never reveals an edge; darkened so the screen-blend ink lifts as
+     coloured light rather than washing the scene out. */
+  .hero-ink-photo {
+    position: absolute;
+    inset: -8%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6;
+    transform: scale(1.02);
+    translate: calc(var(--px) * -6px)
+      calc(var(--py) * -5px + var(--sy) * 0.03px);
+    will-change: translate;
+  }
+
+  .hero-ink-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(64px);
+    opacity: 0.5;
+    mix-blend-mode: screen;
+    will-change: transform, translate;
+  }
+  /* Deep ocean blue, upper-left, the slowest layer. */
+  .hero-ink-blob--a {
+    width: 62vw;
+    height: 62vw;
+    top: -14%;
+    left: -8%;
+    background: radial-gradient(
+      circle at center,
+      oklch(0.5 0.14 245) 0%,
+      transparent 68%
+    );
+    animation: hero-drift-a 29s var(--ease-io) infinite alternate;
+    translate: calc(var(--px) * 10px)
+      calc(var(--py) * 8px + var(--sy) * 0.02px);
+  }
+  /* Teal, lower-right. */
+  .hero-ink-blob--b {
+    width: 56vw;
+    height: 56vw;
+    bottom: -22%;
+    right: -10%;
+    background: radial-gradient(
+      circle at center,
+      oklch(0.54 0.11 200) 0%,
+      transparent 68%
+    );
+    animation: hero-drift-b 35s var(--ease-io) infinite alternate;
+    translate: calc(var(--px) * 20px)
+      calc(var(--py) * 16px + var(--sy) * 0.05px);
+  }
+  /* Indigo, centre-right, the closest / fastest-parallax layer. */
+  .hero-ink-blob--c {
+    width: 46vw;
+    height: 46vw;
+    top: 16%;
+    left: 34%;
+    background: radial-gradient(
+      circle at center,
+      oklch(0.46 0.15 285) 0%,
+      transparent 70%
+    );
+    opacity: 0.42;
+    animation: hero-drift-c 41s var(--ease-io) infinite alternate;
+    translate: calc(var(--px) * 32px)
+      calc(var(--py) * 26px + var(--sy) * 0.085px);
+  }
+
+  /* Fine fractal grain to kill banding on the soft gradients. */
+  .hero-ink-grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  /* Vignette: corners fall away so the headline stays brightest. */
+  .hero-ink-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      125% 125% at 50% 32%,
+      transparent 38%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
+  }
+
+  /* --- The staged entrance ------------------------------------ */
+  .hero-stage {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.7s var(--ease-expo),
+      transform 0.7s var(--ease-expo);
+    transition-delay: var(--stage-delay, 0ms);
+  }
+  .hero-stage.is-shown {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* The trust card travels a little further with a faint scale settle. */
+  .hero-card:not(.is-shown) {
+    transform: translateY(26px) scale(0.985);
+  }
+
+  /* The headline clip-reveal: each line wipes up from its own baseline. */
+  .hero-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.16em;
+    margin-bottom: -0.16em;
+  }
+  .hero-line-inner {
+    display: block;
+    transform: translateY(115%);
+    opacity: 0;
+    transition:
+      transform 0.9s var(--ease-expo),
+      opacity 0.6s linear;
+    transition-delay: var(--stage-delay, 0ms);
+    will-change: transform;
+  }
+  .hero-line-inner.is-shown {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* Scroll cue: gentle vertical bob once it has faded in. */
+  .hero-scroll-cue {
+    display: inline-block;
+    animation: hero-bob 2.6s var(--ease-io) infinite;
+  }
+}
+
+:root {
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+@keyframes hero-drift-a {
+  to {
+    transform: translate3d(6%, -4%, 0) scale(1.12);
+  }
+}
+@keyframes hero-drift-b {
+  to {
+    transform: translate3d(-5%, 5%, 0) scale(1.08);
+  }
+}
+@keyframes hero-drift-c {
+  to {
+    transform: translate3d(4%, 7%, 0) scale(1.15);
+  }
+}
+@keyframes hero-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
 /* Focus rings: the only place indigo appears. */
 :where(button, a, [role="button"], input, select, textarea):focus-visible {
   outline: none;
@@ -226,6 +407,19 @@
   }
   .btn-lift {
     transition: none;
+  }
+  /* Hero resolves to its finished composition with no entrance or drift. */
+  .hero-ink-blob,
+  .hero-ink-photo,
+  .hero-scroll-cue {
+    animation: none !important;
+    translate: none !important;
+  }
+  .hero-stage,
+  .hero-card,
+  .hero-line-inner {
+    opacity: 1 !important;
+    transform: none !important;
   }
   *,
   *::before,
