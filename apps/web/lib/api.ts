@@ -1,6 +1,8 @@
 // Typed client for the Laytimely API (notes/04-schemas.md §6).
 
 import type {
+  AdminAuthEvent,
+  AdminOverview,
   AuditEvent,
   CreateInvitationRequest,
   EmailSendError,
@@ -477,4 +479,39 @@ export async function pollVoyage(
     if (TERMINAL.has(state.stage)) return state;
     await delay(intervalMs, signal);
   }
+}
+
+// --- Admin observability ----------------------------------------------------
+
+/** GET /admin/overview. Throws an Error with `.status` (403 when the caller is
+ * not on the ADMIN_EMAILS allowlist) so the page can render a clean denial. */
+export async function getAdminOverview(
+  days = 30,
+  signal?: AbortSignal,
+): Promise<AdminOverview> {
+  const res = await apiFetch(`/admin/overview?days=${days}`, { signal });
+  if (!res.ok) {
+    const err = new Error(`admin overview failed: ${res.status}`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
+  }
+  return (await res.json()) as AdminOverview;
+}
+
+/** GET /admin/events. Recent sign-ups / sign-ins / failed logins / demo starts. */
+export async function getAdminEvents(
+  limit = 50,
+  signal?: AbortSignal,
+): Promise<AdminAuthEvent[]> {
+  const res = await apiFetch(`/admin/events?limit=${limit}`, { signal });
+  if (!res.ok) {
+    const err = new Error(`admin events failed: ${res.status}`) as Error & {
+      status?: number;
+    };
+    err.status = res.status;
+    throw err;
+  }
+  return (await res.json()) as AdminAuthEvent[];
 }

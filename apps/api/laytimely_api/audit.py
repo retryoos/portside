@@ -41,10 +41,18 @@ AuditAction = Literal[
     "workspace.invite",
     "workspace.accept",
     "workspace.member_remove",
+    # Auth + admin events (admin observability).
+    "auth.signup",
+    "auth.login",
+    "auth.login_failed",
+    "auth.demo",
+    "admin.view",
 ]
 
 # Closed target taxonomy.
-AuditTarget = Literal["voyage", "claim", "workspace", "membership", "invitation"]
+AuditTarget = Literal[
+    "voyage", "claim", "workspace", "membership", "invitation", "user", "admin"
+]
 
 
 class AuditEvent(BaseModel):

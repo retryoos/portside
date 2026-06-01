@@ -41,6 +41,8 @@ os.environ.setdefault("SIGNUP_BOOTSTRAP_CODE", "test-bootstrap")
 # tests). The quota's own tests re-enable a small limit via monkeypatch.
 os.environ.setdefault("PER_ACCOUNT_PIPELINE_MAX", "100000")
 os.environ.setdefault("DEMO_PIPELINE_MAX", "100000")
+# The dev-auth principal's email, so admin-route tests run as an admin.
+os.environ.setdefault("ADMIN_EMAILS", "demo@laytimely.com")
 
 # pylint: disable=wrong-import-position
 from laytimely_api import main as main_mod  # noqa: E402

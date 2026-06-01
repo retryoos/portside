@@ -96,6 +96,19 @@ async def extract_structured(
             )
             continue
 
+        # Capture token usage for the admin dashboard. Best-effort: a failure
+        # here must never affect the extraction result.
+        try:
+            from .. import usage as _usage
+
+            await _usage.record(
+                getattr(response, "usage", None),
+                model=MODEL,
+                feature=output_format.__name__,
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("usage capture failed", exc_info=True)
+
         return response.parsed_output
 
     raise ValueError(

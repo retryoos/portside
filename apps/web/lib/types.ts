@@ -401,6 +401,51 @@ export interface MyWorkspaceEntry {
   role: WorkspaceRole;
 }
 
+// --- Admin observability (gated /admin dashboard) --------------------------
+
+export interface UsageBucket {
+  key: string;
+  label?: string | null;
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  est_cost_usd: number;
+}
+
+export interface UsageTimePoint {
+  date: string;
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  est_cost_usd: number;
+}
+
+export interface AdminAuthEvent {
+  at: string;
+  action: string;
+  actor_sub: string | null;
+  email: string | null;
+  target_id: string;
+}
+
+export interface AdminOverview {
+  window_days: number;
+  signups: number;
+  logins: number;
+  login_failures: number;
+  demo_starts: number;
+  active_users: number;
+  total_calls: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  est_cost_usd: number;
+  by_key: UsageBucket[];
+  by_model: UsageBucket[];
+  by_feature: UsageBucket[];
+  top_users: UsageBucket[];
+  timeseries: UsageTimePoint[];
+}
+
 export interface WorkspaceInvitation {
   id: number;
   workspace_id: string;

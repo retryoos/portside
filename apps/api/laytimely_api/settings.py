@@ -55,6 +55,12 @@ class Settings:
     # token cannot be forged. ``app_jwt_ttl_seconds`` is the token lifetime.
     app_jwt_secret: str
     app_jwt_ttl_seconds: int
+    # Admin dashboard allowlist (cost/usage observability). Comma-separated
+    # emails (in Doppler) that may reach the /admin endpoints. Checked
+    # server-side against the verified token email on every admin route, so
+    # changing who is an admin is a single Doppler edit and nothing in the UI
+    # can bypass it. Empty means no one is an admin (fail-closed).
+    admin_emails: list[str]
     # Signup gating (cost control). Signup is invite-only: a new account needs a
     # valid matching invitation token. ``signup_bootstrap_code``, when set,
     # additionally lets a founder self-serve a first account without an invite
@@ -167,6 +173,11 @@ class Settings:
             app_jwt_ttl_seconds=int(
                 os.environ.get("APP_JWT_TTL_SECONDS") or str(60 * 60 * 24 * 7)
             ),
+            admin_emails=[
+                e.strip().lower()
+                for e in (os.environ.get("ADMIN_EMAILS") or "").split(",")
+                if e.strip()
+            ],
             signup_bootstrap_code=os.environ.get("SIGNUP_BOOTSTRAP_CODE") or None,
             per_account_pipeline_max=int(
                 os.environ.get("PER_ACCOUNT_PIPELINE_MAX") or "5"
