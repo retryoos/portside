@@ -28,7 +28,7 @@ from .models import (
     InboundMessage,
 )
 
-# 25 MB. Mirror SES default and the upload limits in portside_api/limits.py.
+# 25 MB. Mirror SES default and the upload limits in laytimely_api/limits.py.
 _MAX_MESSAGE_BYTES = 25 * 1024 * 1024
 _MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024
 

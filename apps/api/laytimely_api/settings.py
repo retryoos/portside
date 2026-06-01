@@ -1,4 +1,4 @@
-"""Environment-driven settings for the Papership.Ai API.
+"""Environment-driven settings for the Laytimely API.
 
 Cross-cutting config used by the FastAPI app + the agent fleet. Values come from
 environment variables; a ``.env`` file at the repo root or ``apps/api/.env`` is

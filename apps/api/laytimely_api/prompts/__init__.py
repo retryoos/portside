@@ -3,7 +3,7 @@
 Prompts live as `.md` files in this directory so they can be version-controlled
 and iterated on without touching Python. Compose by concatenation:
 
-    from portside_api.prompts import load_prompt
+    from laytimely_api.prompts import load_prompt
     SYSTEM = load_prompt("cross_cutting") + "\n\n" + load_prompt("analyst")
 
 The cross-cutting prefix (notes/11-prompts.md "Cross-cutting rules") is shared

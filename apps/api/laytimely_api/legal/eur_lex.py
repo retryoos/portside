@@ -23,7 +23,7 @@ from typing import Optional
 
 from .outbound import LiveCallDisabled, OutboundClient
 
-logger = logging.getLogger("portside_api.legal.eur_lex")
+logger = logging.getLogger("laytimely_api.legal.eur_lex")
 
 # Public endpoint. CELLAR exposes a SPARQL gateway too; the REST search is
 # sufficient for citation-by-title and follows simpler request shapes.

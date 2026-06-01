@@ -661,7 +661,7 @@ class AuditEventRow(Base):
     rather than relying on a decorator (decorators hide what got written).
     ``payload_redacted`` is a small JSON blob whose schema is per-action;
     PII and the model's prose are intentionally NOT included. See
-    ``portside_api/audit.py`` for the helper and the action vocabulary.
+    ``laytimely_api/audit.py`` for the helper and the action vocabulary.
 
     Retention: 90 days hot in Postgres; the CloudWatch sink for the long tail
     lands in the observability work (Tier 2 of the customer checklist).

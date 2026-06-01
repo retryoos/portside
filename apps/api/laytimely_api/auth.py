@@ -19,12 +19,12 @@ from pydantic import BaseModel
 
 from .settings import settings
 
-logger = logging.getLogger("portside_api.auth")
+logger = logging.getLogger("laytimely_api.auth")
 
 # Owner id for dev-auth requests and for the seeded demo voyages, so the dev
 # user actually sees the seeds once owner-scoping is on.
 DEV_USER_ID = "dev-user"
-DEV_USER_EMAIL = "dev@portside.local"
+DEV_USER_EMAIL = "demo@laytimely.com"
 
 
 class Principal(BaseModel):

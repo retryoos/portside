@@ -1,6 +1,6 @@
 """Export the canonical demo VoyageState to apps/web/public/demo-fixture.json.
 
-Run this whenever `apps/api/portside_api/fixtures.py` changes — the frontend's
+Run this whenever `apps/api/laytimely_api/fixtures.py` changes — the frontend's
 offline-demo path reads this JSON file via a plain HTTP GET to /demo-fixture.json
 (served as a static asset by Next.js out of `apps/web/public/`).
 
@@ -18,7 +18,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from portside_api.fixtures import demo_voyage_fixture
+from laytimely_api.fixtures import demo_voyage_fixture
 
 # Fixed timestamp so the exported JSON stays byte-stable across runs. The live
 # pipeline stamps a real ``created_at``; only this static export pins it.

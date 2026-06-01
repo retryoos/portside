@@ -30,7 +30,7 @@ from .schemas import (
 )
 from .storage import VoyageStore
 
-logger = logging.getLogger("portside_api.pipeline")
+logger = logging.getLogger("laytimely_api.pipeline")
 
 # Shown to the client when an *unexpected* failure aborts the pipeline. The real
 # exception is logged server-side; the client only ever sees this so internal

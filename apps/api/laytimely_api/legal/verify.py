@@ -20,7 +20,7 @@ from typing import Iterable
 
 from .models import CitedAuthority
 
-logger = logging.getLogger("portside_api.legal.verify")
+logger = logging.getLogger("laytimely_api.legal.verify")
 
 
 def validate_authorities(

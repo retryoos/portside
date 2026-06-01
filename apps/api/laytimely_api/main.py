@@ -1,4 +1,4 @@
-"""FastAPI app + routes for the Papership.Ai backend.
+"""FastAPI app + routes for the Laytimely backend.
 
 Endpoints:
     POST /voyages                 upload CP/NOR/SoF PDFs, kick off the pipeline in
@@ -95,7 +95,7 @@ from .schemas import (
 from .settings import settings
 from .storage import SqlVoyageStore, VoyageStore
 
-logger = logging.getLogger("portside_api")
+logger = logging.getLogger("laytimely_api")
 
 # Relational store, shared for the process lifetime. The engine is lazy
 # (no connection until first use), so constructing it at import is side-effect
@@ -176,7 +176,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Papership.Ai API",
+    title="Laytimely API",
     version="0.1.0",
     lifespan=lifespan,
     # Interactive docs + schema are off unless EXPOSE_DOCS=1 so a production

@@ -24,14 +24,14 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.email import (  # noqa: E402
+from laytimely_api.email import (  # noqa: E402
     EmailErrorCode,
     EmailSendError,
     LetterEmailRequest,
     build_mime,
     send_claim_letter,
 )
-from portside_api.fixtures import demo_voyage_fixture  # noqa: E402
+from laytimely_api.fixtures import demo_voyage_fixture  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

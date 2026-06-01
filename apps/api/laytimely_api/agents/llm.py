@@ -19,7 +19,7 @@ from typing import TypeVar
 from anthropic import AsyncAnthropic
 from pydantic import BaseModel, ValidationError
 
-logger = logging.getLogger("portside_api")
+logger = logging.getLogger("laytimely_api")
 
 MODEL = os.environ.get("ANTHROPIC_MODEL_PRIMARY", "claude-sonnet-4-6")
 

@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 from .db.models import AuditEventRow
 
-logger = logging.getLogger("portside_api.audit")
+logger = logging.getLogger("laytimely_api.audit")
 
 # Closed action vocabulary. Every site that calls ``record`` must pass one of
 # these literals. New actions are added with the route that emits them; the

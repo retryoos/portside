@@ -17,18 +17,18 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.claim_strength import (  # noqa: E402
+from laytimely_api.claim_strength import (  # noqa: E402
     build_panels,
     evidence_completeness_from_checklist,
     time_bar_risk,
 )
-from portside_api.evidence_checklist import (  # noqa: E402
+from laytimely_api.evidence_checklist import (  # noqa: E402
     EvidenceChecklist,
     EvidenceItem,
     build_checklist,
 )
-from portside_api.fixtures import demo_voyage_fixture  # noqa: E402
-from portside_api.researcher import EvidenceBundle, EvidenceItem as ResearchEvidence  # noqa: E402
+from laytimely_api.fixtures import demo_voyage_fixture  # noqa: E402
+from laytimely_api.researcher import EvidenceBundle, EvidenceItem as ResearchEvidence  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

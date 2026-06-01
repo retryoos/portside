@@ -13,11 +13,11 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import main as main_mod
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.objects import LocalObjectStore
-from portside_api.reviser import RevisionEdit, apply_revisions
-from portside_api.storage import InMemoryStore
+from laytimely_api import main as main_mod
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.objects import LocalObjectStore
+from laytimely_api.reviser import RevisionEdit, apply_revisions
+from laytimely_api.storage import InMemoryStore
 
 # A reword of a packet sentence with no EUR/clause/event tokens — always safe.
 _SAFE_FROM = "All rights reserved."

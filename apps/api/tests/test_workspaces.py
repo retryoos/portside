@@ -26,9 +26,9 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api import workspaces  # noqa: E402
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker  # noqa: E402
-from portside_api.db.models import InvitationRow, MembershipRow, WorkspaceRow  # noqa: E402
+from laytimely_api import workspaces  # noqa: E402
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker  # noqa: E402
+from laytimely_api.db.models import InvitationRow, MembershipRow, WorkspaceRow  # noqa: E402
 
 
 @pytest.fixture

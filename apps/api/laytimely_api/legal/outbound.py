@@ -17,7 +17,7 @@ from typing import Optional
 
 import httpx
 
-logger = logging.getLogger("portside_api.legal.outbound")
+logger = logging.getLogger("laytimely_api.legal.outbound")
 
 
 class LiveCallDisabled(RuntimeError):

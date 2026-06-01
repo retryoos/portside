@@ -9,11 +9,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Make the portside_api package importable (apps/api is the parent of this dir).
+# Make the laytimely_api package importable (apps/api is the parent of this dir).
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from portside_api.db.models import Base  # noqa: E402
-from portside_api.settings import settings  # noqa: E402
+from laytimely_api.db.models import Base  # noqa: E402
+from laytimely_api.settings import settings  # noqa: E402
 
 config = context.config
 

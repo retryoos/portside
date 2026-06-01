@@ -1,6 +1,6 @@
 """Tests for the async-background POST /voyages pattern.
 
-All tests monkeypatch ``portside_api.main.pipeline.run`` so the FastAPI route
+All tests monkeypatch ``laytimely_api.main.pipeline.run`` so the FastAPI route
 never reaches the real Anthropic SDK. The critical invariant: POST returns
 the voyage_id immediately and the pipeline runs in the background while the
 frontend polls GET /voyages/{id} to watch the stage advance.
@@ -16,11 +16,11 @@ from typing import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from portside_api import main as main_mod
-from portside_api.objects import LocalObjectStore
-from portside_api.pipeline import GENERIC_PIPELINE_ERROR
-from portside_api.schemas import Perspective, VoyageState
-from portside_api.storage import InMemoryStore, VoyageStore
+from laytimely_api import main as main_mod
+from laytimely_api.objects import LocalObjectStore
+from laytimely_api.pipeline import GENERIC_PIPELINE_ERROR
+from laytimely_api.schemas import Perspective, VoyageState
+from laytimely_api.storage import InMemoryStore, VoyageStore
 
 _VOYAGE_ID_RE = re.compile(r"^v_[0-9a-f]{12}$")
 

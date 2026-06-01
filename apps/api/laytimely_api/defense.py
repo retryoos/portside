@@ -27,7 +27,7 @@ from .schemas import (
     VoyageState,
 )
 
-logger = logging.getLogger("portside_api")
+logger = logging.getLogger("laytimely_api")
 
 _PROMPT = (Path(__file__).resolve().parent / "prompts" / "rebuttal.md").read_text()
 

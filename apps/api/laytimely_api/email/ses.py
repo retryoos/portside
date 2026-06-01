@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     # boto3 typing stubs are not pinned; this hint exists for editors only.
     from botocore.exceptions import ClientError  # noqa: F401  # pragma: no cover
 
-logger = logging.getLogger("portside_api.email.ses")
+logger = logging.getLogger("laytimely_api.email.ses")
 
 # Default sender address. Production swaps via env (`SES_SENDER`).
 _DEFAULT_SENDER = "claims@laytimely.com"

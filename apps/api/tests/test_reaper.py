@@ -11,10 +11,10 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker
-from portside_api.objects import StoredDocument
-from portside_api.schemas import VoyageState
-from portside_api.storage import SqlVoyageStore
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker
+from laytimely_api.objects import StoredDocument
+from laytimely_api.schemas import VoyageState
+from laytimely_api.storage import SqlVoyageStore
 
 
 def _doc(role: str = "cp") -> StoredDocument:

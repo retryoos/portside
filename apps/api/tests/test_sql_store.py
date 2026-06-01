@@ -12,10 +12,10 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker
-from portside_api.fixtures import demo_voyage_fixture, seed_voyages
-from portside_api.schemas import VoyageState
-from portside_api.storage import SqlVoyageStore
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker
+from laytimely_api.fixtures import demo_voyage_fixture, seed_voyages
+from laytimely_api.schemas import VoyageState
+from laytimely_api.storage import SqlVoyageStore
 
 
 def _url(tmp_path: Path, name: str = "t.db") -> str:

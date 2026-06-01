@@ -1,4 +1,4 @@
-"""Relational persistence layer for the Portside API.
+"""Relational persistence layer for the Laytimely API.
 
 `models` holds the SQLAlchemy ORM mapping of the full ``VoyageState`` tree;
 `mapping` converts between those ORM rows and the frozen Pydantic schemas.

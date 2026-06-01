@@ -25,9 +25,9 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api import audit  # noqa: E402
-from portside_api.audit import _redact  # noqa: E402
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker  # noqa: E402
+from laytimely_api import audit  # noqa: E402
+from laytimely_api.audit import _redact  # noqa: E402
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker  # noqa: E402
 
 
 @pytest.fixture

@@ -48,7 +48,7 @@ def test_committed_fixture_round_trips_to_voyage_state() -> None:
     """The committed apps/web/public/demo-fixture.json must deserialise back
     to the canonical VoyageState. If you change the fixture, re-run
     `uv run python scripts/export_demo_fixture.py`."""
-    from portside_api.schemas import VoyageState
+    from laytimely_api.schemas import VoyageState
 
     repo_root = Path(__file__).resolve().parents[3]
     committed = repo_root / "apps" / "web" / "public" / "demo-fixture.json"

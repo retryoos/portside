@@ -25,7 +25,7 @@ from .models import (
     SesSendResult,
 )
 
-logger = logging.getLogger("portside_api.email.invitations")
+logger = logging.getLogger("laytimely_api.email.invitations")
 
 
 def _now_iso() -> str:

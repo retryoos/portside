@@ -30,17 +30,17 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.agents import analyst  # noqa: E402
-from portside_api.agents.analyst import (  # noqa: E402
+from laytimely_api.agents import analyst  # noqa: E402
+from laytimely_api.agents.analyst import (  # noqa: E402
     EnrichedDisputeAnalysis,
     FlaggedEventCitations,
     _CitationPick,
     _CitationPicks,
     _citations_for_event,
 )
-from portside_api.fixtures import demo_voyage_fixture  # noqa: E402
-from portside_api.legal import corpus as legal_corpus  # noqa: E402
-from portside_api.legal.models import CitedAuthority  # noqa: E402
+from laytimely_api.fixtures import demo_voyage_fixture  # noqa: E402
+from laytimely_api.legal import corpus as legal_corpus  # noqa: E402
+from laytimely_api.legal.models import CitedAuthority  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

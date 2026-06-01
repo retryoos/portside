@@ -16,11 +16,11 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from portside_api import auth, main as main_mod
-from portside_api.auth import DEV_USER_ID, Principal, get_current_user
-from portside_api.db.engine import create_all, make_engine, make_sessionmaker
-from portside_api.fixtures import demo_voyage_fixture
-from portside_api.storage import InMemoryStore, SqlVoyageStore
+from laytimely_api import auth, main as main_mod
+from laytimely_api.auth import DEV_USER_ID, Principal, get_current_user
+from laytimely_api.db.engine import create_all, make_engine, make_sessionmaker
+from laytimely_api.fixtures import demo_voyage_fixture
+from laytimely_api.storage import InMemoryStore, SqlVoyageStore
 
 
 def test_dev_auth_returns_fixed_dev_user() -> None:

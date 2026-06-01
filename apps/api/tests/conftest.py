@@ -35,9 +35,9 @@ _TEST_DB_PATH.unlink(missing_ok=True)
 os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{_TEST_DB_PATH}"
 
 # pylint: disable=wrong-import-position
-from portside_api import main as main_mod  # noqa: E402
-from portside_api.db.engine import run_migrations  # noqa: E402
-from portside_api.db.models import (  # noqa: E402
+from laytimely_api import main as main_mod  # noqa: E402
+from laytimely_api.db.engine import run_migrations  # noqa: E402
+from laytimely_api.db.models import (  # noqa: E402
     AuditEventRow,
     InvitationRow,
     MembershipRow,

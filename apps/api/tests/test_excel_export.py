@@ -19,9 +19,9 @@ if str(_API_ROOT) not in sys.path:
 
 
 # pylint: disable=wrong-import-position
-from portside_api.exports import excel as excel_export  # noqa: E402
-from portside_api.fixtures import demo_voyage_fixture  # noqa: E402
-from portside_api.schemas import LaytimeResult, VoyageState  # noqa: E402
+from laytimely_api.exports import excel as excel_export  # noqa: E402
+from laytimely_api.fixtures import demo_voyage_fixture  # noqa: E402
+from laytimely_api.schemas import LaytimeResult, VoyageState  # noqa: E402
 
 
 @pytest.fixture
