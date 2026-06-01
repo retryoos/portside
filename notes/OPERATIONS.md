@@ -30,7 +30,7 @@ pipeline reach EUR 84,375.00.
 Backend-only smoke:
 ```
 D=synthetic-data/scenarios/rotterdam-weather-dispute
-VID=$(curl -s -F cp=@$D/cp.pdf -F nor=@$D/nor.pdf -F sof=@$D/sof.pdf -F perspective=owner localhost:8000/voyages | python3 -c "import sys,json;print(json.load(sys.stdin)['voyage_id'])")
+VID=$(curl -s -F "cp=@$D/Charter Party.pdf" -F "nor=@$D/Notice of Readiness.pdf" -F "sof=@$D/Statement of Facts.pdf" -F perspective=owner localhost:8000/voyages | python3 -c "import sys,json;print(json.load(sys.stdin)['voyage_id'])")
 sleep 35
 curl -s localhost:8000/voyages/$VID | python3 -c "import sys,json;d=json.load(sys.stdin);print(d['stage'], d['laytime']['demurrage_due_eur'])"
 # -> done 84375.0

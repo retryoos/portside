@@ -124,34 +124,61 @@ export default function ClaimScreen({ id }: { id?: string }) {
         </div>
       </header>
 
-      {/* Processing band: grid-rows collapse + opacity fade when done. */}
-      <div
-        className={`mt-10 grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${
-          processing
-            ? "grid-rows-[1fr] opacity-100"
-            : "mt-0 grid-rows-[0fr] opacity-0"
-        }`}
-        aria-hidden={!processing}
-      >
-        <div className="min-h-0">
-          {live && <AgentSteps stage={voyage.stage} error={voyage.error} />}
+      {voyage.stage === "error" ? (
+        // A failed run has a near-empty VoyageState (no extraction/packet),
+        // which the data columns below assume is present. Render a clean,
+        // self-contained failure panel instead so the page never crashes to a
+        // blank screen on an errored voyage.
+        <div className="mt-12 rounded-card border border-danger/20 bg-danger-container px-6 py-12 text-center">
+          <p className="text-eyebrow text-danger">Run failed</p>
+          <h2 className="text-h2 mt-3 text-primary">
+            This claim could not be generated.
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-body text-secondary">
+            {voyage.error ||
+              "The pipeline failed unexpectedly. Please try the upload again."}
+          </p>
+          <div className="mt-7 flex justify-center">
+            <a
+              href="/cases"
+              className="btn-lift rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
+            >
+              Back to cases
+            </a>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Processing band: grid-rows collapse + opacity fade when done. */}
+          <div
+            className={`mt-10 grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${
+              processing
+                ? "grid-rows-[1fr] opacity-100"
+                : "mt-0 grid-rows-[0fr] opacity-0"
+            }`}
+            aria-hidden={!processing}
+          >
+            <div className="min-h-0">
+              {live && <AgentSteps stage={voyage.stage} error={voyage.error} />}
+            </div>
+          </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-[58fr_42fr]">
-        <div>
-          <ClaimLetter
-            packet={voyage.packet}
-            loading={!readyPacket}
-            voyageId={voyage.voyage_id}
-            vesselName={cp?.vessel_name ?? null}
-            citations={citations}
-          />
-        </div>
-        <div>
-          <SourcesTabs voyage={voyage} citations={citations} />
-        </div>
-      </div>
+          <div className="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-[58fr_42fr]">
+            <div>
+              <ClaimLetter
+                packet={voyage.packet}
+                loading={!readyPacket}
+                voyageId={voyage.voyage_id}
+                vesselName={cp?.vessel_name ?? null}
+                citations={citations}
+              />
+            </div>
+            <div>
+              <SourcesTabs voyage={voyage} citations={citations} />
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

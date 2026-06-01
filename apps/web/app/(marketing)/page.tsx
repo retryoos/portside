@@ -137,15 +137,36 @@ export default function LandingPage() {
         </ScrollReveal>
         <div className="mt-20 grid grid-cols-1 gap-12 md:grid-cols-3">
           <ScrollReveal delayMs={80}>
-            <LoopVideo caption="Drag and drop the three voyage documents. A new case lands on the dashboard." />
+            <LoopVideo
+              poster="/showcase/upload.jpg"
+              caption="Drag and drop the three voyage documents. A new case lands on the dashboard."
+            />
           </ScrollReveal>
           <ScrollReveal delayMs={160}>
-            <LoopVideo caption="Watch four AI agents hand work to each other, then the EUR 84,375.00 quantum land." />
+            <LoopVideo
+              poster="/showcase/process.jpg"
+              caption="Watch four AI agents hand work to each other, then the EUR 84,375.00 quantum land."
+            />
           </ScrollReveal>
           <ScrollReveal delayMs={240}>
-            <LoopVideo caption="Highlight a sentence, refine it with AI, export the cited claim as a PDF." />
+            <LoopVideo
+              poster="/showcase/edit.jpg"
+              caption="Highlight a sentence, refine it with AI, export the cited claim as a PDF."
+            />
           </ScrollReveal>
         </div>
+        <ScrollReveal delayMs={320}>
+          <div className="mt-12 text-center">
+            <a
+              href="/sample-claim-letter.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-lift inline-flex items-center gap-2 rounded-pill border border-on-primary/30 px-5 py-2.5 text-body-sm font-semibold text-on-primary hover:bg-on-primary/10"
+            >
+              See a finished sample letter (PDF)
+            </a>
+          </div>
+        </ScrollReveal>
       </Section>
 
       {/* Section 4 - How it works */}
