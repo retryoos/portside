@@ -45,7 +45,7 @@ function scrubOklchFromStylesheets(doc: Document): void {
     try {
       rules = sheet.cssRules;
     } catch {
-      // Cross-origin sheet — skip silently.
+      // Cross-origin sheet, skip silently.
       continue;
     }
     if (rules) scrubRuleList(rules);
@@ -158,7 +158,7 @@ export default function ExportPdfButton({ targetId }: { targetId: string }) {
     // Drop the attribute for the capture and restore it after.
     if (prev.contentEditable !== null) {
       node.removeAttribute("contenteditable");
-      // Ensure the article is not focused — a stale selection in the editable
+      // Ensure the article is not focused, a stale selection in the editable
       // article can also confuse the snapshot.
       if (document.activeElement === node) {
         (node as HTMLElement).blur();

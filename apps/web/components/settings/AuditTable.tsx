@@ -171,7 +171,7 @@ function AuditRow({
           {formatTimestamp(event.at)}
         </td>
         <td className="px-4 py-3 align-top text-body-sm text-primary">
-          {event.actor_sub ? truncate(event.actor_sub, 22) : "—"}
+          {event.actor_sub ? truncate(event.actor_sub, 22) : "-"}
         </td>
         <td className="px-4 py-3 align-top">
           <span className="inline-flex rounded-pill border border-border bg-surface-muted px-2.5 py-0.5 text-body-sm text-primary">

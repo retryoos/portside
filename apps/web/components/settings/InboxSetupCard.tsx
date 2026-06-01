@@ -4,7 +4,7 @@
 // Three parts:
 //
 //   1. The forward-to address (read-only, big, with a Copy button)
-//   2. The privacy stance — Laytimely never reads the customer's mailbox;
+//   2. The privacy stance, Laytimely never reads the customer's mailbox;
 //      the customer forwards what they want us to ingest.
 //   3. Two short tutorials: Gmail filter -> forward, Outlook rule -> forward.
 //      Plain numbered lists, no embedded screenshots; the steps are stable
@@ -76,7 +76,7 @@ function AddressBlock({
             data-testid="inbox-address"
             className="select-all break-all rounded-md bg-surface-muted px-3 py-2 font-mono text-h3 text-primary"
           >
-            {address ?? "—"}
+            {address ?? "-"}
           </code>
         )}
         <button
@@ -240,7 +240,7 @@ function CopyToast({ status }: { status: "copied" | "failed" }) {
           </svg>
         </span>
         <p className="text-body-sm font-semibold text-primary">
-          {positive ? "Address copied" : "Copy failed — try selecting manually"}
+          {positive ? "Address copied" : "Copy failed, try selecting manually"}
         </p>
       </div>
     </div>

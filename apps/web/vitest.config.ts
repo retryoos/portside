@@ -1,6 +1,6 @@
 // Vitest config (review #13). Path alias mirrors tsconfig.json so the
 // ``@/lib/...`` imports the same modules at test time as at build time.
-// Node test environment (no jsdom) — every helper covered here is pure
+// Node test environment (no jsdom), every helper covered here is pure
 // JS, no React, no DOM. When component tests land, add jsdom + RTL.
 
 import { defineConfig } from "vitest/config";

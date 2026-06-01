@@ -28,8 +28,8 @@ export default function MailtoLetterButton({
 }) {
   function handleOpen() {
     const subject = vesselName
-      ? `Demurrage Claim — ${vesselName} (${voyageId})`
-      : `Demurrage Claim — ${voyageId}`;
+      ? `Demurrage Claim: ${vesselName} (${voyageId})`
+      : `Demurrage Claim: ${voyageId}`;
     const body = prepareBody(letterMarkdown);
     const params = new URLSearchParams();
     params.set("subject", subject);

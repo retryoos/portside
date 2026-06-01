@@ -2,7 +2,7 @@
 // env vars at module import (Next.js inlines them at build time) and
 // exposes a typed surface so components don't have to think about truthy
 // string parsing or env var naming. Add a new flag here when a new
-// surface ships behind one — never reach for ``process.env`` directly in
+// surface ships behind one, never reach for ``process.env`` directly in
 // a component.
 
 function readBool(name: string): boolean {
