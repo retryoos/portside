@@ -145,3 +145,26 @@ def test_list_ordering_and_vessel_grouping(tmp_path: Path) -> None:
         "MT Baltic Trader": 2,
         "MT Levant Carrier": 1,
     }
+
+
+def test_resave_with_extraction_replaces_branch(tmp_path: Path) -> None:
+    """The pipeline saves the same voyage at every stage, each time carrying the
+    extraction. The one-to-one analysis branches must be replaced, never
+    duplicate-inserted. Regression: this raised a UniqueViolationError on
+    ix_extractions_voyage_id under Postgres/asyncpg (insert-before-delete flush
+    ordering), failing every live run with "Processing failed unexpectedly"."""
+
+    async def go() -> VoyageState | None:
+        _engine, store = await _fresh_store(_url(tmp_path))
+        # First save inserts the extraction (e.g. stage "calculating").
+        await store.save(demo_voyage_fixture("v_resave"))
+        # Subsequent saves re-persist the same voyage + extraction (stages
+        # "analyzing", "drafting", "done"). Must not violate the unique key.
+        await store.save(demo_voyage_fixture("v_resave"))
+        await store.save(demo_voyage_fixture("v_resave"))
+        return await store.load("v_resave")
+
+    loaded = asyncio.run(go())
+    assert loaded is not None
+    assert loaded.extraction is not None
+    assert loaded.packet is not None

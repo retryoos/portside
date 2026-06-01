@@ -250,6 +250,20 @@ class SqlVoyageStore:
                     # owner (unless explicitly set) and the uploaded documents.
                     if owner_user_id is not None:
                         existing.owner_user_id = owner_user_id
+                    # Drop the existing one-to-one analysis branches and flush
+                    # the DELETEs before update_orm_from_state inserts the new
+                    # ones. Each child has a UNIQUE(voyage_id); without this,
+                    # SQLAlchemy's unit-of-work can order the new INSERT before
+                    # the old DELETE in the same flush, which Postgres/asyncpg
+                    # (Neon) rejects as a hard UniqueViolationError. This bites
+                    # every multi-stage pipeline save (extracting -> calculating
+                    # -> ... re-saves the extraction), failing the run with a
+                    # generic "Processing failed unexpectedly".
+                    existing.extraction = None
+                    existing.laytime = None
+                    existing.dispute = None
+                    existing.packet = None
+                    await session.flush()
                     update_orm_from_state(existing, state)
 
     async def load(
