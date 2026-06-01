@@ -46,6 +46,7 @@ AuditAction = Literal[
     "auth.login",
     "auth.login_failed",
     "auth.demo",
+    "auth.demo_seed",
     "admin.view",
 ]
 
@@ -101,6 +102,29 @@ async def record(
         actor_sub or "?",
         body,
     )
+
+
+async def has_event(
+    session: AsyncSession, *, actor_sub: str, action: AuditAction
+) -> bool:
+    """True if any audit row exists for ``actor_sub`` with ``action``.
+
+    A durable, indexed idempotency marker (``action`` is indexed). Used to make
+    one-off per-account side effects (e.g. demo seeding) idempotent without
+    pinning them to a deletable domain row. Takes the caller's session, so on a
+    hot path (login) it adds one query on the open connection, not a new one.
+    """
+    from sqlalchemy import func
+
+    stmt = (
+        select(func.count())
+        .select_from(AuditEventRow)
+        .where(
+            AuditEventRow.action == action,
+            AuditEventRow.actor_sub == actor_sub,
+        )
+    )
+    return bool((await session.execute(stmt)).scalar_one())
 
 
 # ---------------------------------------------------------------------------

@@ -60,6 +60,11 @@ class Settings:
     # founder can hand out a populated, credentialed demo login. Isolated from
     # the anonymous "Try live demo" identity and from each other.
     demo_share_emails: list[str]
+    # DB connection pool size (latency). 0 (default) keeps NullPool: a fresh
+    # Neon/PgBouncer connection per request, simplest and multi-loop safe. Set
+    # DB_POOL_SIZE>0 on the long-running server to reuse warm connections and
+    # cut the per-request connect round trip (see db/engine.make_engine).
+    db_pool_size: int
     # Admin dashboard allowlist (cost/usage observability). Comma-separated
     # emails (in Doppler) that may reach the /admin endpoints. Checked
     # server-side against the verified token email on every admin route, so
@@ -188,6 +193,7 @@ class Settings:
                 for e in (os.environ.get("DEMO_SHARE_EMAILS") or "").split(",")
                 if e.strip()
             ],
+            db_pool_size=int(os.environ.get("DB_POOL_SIZE") or "0"),
             signup_bootstrap_code=os.environ.get("SIGNUP_BOOTSTRAP_CODE") or None,
             per_account_pipeline_max=int(
                 os.environ.get("PER_ACCOUNT_PIPELINE_MAX") or "5"
