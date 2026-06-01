@@ -59,7 +59,7 @@ export default function InboxSettingsPage() {
             <h1 className="text-hero mt-4 text-primary">Email-in.</h1>
             <p className="mt-6 max-w-xl text-body-lg text-secondary">
               Forward voyage emails (brokers, agents, charterers) into
-              Laytimely. We never read your mailbox; we only see what you
+              Laytimely. We never read your mailbox. We only see what you
               forward.
             </p>
           </div>

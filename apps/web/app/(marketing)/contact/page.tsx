@@ -4,7 +4,7 @@ import Section from "@/components/marketing/Section";
 import ContactForm from "@/components/marketing/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Contact · Laytimely",
+  title: "Contact, Laytimely",
   description:
     "Get in touch with the Laytimely team. Sales, support, security, and press.",
 };
