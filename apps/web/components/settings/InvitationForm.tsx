@@ -104,10 +104,15 @@ export default function InvitationForm({
       className="rounded-card border border-border bg-surface p-6"
     >
       <p className="text-eyebrow text-secondary">Invite a teammate</p>
+      <p className="mt-2 text-body-sm text-secondary">
+        Send an invite link. They create an account and join this workspace.
+      </p>
 
-      <form onSubmit={handleSubmit} className="mt-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-          <div className="sm:w-72">
+      {/* Tight, grouped row capped at a sensible width so the controls sit
+          together instead of stretching across the whole settings column. */}
+      <form onSubmit={handleSubmit} className="mt-5 max-w-xl">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="min-w-0 flex-1">
             <label
               htmlFor="invite-email"
               className="text-label-caps text-secondary"
@@ -127,13 +132,13 @@ export default function InvitationForm({
               required
               placeholder="teammate@example.com"
               aria-invalid={invalid || undefined}
-              className={`mt-2 w-full rounded-md border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary ${
+              className={`mt-1.5 w-full rounded-md border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary ${
                 invalid ? "border-danger" : "border-border"
               }`}
             />
           </div>
 
-          <div>
+          <div className="sm:w-40">
             <label
               htmlFor="invite-role"
               className="text-label-caps text-secondary"
@@ -144,7 +149,7 @@ export default function InvitationForm({
               id="invite-role"
               value={role}
               onChange={(e) => setRole(e.target.value as WorkspaceRole)}
-              className="mt-2 rounded-md border border-border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary"
+              className="mt-1.5 w-full rounded-md border border-border bg-surface px-3 py-2 text-body text-primary outline-none transition-colors focus:border-primary"
             >
               {ROLE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -157,13 +162,13 @@ export default function InvitationForm({
           <button
             type="submit"
             disabled={busy}
-            className="btn-lift rounded-pill bg-cta px-5 py-2 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:opacity-60 sm:ml-auto"
+            className="btn-lift shrink-0 whitespace-nowrap rounded-pill bg-cta px-5 py-2 text-body-sm font-semibold text-on-cta hover:bg-cta-hover disabled:opacity-60"
           >
             {busy ? "Inviting…" : "Send invite"}
           </button>
         </div>
 
-        <p className="mt-2 text-body-sm text-secondary">{roleHint}</p>
+        <p className="mt-2.5 text-body-sm text-secondary">{roleHint}</p>
 
         {error ? (
           <p role="alert" className="mt-2 text-body-sm text-danger">
@@ -172,8 +177,8 @@ export default function InvitationForm({
         ) : null}
 
         <p className="mt-4 text-body-sm text-secondary">
-          Invitations expire in 14 days. We do not email them yet: copy the
-          link below to share it.
+          Invites are valid for 14 days. We do not send them by email yet, copy
+          the link below to share.
         </p>
       </form>
 

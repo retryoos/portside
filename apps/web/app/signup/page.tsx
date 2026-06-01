@@ -4,6 +4,7 @@
 // survives a sign-up detour), sanitised to same-origin paths only.
 
 import SignupForm from "./SignupForm";
+import ReactDOM from "react-dom";
 import Wordmark from "@/components/Wordmark";
 
 function sanitiseNext(raw: string | undefined): string | null {
@@ -19,6 +20,8 @@ export default async function SignupPage({
 }) {
   const { next } = await searchParams;
   const safeNext = sanitiseNext(next);
+
+  ReactDOM.preload("/photography/hero-login.jpg", { as: "image", fetchPriority: "high" });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-primary">

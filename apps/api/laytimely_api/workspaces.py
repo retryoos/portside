@@ -393,6 +393,37 @@ async def list_memberships_for_user(
     return [(ws, mem.role) for (mem, ws) in rows]  # type: ignore[return-value]
 
 
+async def co_member_subs(
+    session: AsyncSession,
+    *,
+    user_sub: str,
+) -> list[str]:
+    """Every user_sub that shares at least one workspace with ``user_sub``,
+    including the caller. This is the access set for workspace-shared resources:
+    a member of a workspace can see voyages owned by any other member of that
+    workspace (D1 voyage sharing). Two cheap indexed queries: the caller's
+    workspaces, then everyone in those workspaces. Always includes the caller
+    even if they have no membership rows yet."""
+    ws_ids = (
+        await session.execute(
+            select(MembershipRow.workspace_id).where(
+                MembershipRow.user_sub == user_sub
+            )
+        )
+    ).scalars().all()
+    subs: set[str] = {user_sub}
+    if ws_ids:
+        members = (
+            await session.execute(
+                select(MembershipRow.user_sub)
+                .where(MembershipRow.workspace_id.in_(list(ws_ids)))
+                .distinct()
+            )
+        ).scalars().all()
+        subs.update(members)
+    return sorted(subs)
+
+
 async def change_member_role(
     session: AsyncSession,
     *,

@@ -109,6 +109,18 @@ class VoyageStore(Protocol):
 
     async def list(self, owner_user_id: str | None = None) -> list[VoyageSummary]: ...
 
+    async def list_for_owners(
+        self, owner_user_ids: list[str]
+    ) -> list[VoyageSummary]:
+        """Voyages owned by ANY of ``owner_user_ids`` (workspace sharing)."""
+        ...
+
+    async def load_for_owners(
+        self, voyage_id: str, owner_user_ids: list[str]
+    ) -> VoyageState | None:
+        """Load a voyage iff its owner is in ``owner_user_ids``."""
+        ...
+
     async def list_vessels(
         self, owner_user_id: str | None = None
     ) -> list[VesselSummary]: ...
@@ -178,6 +190,17 @@ class InMemoryStore:
 
     async def list(self, owner_user_id: str | None = None) -> list[VoyageSummary]:
         return summaries_from_states(list(self._voyages.values()))
+
+    async def list_for_owners(
+        self, owner_user_ids: list[str]
+    ) -> list[VoyageSummary]:
+        # The in-memory store does not track ownership; return everything.
+        return await self.list()
+
+    async def load_for_owners(
+        self, voyage_id: str, owner_user_ids: list[str]
+    ) -> VoyageState | None:
+        return self._voyages.get(voyage_id)
 
     async def list_vessels(
         self, owner_user_id: str | None = None
@@ -293,7 +316,11 @@ class SqlVoyageStore:
                 update_orm_from_state(existing, updated)
             return updated
 
-    async def list(self, owner_user_id: str | None = None) -> list[VoyageSummary]:
+    async def list(
+        self,
+        owner_user_id: str | None = None,
+        owner_user_ids: list[str] | None = None,
+    ) -> list[VoyageSummary]:
         stmt = (
             select(
                 m.Voyage.voyage_id,
@@ -315,7 +342,9 @@ class SqlVoyageStore:
             )
             .order_by(m.Voyage.created_at.desc())
         )
-        if owner_user_id is not None:
+        if owner_user_ids is not None:
+            stmt = stmt.where(m.Voyage.owner_user_id.in_(list(owner_user_ids)))
+        elif owner_user_id is not None:
             stmt = stmt.where(m.Voyage.owner_user_id == owner_user_id)
         async with self._sm() as session:
             rows = (await session.execute(stmt)).all()
@@ -332,6 +361,24 @@ class SqlVoyageStore:
             )
             for r in rows
         ]
+
+    async def list_for_owners(
+        self, owner_user_ids: list[str]
+    ) -> list[VoyageSummary]:
+        owners = list(owner_user_ids)
+        if not owners:
+            return []
+        return await self.list(owner_user_ids=owners)
+
+    async def load_for_owners(
+        self, voyage_id: str, owner_user_ids: list[str]
+    ) -> VoyageState | None:
+        owners = set(owner_user_ids)
+        async with self._sm() as session:
+            voyage = await session.get(m.Voyage, voyage_id)
+            if voyage is None or voyage.owner_user_id not in owners:
+                return None
+            return orm_to_state(voyage)
 
     async def list_vessels(
         self, owner_user_id: str | None = None

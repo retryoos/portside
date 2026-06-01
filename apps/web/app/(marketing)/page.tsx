@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ReactDOM from "react-dom";
 import Hero from "@/components/marketing/Hero";
 import Section from "@/components/marketing/Section";
 import ScrollReveal from "@/components/marketing/ScrollReveal";
@@ -89,6 +90,12 @@ const SEGMENTS = [
 ];
 
 export default function LandingPage() {
+  // Preload the hero photograph at high priority so it paints with the page
+  // instead of popping in a beat later.
+  ReactDOM.preload("/photography/hero-landing.jpg", {
+    as: "image",
+    fetchPriority: "high",
+  });
   return (
     <>
       <Hero />

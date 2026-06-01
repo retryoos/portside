@@ -49,11 +49,12 @@ export default function InvitationsPage() {
             <p className="text-eyebrow text-secondary">Settings</p>
             <h1 className="text-hero mt-4 text-primary">Invitations.</h1>
             <p className="mt-6 max-w-xl text-body-lg text-secondary">
-              Mint and re-share invitations for{" "}
+              Invite teammates to{" "}
               <span className="font-medium text-primary">
                 {active?.workspace.name ?? "this workspace"}
               </span>
-              . Each invitation is good for 14 days.
+              , and re-share any pending invites. Each invite is valid for 14
+              days.
             </p>
           </div>
         </section>

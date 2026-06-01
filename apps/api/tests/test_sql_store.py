@@ -168,3 +168,26 @@ def test_resave_with_extraction_replaces_branch(tmp_path: Path) -> None:
     assert loaded is not None
     assert loaded.extraction is not None
     assert loaded.packet is not None
+
+
+def test_list_and_load_for_owners(tmp_path: Path) -> None:
+    """Workspace sharing (D1): list_for_owners / load_for_owners scope by an
+    owner set, so a member sees co-members' voyages and can open them."""
+
+    async def go():
+        _engine, store = await _fresh_store(_url(tmp_path))
+        await store.ensure_user("alice", "a@x.com")
+        await store.ensure_user("bob", "b@x.com")
+        await store.save(demo_voyage_fixture("v_alice"), owner_user_id="alice")
+        await store.save(demo_voyage_fixture("v_bob"), owner_user_id="bob")
+        shared = await store.list_for_owners(["alice", "bob"])
+        only_bob = await store.list_for_owners(["bob"])
+        cross = await store.load_for_owners("v_alice", ["bob"])  # not shared
+        ok = await store.load_for_owners("v_alice", ["alice", "bob"])
+        return shared, only_bob, cross, ok
+
+    shared, only_bob, cross, ok = asyncio.run(go())
+    assert {v.id for v in shared} == {"v_alice", "v_bob"}
+    assert {v.id for v in only_bob} == {"v_bob"}
+    assert cross is None  # bob alone cannot load alice's voyage
+    assert ok is not None  # in the shared owner set, he can

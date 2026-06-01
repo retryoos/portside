@@ -18,6 +18,10 @@ export default function CasesDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
+  // The shared demo identity is browse-only (the backend 403s its writes), so
+  // hide the upload affordance and show a sign-up nudge instead of letting a
+  // visitor hit a wall.
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -27,6 +31,12 @@ export default function CasesDashboardPage() {
         if (controller.signal.aborted) return;
         setError(e instanceof Error ? e.message : String(e));
       });
+    fetch("/api/auth/me", { signal: controller.signal })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { user?: { email?: string | null } } | null) => {
+        if (d?.user?.email === "demo@laytimely.com") setIsDemo(true);
+      })
+      .catch(() => {});
     return () => controller.abort();
   }, []);
 
@@ -61,18 +71,31 @@ export default function CasesDashboardPage() {
             </p>
           </div>
           <div className="flex shrink-0 items-center">
-            <button
-              type="button"
-              onClick={() => setShowUpload((s) => !s)}
-              aria-expanded={showUpload}
-              className="btn-lift rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
-            >
-              {showUpload ? "Close upload" : "New voyage claim"}
-            </button>
+            {isDemo ? (
+              <span className="rounded-pill border border-border bg-surface px-4 py-2 text-body-sm text-secondary">
+                Read-only demo
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowUpload((s) => !s)}
+                aria-expanded={showUpload}
+                className="btn-lift rounded-pill bg-cta px-6 py-3 text-body-sm font-semibold text-on-cta hover:bg-cta-hover"
+              >
+                {showUpload ? "Close upload" : "New voyage claim"}
+              </button>
+            )}
           </div>
         </section>
 
-        {showUpload && (
+        {isDemo && (
+          <p className="mb-8 rounded-card border border-border bg-surface-muted px-5 py-4 text-body-sm text-secondary">
+            You are exploring the live demo. Browse these finished cases freely.
+            To run your own claims, ask us for an invite.
+          </p>
+        )}
+
+        {showUpload && !isDemo && (
           <div className="pb-8">
             <Dropzone onSubmit={handleSubmit} busy={createBusy} />
           </div>

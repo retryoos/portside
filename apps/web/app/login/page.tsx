@@ -2,6 +2,7 @@
 // hero with a frosted-glass card overlaid asymmetrically (Revolut-style),
 // falling back to a deep-ink surface when no hero photo is committed.
 
+import ReactDOM from "react-dom";
 import LoginForm from "./LoginForm";
 import Wordmark from "@/components/Wordmark";
 
@@ -21,6 +22,12 @@ export default async function LoginPage({
 }) {
   const { next } = await searchParams;
   const safeNext = sanitiseNext(next);
+
+  // Preload the login hero so it loads with the page, not a beat after.
+  ReactDOM.preload("/photography/hero-login.jpg", {
+    as: "image",
+    fetchPriority: "high",
+  });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-primary">
