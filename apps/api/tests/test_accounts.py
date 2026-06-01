@@ -249,13 +249,28 @@ def test_demo_share_email_lands_populated_and_is_idempotent(client, monkeypatch)
     assert all(v.id.startswith("v_demo_") for v in seeded)
     count = len(seeded)
 
-    # Logging in again is an idempotent no-op (deterministic per-account ids).
+    # Logging in again is an idempotent no-op (the durable audit marker gates
+    # seeding, so no re-seed and no duplication).
     login = client.post(
         "/auth/login", json={"email": "share@acme.com", "password": "password1"}
     )
     assert login.status_code == 200
     again = _run(main_mod.store.list(owner_user_id=sub))
     assert len(again) == count
+
+    # Regression: deleting a seeded case must NOT resurrect it on the next login.
+    # The old marker was a seeded voyage itself, so deleting it re-seeded the
+    # whole set on every subsequent login (a multi-second write storm). The
+    # durable marker survives the deletion.
+    deleted_id = seeded[0].id
+    assert _run(main_mod.store.delete(deleted_id, sub)) is True
+    relogin = client.post(
+        "/auth/login", json={"email": "share@acme.com", "password": "password1"}
+    )
+    assert relogin.status_code == 200
+    after_delete = _run(main_mod.store.list(owner_user_id=sub))
+    assert len(after_delete) == count - 1
+    assert all(v.id != deleted_id for v in after_delete)
 
     # A normal (non-share) signup stays empty.
     n = client.post(

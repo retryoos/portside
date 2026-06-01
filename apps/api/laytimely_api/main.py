@@ -110,7 +110,7 @@ logger = logging.getLogger("laytimely_api")
 # Relational store, shared for the process lifetime. The engine is lazy
 # (no connection until first use), so constructing it at import is side-effect
 # free; tests monkeypatch ``store`` with an InMemoryStore before startup.
-_engine = make_engine(settings.database_url)
+_engine = make_engine(settings.database_url, pool_size=settings.db_pool_size)
 _sessionmaker = make_sessionmaker(_engine)
 store: VoyageStore = SqlVoyageStore(_sessionmaker)
 # Let the token-usage capture persist via the same sessionmaker (it cannot
@@ -359,21 +359,44 @@ async def enforce_auth_rate_limit(request: Request) -> None:
         )
 
 
-async def _seed_demo_cases_for(owner_sub: str) -> None:
+_DEMO_SEED_ACTION = "auth.demo_seed"
+
+
+async def _perform_demo_seed(owner_sub: str) -> None:
     """Give a demo-share account its OWN private copy of the seeded demo cases.
 
     Founder-designated accounts (settings.demo_share_emails, set in Doppler)
     get a fully populated dashboard they can hand out as a credentialed demo
     login, isolated from the anonymous "Try live demo" identity and from each
     other (the copies are owned by the account, so its own uploads sit
-    alongside them). Idempotent: the per-account voyage ids are deterministic,
-    so the seed runs once and every later login is a cheap no-op."""
-    marker = f"v_demo_{owner_sub[:12]}_0"
-    if await store.load(marker, owner_sub) is not None:
-        return  # already seeded for this account
-    for i, state in enumerate(seed_voyages()):
-        copy = state.model_copy(update={"voyage_id": f"v_demo_{owner_sub[:12]}_{i}"})
-        await store.save(copy, owner_user_id=owner_sub)
+    alongside them).
+
+    Done ONCE per account, gated by a durable audit-event marker
+    (``_DEMO_SEED_ACTION``), NOT by the presence of a seeded voyage. The old
+    voyage-id marker re-seeded on every login the moment that one case was
+    deleted, turning each login into a 10-write connection storm (multi-second,
+    occasionally a minutes-long hang). The marker survives any deletion, so a
+    prospect deleting demo cases during a walkthrough never resurrects them.
+
+    The 10 copies are written in a single transaction (``save_many``) and the
+    marker is recorded after, so first-seed is one connection's worth of work
+    and every later login is a single indexed COUNT on the open connection."""
+    sub12 = owner_sub[:12]
+    states = [
+        state.model_copy(update={"voyage_id": f"v_demo_{sub12}_{i}"})
+        for i, state in enumerate(seed_voyages())
+    ]
+    await store.save_many(states, owner_user_id=owner_sub)
+    async with _sessionmaker() as session:
+        await audit.record(
+            session,
+            actor_sub=owner_sub,
+            action=_DEMO_SEED_ACTION,
+            target_type="user",
+            target_id=owner_sub,
+            payload={"count": len(states)},
+        )
+        await session.commit()
 
 
 @app.post("/auth/signup", dependencies=[Depends(enforce_auth_rate_limit)])
@@ -461,9 +484,10 @@ async def auth_signup(req: accounts.SignupRequest) -> accounts.AuthResponse:
         await session.commit()
 
     # Founder-designated demo-share accounts land pre-populated so they can be
-    # handed out as a credentialed, fully populated demo login.
+    # handed out as a credentialed, fully populated demo login. A fresh signup
+    # has no prior seed, so seed unconditionally (the marker is recorded inside).
     if email_lower in settings.demo_share_emails:
-        await _seed_demo_cases_for(sub)
+        await _perform_demo_seed(sub)
 
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
@@ -545,6 +569,16 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
         _wid, created = await workspaces.ensure_personal_workspace(
             session, user_sub=sub, display_name=name or email
         )
+        # Demo-share accounts (incl. ones predating the allowlist) get seeded on
+        # first login. Decide it here, on the OPEN connection, with one indexed
+        # COUNT, so a steady-state login of a demo account costs one extra query,
+        # not a whole extra session/connection round trip.
+        needs_demo_seed = (
+            email.strip().lower() in settings.demo_share_emails
+            and not await audit.has_event(
+                session, actor_sub=sub, action=_DEMO_SEED_ACTION
+            )
+        )
         await audit.record(
             session,
             actor_sub=sub,
@@ -553,10 +587,10 @@ async def auth_login(req: accounts.LoginRequest) -> accounts.AuthResponse:
             target_id=sub,
         )
         await session.commit()
-    # Seed (idempotently) so an existing demo-share account that predates the
-    # allowlist also gets its populated copy on its next login.
-    if email.strip().lower() in settings.demo_share_emails:
-        await _seed_demo_cases_for(sub)
+    # The actual seed (rare: once per account) runs after commit, off the
+    # request's main transaction.
+    if needs_demo_seed:
+        await _perform_demo_seed(sub)
     token = accounts.issue_app_token(sub=sub, email=email, name=name)
     return accounts.AuthResponse(
         token=token, user=accounts.AuthUser(sub=sub, email=email, name=name)

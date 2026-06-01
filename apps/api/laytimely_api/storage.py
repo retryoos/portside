@@ -101,6 +101,13 @@ class VoyageStore(Protocol):
         self, state: VoyageState, owner_user_id: str | None = None
     ) -> None: ...
 
+    async def save_many(
+        self, states: list[VoyageState], owner_user_id: str | None = None
+    ) -> None:
+        """Persist many voyages in ONE transaction (bulk seed). One connection
+        and one commit, vs ``save`` per voyage which is one of each per call."""
+        ...
+
     async def load(
         self, voyage_id: str, owner_user_id: str | None = None
     ) -> VoyageState | None: ...
@@ -173,6 +180,13 @@ class InMemoryStore:
     ) -> None:
         async with self._lock:
             self._voyages[state.voyage_id] = state
+
+    async def save_many(
+        self, states: list[VoyageState], owner_user_id: str | None = None
+    ) -> None:
+        async with self._lock:
+            for state in states:
+                self._voyages[state.voyage_id] = state
 
     async def load(
         self, voyage_id: str, owner_user_id: str | None = None
@@ -282,6 +296,29 @@ class SqlVoyageStore:
                     # every multi-stage pipeline save (extracting -> calculating
                     # -> ... re-saves the extraction), failing the run with a
                     # generic "Processing failed unexpectedly".
+                    existing.extraction = None
+                    existing.laytime = None
+                    existing.dispute = None
+                    existing.packet = None
+                    await session.flush()
+                    update_orm_from_state(existing, state)
+
+    async def save_many(
+        self, states: list[VoyageState], owner_user_id: str | None = None
+    ) -> None:
+        # All voyages in ONE session + ONE transaction (one connection, one
+        # commit), unlike ``save`` which opens a session per call. Used by the
+        # demo-share seed so login does not pay N connect round trips. Same
+        # upsert + flush-before-reinsert logic as ``save`` (see that comment).
+        async with self._sm() as session:
+            async with session.begin():
+                for state in states:
+                    existing = await session.get(m.Voyage, state.voyage_id)
+                    if existing is None:
+                        session.add(state_to_orm(state, owner_user_id))
+                        continue
+                    if owner_user_id is not None:
+                        existing.owner_user_id = owner_user_id
                     existing.extraction = None
                     existing.laytime = None
                     existing.dispute = None

@@ -18,22 +18,34 @@ from sqlalchemy.pool import NullPool
 from .models import Base
 
 
-def make_engine(database_url: str) -> AsyncEngine:
+def make_engine(database_url: str, *, pool_size: int = 0) -> AsyncEngine:
     engine_kwargs: dict[str, object] = {"future": True}
     if "+asyncpg" in database_url:
         # Postgres-on-asyncpg config, tuned for Neon's pooled (PgBouncer,
-        # transaction-pooling) endpoint:
-        #   - NullPool: never reuse a connection across event loops. SQLAlchemy's
-        #     default pool caches connections, and an asyncpg connection bound to
-        #     one loop and reused on another raises "got Future attached to a
-        #     different loop" (hit under asyncio.run() in tests and on cold-start
-        #     work that runs on a different loop than request handling). A fresh
-        #     connection per checkout sidesteps it; Neon fronts a pooler anyway.
-        #   - statement_cache_size=0: PgBouncer transaction pooling is
-        #     incompatible with asyncpg's server-side prepared-statement cache,
-        #     which otherwise surfaces as intermittent 500s on query endpoints.
-        engine_kwargs["poolclass"] = NullPool
+        # transaction-pooling) endpoint. ``statement_cache_size=0`` is always
+        # set: PgBouncer transaction pooling is incompatible with asyncpg's
+        # server-side prepared-statement cache, which otherwise surfaces as
+        # intermittent 500s on query endpoints.
         engine_kwargs["connect_args"] = {"statement_cache_size": 0}
+        if pool_size > 0:
+            # Opt-in warm connection pool (DB_POOL_SIZE>0). Reuses connections
+            # on the single uvicorn event loop instead of opening a fresh
+            # Neon/PgBouncer connection per request, which is the dominant
+            # per-request latency under NullPool (a TLS + pooler auth round trip
+            # on every query). ``pool_pre_ping`` transparently replaces a
+            # connection PgBouncer has dropped; ``pool_recycle`` bounds staleness.
+            engine_kwargs["pool_size"] = pool_size
+            engine_kwargs["max_overflow"] = pool_size
+            engine_kwargs["pool_pre_ping"] = True
+            engine_kwargs["pool_recycle"] = 300
+        else:
+            # Default: NullPool, a fresh connection per checkout. SQLAlchemy's
+            # default pool would cache connections, and an asyncpg connection
+            # bound to one event loop then reused on another raises "got Future
+            # attached to a different loop" (hit under asyncio.run() in tests and
+            # any multi-loop cold-start work). A single-loop server can safely
+            # opt into the pool above; this stays the zero-config default.
+            engine_kwargs["poolclass"] = NullPool
     engine = create_async_engine(database_url, **engine_kwargs)
     if database_url.startswith("sqlite"):
 
