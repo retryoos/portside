@@ -21,14 +21,16 @@ export default async function SignupPage({
   const { next } = await searchParams;
   const safeNext = sanitiseNext(next);
 
-  ReactDOM.preload("/photography/hero-login.jpg", { as: "image", fetchPriority: "high" });
+  // Optimised ~360KB WebP hero (was a 3.9MB JPG); preloaded so it paints with
+  // the page instead of popping in a beat later.
+  ReactDOM.preload("/photography/hero-login.webp", { as: "image", fetchPriority: "high" });
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-primary">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/photography/hero-login.jpg')" }}
+        style={{ backgroundImage: "url('/photography/hero-login.webp')" }}
       />
       <div
         aria-hidden="true"

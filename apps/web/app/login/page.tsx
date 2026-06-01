@@ -23,8 +23,11 @@ export default async function LoginPage({
   const { next } = await searchParams;
   const safeNext = sanitiseNext(next);
 
-  // Preload the login hero so it loads with the page, not a beat after.
-  ReactDOM.preload("/photography/hero-login.jpg", {
+  // Preload the login hero so it loads with the page, not a beat after. The
+  // asset is an optimised ~360KB WebP (the source was a 3.9MB DSLR JPG, which
+  // always painted late and "popped in"); at this size + high priority it
+  // arrives with the first paint.
+  ReactDOM.preload("/photography/hero-login.webp", {
     as: "image",
     fetchPriority: "high",
   });
@@ -37,7 +40,7 @@ export default async function LoginPage({
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: "url('/photography/hero-login.jpg')",
+          backgroundImage: "url('/photography/hero-login.webp')",
         }}
       />
       {/* Subtle ink scrim so the glass card always reads, even on a bright photo. */}
