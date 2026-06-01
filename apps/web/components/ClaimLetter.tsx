@@ -51,19 +51,22 @@ export default function ClaimLetter({
     }
   }, [packet, snapshotMd]);
 
-  if (loading || !packet) {
-    return <ClaimLetterSkeleton />;
-  }
-
-  const rawBodyMd = snapshotMd ?? packet.claim_letter_markdown;
   // Inject ¹ ² ³ markers after every reference to a verified citation and
   // get back the flat numbered list for the footnotes block. useMemo keeps
   // the regex run off the hot edit path (this only re-runs when the body
-  // text or the citations list changes).
+  // text or the citations list changes). Computed BEFORE the loading
+  // early-return so the hooks order stays stable across renders (otherwise
+  // React throws "Rendered fewer hooks than expected" when loading flips
+  // from true -> false).
+  const rawBodyMd = snapshotMd ?? packet?.claim_letter_markdown ?? "";
   const { markdown: bodyMd, flat: numberedAuthorities } = useMemo(
     () => injectCitationMarkers(rawBodyMd, citations ?? []),
     [rawBodyMd, citations],
   );
+
+  if (loading || !packet) {
+    return <ClaimLetterSkeleton />;
+  }
 
   return (
     <div className="relative rounded-card border border-border bg-surface">
