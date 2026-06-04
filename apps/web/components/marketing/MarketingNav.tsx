@@ -15,10 +15,14 @@ import Wordmark from "@/components/Wordmark";
 // ``/security`` are white-on-white, so the nav would read as invisible
 // when scrollY=0. We solidify by default on every route except ``/`` so
 // the chrome is always visible and clickable.
-const NAV = [
-  { label: "Product", href: "/#product" },
-  { label: "How it works", href: "/#how" },
-  { label: "Pricing", href: "/#pricing" },
+// ``hard`` items navigate with a real <a> (full document load) instead of
+// next/link, because /survey is a static document outside the Next route tree
+// (served from public/survey via a rewrite); a client RSC navigation would 404.
+const NAV: { label: string; href: string; hard?: boolean }[] = [
+  { label: "How we work", href: "/#how-we-work" },
+  { label: "Example", href: "/#example" },
+  { label: "Engagement", href: "/#engagement" },
+  { label: "Survey", href: "/survey", hard: true },
 ];
 
 export default function MarketingNav() {
@@ -57,19 +61,22 @@ export default function MarketingNav() {
           <Wordmark size="sm" />
         </Link>
         <nav className="hidden items-center gap-2 md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`rounded-pill px-4 py-2 text-body-sm font-semibold transition-colors ${
-                scrolled
-                  ? "text-secondary hover:bg-surface-muted hover:text-primary"
-                  : "text-on-primary/80 hover:bg-on-primary/10 hover:text-on-primary"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV.map((item) => {
+            const className = `rounded-pill px-4 py-2 text-body-sm font-semibold transition-colors ${
+              scrolled
+                ? "text-secondary hover:bg-surface-muted hover:text-primary"
+                : "text-on-primary/80 hover:bg-on-primary/10 hover:text-on-primary"
+            }`;
+            return item.hard ? (
+              <a key={item.href} href={item.href} className={className}>
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.href} href={item.href} className={className}>
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <Link
           href="/login"

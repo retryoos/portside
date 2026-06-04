@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI agents in maritime shipping · A Laytimely research survey</title>
+    <meta
+      name="description"
+      content="A short, anonymous research survey on how the maritime shipping industry understands and uses AI agents. Sixteen questions, about five minutes."
+    />
+    <meta name="robots" content="noindex" />
+
+    <!-- Fonts: Inter for UI, Fraunces for the wordmark only, per DESIGN.md -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="icon" href="assets/logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Top nav: transparent over the hero, solid after scroll -->
+    <header class="nav scrolled" id="nav" data-static>
+      <div class="nav__inner">
+        <a class="wordmark" id="navWordmark" href="#survey" aria-label="Laytimely home">
+          <img src="assets/laytimely-logo.jpg" alt="" aria-hidden="true" />
+          <span>Laytimely<span class="dot">.</span></span>
+        </a>
+        <span class="nav__meta">Research survey</span>
+      </div>
+    </header>
+
+    <!-- Consent gate: the survey is hidden until this is accepted -->
+    <section class="consent" id="consent">
+      <div class="consent__inner">
+        <p class="text-eyebrow text-secondary">Before you begin</p>
+        <h1 class="text-display">Consent to take part.</h1>
+        <p class="consent__lede text-body-lg text-secondary">
+          Please read the information below. You will need to confirm your consent
+          to continue.
+        </p>
+
+        <div class="consent__card">
+          <label class="consent__check" for="consentCheck">
+            <input type="checkbox" id="consentCheck" />
+            <span class="consent__mark" aria-hidden="true"></span>
+            <span class="consent__agree">
+              I confirm that I have read and understood the information below, I am
+              18 years of age or older, and I agree to take part voluntarily.
+            </span>
+          </label>
+
+          <button type="button" class="btn btn--primary" id="beginBtn" disabled>
+            Begin the survey
+          </button>
+
+          <div class="consent__details">
+            <p class="consent__detailhead">What you are agreeing to</p>
+            <div class="consent__item">
+              <p class="consent__term">Purpose</p>
+              <p class="consent__desc">
+                This survey is part of an academic research project at the American
+                College of Greece AI Lab, studying how maritime shipping
+                professionals understand and use AI agents.
+              </p>
+            </div>
+            <div class="consent__item">
+              <p class="consent__term">What it involves</p>
+              <p class="consent__desc">
+                Around 35 short questions: a few about you, then your views on AI
+                agents in your work. It takes about nine minutes.
+              </p>
+            </div>
+            <div class="consent__item">
+              <p class="consent__term">Voluntary participation</p>
+              <p class="consent__desc">
+                Taking part is entirely voluntary. You may withdraw at any time
+                before submitting by simply closing this page. Nothing is recorded
+                until you press submit.
+              </p>
+            </div>
+            <div class="consent__item">
+              <p class="consent__term">Anonymity and data</p>
+              <p class="consent__desc">
+                Your responses are anonymous. We do not collect your name, email,
+                or any other identifying information. We record only your answers,
+                the time of submission, and basic non-identifying technical
+                information (your browser type). Data is used only in aggregate for
+                research and may appear in academic publications.
+              </p>
+            </div>
+            <div class="consent__item">
+              <p class="consent__term">Contact</p>
+              <p class="consent__desc">
+                Questions about this research? Contact
+                <span id="consentContact">the American College of Greece AI Lab</span>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Survey form -->
+    <main class="form-wrap" id="survey" hidden>
+      <!-- Progress -->
+      <div class="progress" id="progress">
+        <div class="progress__track"><div class="progress__fill" id="progressFill"></div></div>
+        <span class="progress__count" id="progressCount">0 / 0</span>
+      </div>
+
+      <div class="intro" id="about">
+        <p class="text-eyebrow text-secondary" id="introEyebrow"></p>
+        <h2 class="text-display" id="introTitle"></h2>
+        <p class="lede text-body-lg text-secondary" id="introBody"></p>
+        <p class="intro__meta">Anonymous · No sign-in · For academic research at the American College of Greece AI Lab</p>
+      </div>
+
+      <form id="surveyForm" novalidate>
+        <!-- Sections + questions injected here by survey.js -->
+        <div id="sections"></div>
+
+        <div class="submit-row">
+          <button type="submit" class="btn btn--primary" id="submitBtn">
+            Submit my answers
+          </button>
+          <p class="form-status" id="formStatus"></p>
+        </div>
+      </form>
+    </main>
+
+    <!-- Success screen (hidden until submit) -->
+    <section class="done" id="done" hidden>
+      <div class="done__mark" aria-hidden="true">✓</div>
+      <p class="text-eyebrow text-secondary">Submitted</p>
+      <h2 class="text-display">Thank you.</h2>
+      <p class="lede text-body-lg">
+        Your answers have been recorded. They feed an ongoing research project on
+        AI agents in maritime shipping at the American College of Greece AI Lab.
+      </p>
+
+      <div class="done__offer">
+        <p class="text-eyebrow text-secondary">A thank-you</p>
+        <p class="done__offer-title text-h3">
+          You're now eligible for a free consultation on integrating AI agents
+          into your work.
+        </p>
+        <p class="done__offer-body text-body">
+          To claim it, email either of us with the subject line
+          <strong>"AI Agents"</strong> and we'll get back to you.
+        </p>
+        <div class="done__emails">
+          <a class="btn btn--primary" href="mailto:r.dolgopolyi@acg.edu?subject=AI%20Agents">
+            r.dolgopolyi@acg.edu
+          </a>
+          <a class="btn btn--primary" href="mailto:d.kalligaridis@acg.edu?subject=AI%20Agents">
+            d.kalligaridis@acg.edu
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <a class="wordmark" href="#survey" aria-label="Laytimely home">
+          <img src="assets/laytimely-logo.jpg" alt="" aria-hidden="true" />
+          <span>Laytimely<span class="dot">.</span></span>
+        </a>
+        <p>Built in Athens by Dimitris &amp; Roman at the American College of Greece AI Lab.</p>
+      </div>
+    </footer>
+
+    <script src="config.js"></script>
+    <script src="questions.js"></script>
+    <script src="survey.js"></script>
+  </body>
+</html>

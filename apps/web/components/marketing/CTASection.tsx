@@ -12,11 +12,12 @@ export default function CTASection() {
           <div className="max-w-2xl">
             <p className="text-eyebrow text-on-primary/70">Get started</p>
             <h2 className="text-display mt-6 text-on-primary">
-              Stop losing valid claims to deadlines you missed.
+              Find the system your operation is missing.
             </h2>
             <p className="mt-6 max-w-xl text-body-lg text-on-primary/80">
-              See a live run on real voyage documents. We will walk you through
-              the agents, the citations, and the exported claim letter.
+              Book a working session. We will map your bottlenecks and walk you
+              through a live agent we already built, the citations, the math, and
+              the output.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -24,7 +25,7 @@ export default function CTASection() {
               href="/contact"
               className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover"
             >
-              Book a demo
+              Book a working session
             </Link>
             <Link
               href="/login"

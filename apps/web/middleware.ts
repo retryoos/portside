@@ -24,6 +24,12 @@ import {
 import { verifySession } from "@/lib/auth/session";
 
 // Marketing surfaces. Visitors reach these without a session.
+//
+// "/survey" is the bare path for the static research survey (rewritten to
+// /survey/index.html in next.config). Its sub-assets (styles.css, survey.js,
+// images) carry a file extension and so are excluded by the matcher's `.*\..*`
+// rule; only this extensionless entry path reaches the middleware and needs to
+// be allowlisted, otherwise the default-deny bounces it to /login.
 const PUBLIC_EXACT = new Set<string>([
   "/",
   "/about",
@@ -31,6 +37,7 @@ const PUBLIC_EXACT = new Set<string>([
   "/privacy",
   "/terms",
   "/contact",
+  "/survey",
 ]);
 
 export async function middleware(request: NextRequest) {
