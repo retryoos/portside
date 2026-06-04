@@ -33,8 +33,11 @@ const csp = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   // html2canvas (bundled in html2pdf.js) renders via a blob: worker.
   "worker-src 'self' blob:",
-  // 'self' + the API origin + Web3Forms (the marketing contact form endpoint).
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.web3forms.com`,
+  // 'self' + the API origin + Web3Forms (the marketing contact form endpoint)
+  // + Google Apps Script (the /survey research form posts there with
+  // mode:'no-cors'; the /exec endpoint redirects to script.googleusercontent.com,
+  // so both hosts are allowed).
+  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.web3forms.com https://script.google.com https://script.googleusercontent.com`,
 ].join("; ");
 
 const securityHeaders = [
@@ -56,6 +59,12 @@ const nextConfig = {
   reactStrictMode: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  async rewrites() {
+    // Serve Roman's static research survey (apps/web/public/survey/) at the
+    // clean path /survey. The files reference their assets relatively, so they
+    // resolve under /survey/ unchanged; only the bare path needs mapping.
+    return [{ source: "/survey", destination: "/survey/index.html" }];
   },
 };
 

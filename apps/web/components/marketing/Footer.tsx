@@ -8,19 +8,25 @@ import Wordmark from "@/components/Wordmark";
 // Two product links currently point at /login (the authed product is
 // behind that gate); keys are by label rather than href so the duplicate
 // href does not produce a React "two children with the same key" warning.
-const PRODUCT = [
-  { label: "Demurrage workspace", href: "/login" },
-  { label: "Edit with AI", href: "/login" },
-  { label: "Pricing", href: "/#pricing" },
+// ``hard`` links navigate with a real <a> (full load) instead of next/link;
+// /survey is a static document outside the Next route tree (see MarketingNav).
+type FooterLink = { label: string; href: string; hard?: boolean };
+
+const STUDIO: FooterLink[] = [
+  { label: "How we work", href: "/#how-we-work" },
+  { label: "Example system", href: "/#example" },
+  { label: "Engagement", href: "/#engagement" },
+  { label: "Open the app", href: "/login" },
 ];
 
-const COMPANY = [
+const COMPANY: FooterLink[] = [
   { label: "About", href: "/about" },
+  { label: "Survey", href: "/survey", hard: true },
   { label: "Contact", href: "/contact" },
   { label: "Security", href: "/security" },
 ];
 
-const LEGAL = [
+const LEGAL: FooterLink[] = [
   { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
 ];
@@ -35,14 +41,15 @@ export default function Footer() {
               <Wordmark size="sm" />
             </Link>
             <p className="mt-5 max-w-sm text-body text-secondary">
-              AI workflows for demurrage, laytime, freight disputes, and beyond.
+              Custom multi-agent AI systems for maritime operations. The
+              demurrage engine is one we shipped.
             </p>
             <p className="mt-8 text-body-sm text-secondary">
               Athens, Greece
             </p>
           </div>
 
-          <FooterColumn title="Product" links={PRODUCT} />
+          <FooterColumn title="Studio" links={STUDIO} />
           <FooterColumn title="Company" links={COMPANY} />
           <FooterColumn title="Legal" links={LEGAL} />
         </div>
@@ -61,22 +68,27 @@ function FooterColumn({
   links,
 }: {
   title: string;
-  links: { label: string; href: string }[];
+  links: FooterLink[];
 }) {
+  const linkClass =
+    "text-body-sm text-primary transition-colors hover:text-secondary";
   return (
     <div>
       <p className="text-eyebrow text-secondary">{title}</p>
       <ul className="mt-5 space-y-3">
         {links.map((l) => (
-          // Key by ``label`` since two product links currently share the
-          // ``/login`` href; href-based keys would collide.
+          // Key by ``label`` since links can share an href; href-based keys
+          // would collide.
           <li key={l.label}>
-            <Link
-              href={l.href}
-              className="text-body-sm text-primary transition-colors hover:text-secondary"
-            >
-              {l.label}
-            </Link>
+            {l.hard ? (
+              <a href={l.href} className={linkClass}>
+                {l.label}
+              </a>
+            ) : (
+              <Link href={l.href} className={linkClass}>
+                {l.label}
+              </Link>
+            )}
           </li>
         ))}
       </ul>

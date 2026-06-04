@@ -55,7 +55,7 @@ export default function Hero() {
                 className={`hero-stage ${state} text-eyebrow text-on-primary/80`}
                 style={{ ["--stage-delay" as string]: "60ms" }}
               >
-                AI for maritime operations
+                Agentic AI studio for maritime operations
               </p>
 
               <h1 className="text-hero mt-6 text-on-primary">
@@ -64,7 +64,7 @@ export default function Hero() {
                     className={`hero-line-inner ${state}`}
                     style={{ ["--stage-delay" as string]: "140ms" }}
                   >
-                    AI workflows for
+                    Custom AI systems for
                   </span>
                 </span>
                 <span className="hero-line">
@@ -81,23 +81,23 @@ export default function Hero() {
                 className={`hero-stage ${state} mt-7 max-w-xl text-body-lg text-on-primary/85`}
                 style={{ ["--stage-delay" as string]: "360ms" }}
               >
-                Starting with the claims that used to take days. Three voyage
-                documents in, a finished, cited demurrage claim out, in under a
-                minute. Built for ship owners, charterers, and the lawyers who
-                file their claims.
+                We find the operational bottlenecks that cost you days and money,
+                then build and embed the multi-agent systems that clear them.
+                Scale revenue, cut cost, from the bottom up. The demurrage claim
+                engine below is one we already shipped.
               </p>
 
               <div
                 className={`hero-stage ${state} mt-10 flex flex-wrap items-center gap-4`}
                 style={{ ["--stage-delay" as string]: "460ms" }}
               >
-                <DemoButton className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover disabled:opacity-60" />
                 <Link
                   href="/contact"
-                  className="btn-lift rounded-pill border border-on-primary/30 px-6 py-3 text-body-sm font-semibold text-on-primary hover:bg-on-primary/10"
+                  className="btn-lift rounded-pill bg-cta-inverse px-6 py-3 text-body-sm font-semibold text-on-cta-inverse hover:bg-cta-inverse-hover"
                 >
-                  Book a demo
+                  Book a working session
                 </Link>
+                <DemoButton className="btn-lift rounded-pill border border-on-primary/30 px-6 py-3 text-body-sm font-semibold text-on-primary hover:bg-on-primary/10 disabled:opacity-60" />
               </div>
             </div>
 
@@ -108,13 +108,13 @@ export default function Hero() {
                 className={`hero-stage hero-card ${state} card-glass max-w-sm px-7 py-7 text-primary`}
                 style={{ ["--stage-delay" as string]: "560ms" }}
               >
-                <p className="text-eyebrow text-secondary">Trusted approach</p>
+                <p className="text-eyebrow text-secondary">How we build</p>
                 <p className="mt-4 text-h3 text-primary">
-                  Every figure cited. Every claim auditable.
+                  Deterministic where it counts. Cited. Auditable.
                 </p>
                 <p className="mt-4 text-body-sm text-secondary">
-                  Deterministic arithmetic, clause-by-clause citations, and the
-                  90-day time bar tracked on every voyage.
+                  Plain-code math, clause-by-clause citations, every step a human
+                  can inspect. So an operator and a CFO both trust the output.
                 </p>
               </div>
             </div>
