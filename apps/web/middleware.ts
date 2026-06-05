@@ -37,6 +37,7 @@ const PUBLIC_EXACT = new Set<string>([
   "/privacy",
   "/terms",
   "/contact",
+  "/resources",
   "/survey",
 ]);
 

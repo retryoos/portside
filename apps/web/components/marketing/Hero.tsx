@@ -55,7 +55,7 @@ export default function Hero() {
                 className={`hero-stage ${state} text-eyebrow text-on-primary/80`}
                 style={{ ["--stage-delay" as string]: "60ms" }}
               >
-                Agentic AI studio for maritime operations
+                For owners, charterers, and brokers
               </p>
 
               <h1 className="text-hero mt-6 text-on-primary">
@@ -64,7 +64,7 @@ export default function Hero() {
                     className={`hero-line-inner ${state}`}
                     style={{ ["--stage-delay" as string]: "140ms" }}
                   >
-                    Custom AI systems for
+                    Tailored AI agentic systems
                   </span>
                 </span>
                 <span className="hero-line">
@@ -72,7 +72,7 @@ export default function Hero() {
                     className={`hero-line-inner ${state}`}
                     style={{ ["--stage-delay" as string]: "240ms" }}
                   >
-                    maritime operations.
+                    for maritime operations.
                   </span>
                 </span>
               </h1>
