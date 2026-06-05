@@ -19,13 +19,13 @@ import Link from "next/link";
 // "%s, Laytimely", so it appends the brand. The OG/Twitter titles below are
 // NOT templated, so they keep the explicit "Laytimely," prefix.
 export const metadata: Metadata = {
-  title: "Custom AI systems for maritime operations",
+  title: "Tailored AI agentic systems for maritime operations",
   description:
-    "We build and embed custom multi-agent AI systems for maritime operational bottlenecks, to scale revenue and cut cost from the bottom up. The demurrage claim engine is one we already shipped.",
+    "We build and embed tailored multi-agent AI systems for maritime operational bottlenecks, to scale revenue and cut cost from the bottom up. The demurrage claim engine is one we already shipped.",
   openGraph: {
-    title: "Laytimely, custom AI systems for maritime operations",
+    title: "Laytimely, tailored AI agentic systems for maritime operations",
     description:
-      "We build and embed custom multi-agent AI systems for maritime operational bottlenecks. The demurrage claim engine is one we already shipped.",
+      "We build and embed tailored multi-agent AI systems for maritime operational bottlenecks. The demurrage claim engine is one we already shipped.",
     url: "https://laytimely.com/",
     siteName: "Laytimely",
     locale: "en_GB",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Laytimely, custom AI systems for maritime operations",
+    title: "Laytimely, tailored AI agentic systems for maritime operations",
     description:
       "Custom multi-agent AI systems for maritime operations. The demurrage claim engine is one we already shipped.",
     images: ["/photography/hero-landing.jpg"],
@@ -223,7 +223,7 @@ export default function LandingPage() {
         <ScrollReveal>
           <p className="text-eyebrow text-secondary">Why it holds</p>
           <h2 className="text-display mt-6 max-w-4xl text-primary">
-            Systems a court, or a CFO, can audit.
+            Numbers the parties can easily audit.
           </h2>
         </ScrollReveal>
         <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">

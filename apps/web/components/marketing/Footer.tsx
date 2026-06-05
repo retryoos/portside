@@ -41,7 +41,7 @@ export default function Footer() {
               <Wordmark size="sm" />
             </Link>
             <p className="mt-5 max-w-sm text-body text-secondary">
-              Custom multi-agent AI systems for maritime operations. The
+              Tailored multi-agent AI systems for maritime operations. The
               demurrage engine is one we shipped.
             </p>
             <p className="mt-8 text-body-sm text-secondary">
