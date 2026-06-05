@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Laytimely, tailored AI agentic systems for maritime operations",
     description:
-      "Custom multi-agent AI systems for maritime operations. The demurrage claim engine is one we already shipped.",
+      "Tailored multi-agent AI systems for maritime operations. The demurrage claim engine is one we already shipped.",
     images: ["/photography/hero-landing.jpg"],
   },
 };
@@ -62,7 +62,7 @@ const TRUST_POINTS = [
   {
     eyebrow: "Citations",
     title: "Every figure traces to its source.",
-    body: "Each number references the clause and the event it came from. A reviewer can audit any output in seconds.",
+    body: "Each number shows the charter party clause and the port-log event it came from, so you can check it against your own documents.",
   },
   {
     eyebrow: "Deterministic math",
@@ -156,9 +156,11 @@ export default function LandingPage() {
           </h2>
           <p className="mt-6 max-w-2xl text-body-lg text-on-primary/80">
             One of our maritime systems, live today. Drop in the contract, the
-            arrival notice, and the port log; it calculates the laytime in plain
-            code, builds the legal argument with citations, and drafts the claim.
-            This is the shape of system we build for your bottleneck.
+            arrival notice, and the statement of facts; it calculates the laytime
+            in plain code, assembles the argument with the authorities it relied
+            on, and drafts the claim, every figure traced to a charter party
+            clause and a port-log event. This is the shape of system we build for
+            your bottleneck.
           </p>
         </ScrollReveal>
         <div className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3">
@@ -194,6 +196,12 @@ export default function LandingPage() {
             </a>
           </div>
         </ScrollReveal>
+        <ScrollReveal delayMs={360}>
+          <p className="mt-10 max-w-2xl text-body-sm text-on-primary/55">
+            Illustrative example. The vessel, parties, and figures are fictional,
+            and any authorities shown are examples, not legal advice.
+          </p>
+        </ScrollReveal>
       </Section>
 
       {/* Under the hood of that example system. */}
@@ -205,10 +213,10 @@ export default function LandingPage() {
           </h2>
           <p className="mt-6 max-w-2xl text-body-lg text-secondary">
             The demurrage system runs a small fleet of specialised agents: one
-            reads the documents, one calculates the laytime, one builds the legal
-            argument, one drafts the letter. The math is plain code. The
-            arguments are cited line by line. Every system we build is shaped
-            this way.
+            reads the documents, one calculates the laytime, one assembles the
+            argument and its authorities, one drafts the letter. The math is plain
+            code. Each point cites the clause and the event behind it. Every
+            system we build is shaped this way.
           </p>
         </ScrollReveal>
         <div className="mt-16">
@@ -225,6 +233,11 @@ export default function LandingPage() {
           <h2 className="text-display mt-6 max-w-4xl text-primary">
             Numbers the parties can easily audit.
           </h2>
+          <p className="mt-6 max-w-2xl text-body-lg text-secondary">
+            Most demurrage figures are questioned before they settle, and many go
+            to arbitration. So the output is built to be checked, not to be taken
+            on trust: every number is traceable, and a person signs it off.
+          </p>
         </ScrollReveal>
         <div className="mt-16 grid grid-cols-1 gap-6 md:grid-cols-3">
           {TRUST_POINTS.map((point, i) => (

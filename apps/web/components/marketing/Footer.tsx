@@ -21,6 +21,7 @@ const STUDIO: FooterLink[] = [
 
 const COMPANY: FooterLink[] = [
   { label: "About", href: "/about" },
+  { label: "Resources", href: "/resources" },
   { label: "Survey", href: "/survey", hard: true },
   { label: "Contact", href: "/contact" },
   { label: "Security", href: "/security" },

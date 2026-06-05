@@ -21,6 +21,7 @@ import Wordmark from "@/components/Wordmark";
 const NAV: { label: string; href: string; hard?: boolean }[] = [
   { label: "How we work", href: "/#how-we-work" },
   { label: "Example", href: "/#example" },
+  { label: "Resources", href: "/resources" },
   { label: "Engagement", href: "/#engagement" },
   { label: "Survey", href: "/survey", hard: true },
 ];
