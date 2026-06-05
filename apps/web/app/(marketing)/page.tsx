@@ -14,8 +14,12 @@ import Link from "next/link";
 // SEO metadata for the landing surface. The positioning is now company-level:
 // an agentic-AI studio for maritime operations, with the demurrage engine as
 // the flagship example. OG/Twitter cards reuse the hero photograph.
+//
+// The page title omits the brand: the root layout's title template is
+// "%s, Laytimely", so it appends the brand. The OG/Twitter titles below are
+// NOT templated, so they keep the explicit "Laytimely," prefix.
 export const metadata: Metadata = {
-  title: "Laytimely, custom AI systems for maritime operations",
+  title: "Custom AI systems for maritime operations",
   description:
     "We build and embed custom multi-agent AI systems for maritime operational bottlenecks, to scale revenue and cut cost from the bottom up. The demurrage claim engine is one we already shipped.",
   openGraph: {
