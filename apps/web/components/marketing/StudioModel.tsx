@@ -35,8 +35,8 @@ export default function StudioModel() {
       <ScrollReveal>
         <p className="text-eyebrow text-secondary">How we work</p>
         <h2 className="text-display mt-6 max-w-4xl text-primary">
-          We don't sell software. We find your highest-leverage bottleneck and
-          build the system that clears it.
+          We find your highest-leverage bottleneck and build the system that
+          clears it. Then we stay to run it with you.
         </h2>
       </ScrollReveal>
       <div className="mt-16 grid grid-cols-1 gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
