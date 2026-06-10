@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laytimely — Seed Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink: oklch(0.15 0 0);
+    --ink-soft: oklch(0.27 0.005 265);
+    --paper: oklch(0.985 0.002 95);
+    --surface: oklch(1 0 0);
+    --surface-muted: oklch(0.965 0.004 265);
+    --muted: oklch(0.46 0.006 265);
+    --faint: oklch(0.62 0.006 265);
+    --border: oklch(0.9 0.004 265);
+    --border-strong: oklch(0.8 0.006 265);
+    --success: oklch(0.5 0.12 155);
+    --success-c: oklch(0.95 0.04 155);
+    --warning: oklch(0.58 0.14 70);
+    --warning-c: oklch(0.95 0.06 78);
+    --danger: oklch(0.52 0.18 25);
+    --danger-c: oklch(0.95 0.045 25);
+    --accent: oklch(0.5 0.17 268);
+
+    /* dark surfaces */
+    --d-bg: oklch(0.16 0.008 265);
+    --d-paper: oklch(0.97 0.003 265);
+    --d-muted: oklch(0.72 0.01 265);
+    --d-border: oklch(0.32 0.01 265);
+  }
+
+  *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--ink);
+    font-family:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .mono{ font-family:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-feature-settings:"tnum" 1; letter-spacing:-0.01em; }
+
+  #deck{ display:flex; flex-direction:column; align-items:center; gap:26px; padding:34px 20px 80px; }
+
+  .slide{
+    width:1280px; height:720px; flex:none; position:relative; overflow:hidden;
+    background: var(--paper); color: var(--ink);
+    padding:62px 84px 54px;
+    box-shadow: 0 24px 60px -28px oklch(0 0 0 / 0.6);
+    border-radius:6px;
+    display:flex; flex-direction:column;
+  }
+  .slide.dark{ background: var(--d-bg); color: var(--d-paper); }
+
+  /* top meta row */
+  .meta{ display:flex; justify-content:space-between; align-items:baseline; font-size:11px; font-weight:600;
+         letter-spacing:0.18em; text-transform:uppercase; color:var(--faint); }
+  .slide.dark .meta{ color:var(--d-muted); }
+  .meta .brand{ color:var(--ink); }
+  .slide.dark .meta .brand{ color:var(--d-paper); }
+  .meta .brand b{ font-weight:700; }
+  .meta .num{ font-family:"JetBrains Mono", monospace; letter-spacing:0; }
+
+  .body{ flex:1; display:flex; flex-direction:column; justify-content:flex-start; min-height:0; padding-top:24px; }
+  .body.center{ justify-content:center; }
+
+  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin:0 0 18px; }
+  .slide.dark .eyebrow{ color:var(--d-muted); }
+
+  h1{ font-weight:600; letter-spacing:-0.035em; line-height:1.04; margin:0; }
+  .t-hero{ font-size:62px; line-height:0.98; letter-spacing:-0.04em; }
+  .t-xl{ font-size:46px; max-width:21ch; }
+  .t-lg{ font-size:38px; max-width:24ch; }
+  .lede{ font-size:19px; line-height:1.5; color:var(--muted); max-width:62ch; margin:20px 0 0; font-weight:400; }
+  .slide.dark .lede{ color:var(--d-muted); }
+
+  .cols{ display:grid; gap:40px; margin-top:34px; }
+  .cols.c2{ grid-template-columns: 1.05fr 1fr; }
+  .cols.c2b{ grid-template-columns: 1fr 1.25fr; }
+  .cols.c3{ grid-template-columns: repeat(3,1fr); }
+
+  p{ margin:0; }
+  .col h3{ font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin:0 0 12px; }
+  .slide.dark .col h3{ color:var(--d-muted); }
+
+  ul.clean{ list-style:none; margin:0; padding:0; }
+  ul.clean li{ font-size:17px; line-height:1.45; color:var(--ink-soft); padding:11px 0; border-top:1px solid var(--border); display:flex; gap:13px; }
+  ul.clean li:first-child{ border-top:none; }
+  ul.clean li .k{ font-family:"JetBrains Mono", monospace; font-weight:600; color:var(--ink); font-size:14px; flex:none; width:104px; padding-right:8px; }
+  .slide.dark ul.clean li{ color:var(--d-paper); border-color:var(--d-border); }
+  .slide.dark ul.clean li .k{ color:var(--d-paper); }
+
+  /* stat band */
+  .stats{ display:flex; gap:0; margin-top:36px; border-top:1.5px solid var(--ink); }
+  .stat{ flex:1; padding:22px 26px 4px; border-right:1px solid var(--border); }
+  .stat:last-child{ border-right:none; }
+  .stat .fig{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:40px; letter-spacing:-0.03em; line-height:1; }
+  .stat .lab{ font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.35; max-width:26ch; }
+  .stat.warn .fig{ color:var(--warning); }
+  .stat.win .fig{ color:var(--success); }
+
+  .cite{ font-family:"JetBrains Mono", monospace; font-size:10px; font-weight:600; color:var(--faint);
+          vertical-align:super; margin-left:3px; letter-spacing:0; }
+  .src{ margin-top:auto; padding-top:18px; font-size:11.5px; color:var(--faint); letter-spacing:0.01em; }
+  .src b{ color:var(--muted); font-weight:600; }
+
+  .tag{ display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+        padding:4px 9px; border-radius:999px; }
+  .tag.fact{ background:var(--surface-muted); color:var(--muted); border:1px solid var(--border); }
+  .tag.proj{ background:var(--warning-c); color:oklch(0.42 0.1 60); }
+  .tag.live{ background:var(--success-c); color:oklch(0.38 0.1 155); }
+
+  /* pipeline */
+  .pipe{ display:flex; align-items:stretch; gap:0; margin-top:8px; }
+  .pipe .step{ flex:1; padding:12px 15px; background:var(--surface); border:1px solid var(--border); }
+  .pipe .step:not(:last-child){ border-right:none; }
+  .pipe .step .n{ font-family:"JetBrains Mono", monospace; font-size:12px; color:var(--faint); }
+  .pipe .step .nm{ font-weight:600; font-size:15.5px; margin-top:5px; }
+  .pipe .step .ds{ font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.35; }
+  .pipe .arrow{ align-self:center; color:var(--border-strong); font-size:18px; padding:0 2px; flex:none; }
+
+  /* laytime crossover bar */
+  .lay{ margin-top:6px; }
+  .lay .track{ display:flex; height:64px; border:1px solid var(--ink); border-radius:4px; overflow:hidden; }
+  .lay .seg{ display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; }
+  .lay .allowed{ background:var(--ink); color:var(--paper); }
+  .lay .demur{ background:var(--warning-c); color:oklch(0.4 0.11 60); position:relative; }
+  .lay .labels{ display:flex; margin-top:9px; font-size:12.5px; color:var(--muted); }
+  .lay .labels .a{ width:61.5%; } .lay .labels .b{ flex:1; }
+  .lay .labels .mono{ color:var(--ink); }
+
+  /* big result */
+  .result{ border:1.5px solid var(--ink); border-radius:6px; padding:18px 24px; background:var(--surface); }
+  .result .lab{ font-size:12px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+  .result .fig{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:44px; letter-spacing:-0.035em; margin-top:8px; line-height:1; }
+  .result .sub{ font-size:13px; color:var(--muted); margin-top:12px; }
+
+  /* generic table */
+  table.t{ width:100%; border-collapse:collapse; margin-top:4px; }
+  table.t th{ text-align:left; font-size:11.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); padding:0 14px 11px 0; border-bottom:1.5px solid var(--ink); }
+  table.t th.r, table.t td.r{ text-align:right; padding-right:0; }
+  table.t td{ font-size:15px; padding:9px 14px 9px 0; border-bottom:1px solid var(--border); color:var(--ink-soft); vertical-align:top; }
+  table.t td.lead{ font-weight:600; color:var(--ink); }
+  table.t td .mono{ font-weight:600; color:var(--ink); }
+  table.t tr.tot td{ border-bottom:none; border-top:1.5px solid var(--ink); font-weight:700; color:var(--ink); padding-top:13px; }
+  /* competition table: gutter so the right-aligned figures clear the next column */
+  table.t.cmp th:nth-child(2), table.t.cmp td:nth-child(2){ padding-right:34px; }
+
+  /* funnel */
+  .funnel{ display:flex; flex-direction:column; gap:14px; margin-top:6px; }
+  .tier{ border:1px solid var(--border); background:var(--surface); border-radius:5px; padding:16px 20px; position:relative; }
+  .tier .h{ display:flex; justify-content:space-between; align-items:baseline; }
+  .tier .nm{ font-weight:600; font-size:15px; }
+  .tier .v{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:22px; letter-spacing:-0.02em; }
+  .tier .ds{ font-size:13px; color:var(--muted); margin-top:7px; line-height:1.4; max-width:64ch; }
+  .tier.tam{ border-color:var(--ink); border-width:1.5px; }
+  .tier.som{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .tier.som .ds{ color:oklch(0.78 0.01 265); }
+
+  /* bar chart */
+  .chart{ display:flex; align-items:flex-end; gap:26px; height:260px; margin-top:8px; padding-top:10px; border-bottom:1.5px solid var(--ink); }
+  .bar{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:0; }
+  .bar .col{ width:74%; background:var(--ink); border-radius:4px 4px 0 0; position:relative; min-height:8px; }
+  .bar .col .v{ position:absolute; top:-26px; left:50%; transform:translateX(-50%); font-family:"JetBrains Mono", monospace; font-weight:700; font-size:17px; white-space:nowrap; }
+  .bar.proj .col{ background:oklch(0.62 0.006 265); }
+  .xaxis{ display:flex; gap:26px; margin-top:11px; }
+  .xaxis .x{ flex:1; text-align:center; font-size:13px; color:var(--muted); }
+  .xaxis .x b{ display:block; color:var(--ink); font-weight:600; font-size:13.5px; }
+
+  /* proceeds */
+  .proc{ display:flex; flex-direction:column; gap:13px; margin-top:4px; }
+  .prow{ display:grid; grid-template-columns: 150px 1fr 52px; align-items:center; gap:14px; }
+  .prow .pl{ font-size:14px; font-weight:600; }
+  .prow .pbar{ height:16px; background:var(--ink); border-radius:3px; }
+  .prow .pv{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:15px; text-align:right; }
+  .prow:nth-child(2) .pbar{ background:var(--ink-soft); }
+  .prow:nth-child(3) .pbar{ background:var(--faint); }
+  .prow:nth-child(4) .pbar{ background:var(--border-strong); }
+
+  /* moat / mitigation rows */
+  .rows{ display:flex; flex-direction:column; gap:0; margin-top:6px; }
+  .row2{ display:grid; grid-template-columns: 0.9fr 1.1fr; gap:30px; padding:15px 0; border-top:1px solid var(--border); }
+  .row2:first-child{ border-top:1.5px solid var(--ink); }
+  .row2 .l{ font-weight:600; font-size:15.5px; }
+  .row2 .l .s{ display:block; font-weight:400; font-size:13px; color:var(--muted); margin-top:3px; }
+  .row2 .r{ font-size:14.5px; color:var(--ink-soft); line-height:1.45; }
+
+  /* team */
+  .crew{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; }
+  .person{ border:1px solid var(--border); border-radius:8px; padding:22px 24px; background:var(--surface); }
+  .person .top{ display:flex; align-items:center; gap:16px; }
+  .person .av{ width:66px; height:66px; border-radius:50%; overflow:hidden; flex:none; background:var(--surface-muted); border:1px solid var(--border); }
+  .person .av img{ width:100%; height:100%; object-fit:cover; }
+  .person .role{ font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .person .nm{ font-weight:600; font-size:19px; margin-top:0; color:var(--ink); letter-spacing:-0.01em; }
+  .person .nt{ font-size:13.5px; color:var(--ink-soft); margin-top:16px; line-height:1.5; }
+  .fillnote{ font-size:13px; color:var(--muted); margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+  .fillnote b{ color:var(--ink); font-weight:600; }
+
+  .kicker-fig{ font-family:"JetBrains Mono", monospace; font-weight:700; letter-spacing:-0.03em; }
+
+  /* cover */
+  .cover{ justify-content:space-between; }
+  .cover .top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .cover .logo{ font-size:21px; font-weight:700; letter-spacing:-0.02em; }
+  .cover .logo .dot{ color:var(--accent); }
+  .cover h1{ font-size:74px; letter-spacing:-0.045em; line-height:0.96; max-width:17ch; }
+  .cover .sub{ font-size:20px; color:var(--muted); margin-top:24px; max-width:54ch; line-height:1.45; }
+  .cover .ruler{ display:flex; gap:0; margin:30px 0 0; height:30px; align-items:flex-end; }
+  .cover .ruler i{ flex:1; border-left:1px solid var(--border-strong); height:9px; }
+  .cover .ruler i:nth-child(5n+1){ height:22px; border-color:var(--ink); }
+  .cover .foot{ display:flex; justify-content:space-between; align-items:flex-end; font-size:13px; color:var(--muted); }
+  .cover .foot .demo{ text-align:right; }
+  .cover .foot .demo .f{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:30px; color:var(--ink); letter-spacing:-0.03em; }
+
+  .src-list{ columns:2; column-gap:50px; margin-top:14px; }
+  .src-list .s{ break-inside:avoid; font-size:13px; line-height:1.4; padding:9px 0; border-top:1px solid var(--border); color:var(--ink-soft); }
+  .src-list .s .n{ font-family:"JetBrains Mono", monospace; font-weight:700; color:var(--ink); margin-right:8px; }
+  .src-list .s .u{ color:var(--faint); font-size:11.5px; word-break:break-all; display:block; margin-top:2px; }
+
+  .legend{ display:flex; gap:16px; margin-top:18px; flex-wrap:wrap; }
+  .legend span{ font-size:12px; color:var(--muted); display:flex; align-items:center; gap:7px; }
+
+  /* nav (screen only) */
+  #hud{ position:fixed; right:18px; bottom:16px; z-index:50; font-family:"JetBrains Mono", monospace;
+        font-size:12px; color:oklch(0.85 0 0); background:oklch(0.2 0 0 / 0.85); padding:7px 12px;
+        border-radius:999px; letter-spacing:0.04em; }
+  #hud b{ color:#fff; }
+
+  @media print{
+    body{ background:#fff; }
+    #deck{ gap:0; padding:0; }
+    #hud{ display:none; }
+    @page{ size:1280px 720px; margin:0; }
+    .slide{ zoom:1 !important; box-shadow:none !important; border-radius:0 !important;
+            page-break-after:always; break-after:page; margin:0; }
+    .slide:last-child{ page-break-after:auto; }
+  }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- 0 COVER -->
+  <section class="slide cover">
+    <div class="top">
+      <div class="logo">Laytimely<span class="dot">.</span></div>
+      <div class="meta" style="display:block; text-align:right">PRE-SEED · 2026</div>
+    </div>
+    <div>
+      <h1>Three voyage PDFs in. One defensible demurrage claim out. Under a minute.</h1>
+      <p class="sub">An AI agent that resolves maritime laytime and demurrage, built for Greece, the world's largest shipowning nation.</p>
+      <div class="ruler" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+    <div class="foot">
+      <div>AI-first claims platform for maritime operations<br/>Built by two engineers at the ACG AI Lab, Athens</div>
+      <div class="demo">
+        <div style="font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--faint); margin-bottom:6px">Live demo claim, reproducible</div>
+        <div class="f">EUR&nbsp;84,375.00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 PROBLEM + MARKET -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Problem &amp; Market</span><span class="num">01</span></div>
+    <div class="body">
+      <p class="eyebrow">The pain</p>
+      <h1 class="t-xl" style="max-width:26ch">Demurrage costs tens of thousands a day per ship, still resolved by hand in Excel and email.</h1>
+      <p class="lede">When a port call ends and laytime is disputed, a claims team spends two to four days assembling the Charter Party, Notice of Readiness, and Statement of Facts by hand. Laytime is one of the most frequently disputed areas of maritime law.</p>
+      <div class="stats" style="margin-top:26px">
+        <div class="stat">
+          <div class="fig">$30&ndash;80k<span class="cite">3</span></div>
+          <div class="lab">Demurrage per idle ship per day, Capesize to VLCC.</div>
+        </div>
+        <div class="stat warn">
+          <div class="fig">90 days<span class="cite">2</span></div>
+          <div class="lab">Typical time bar. Miss it, the claim is forfeited.</div>
+        </div>
+        <div class="stat">
+          <div class="fig">2&ndash;4 days<span class="cite">13</span></div>
+          <div class="lab">Analyst time per disputed claim, today, by hand.</div>
+        </div>
+        <div class="stat">
+          <div class="fig">~20%<span class="cite">1</span></div>
+          <div class="lab">Of the world fleet is Greek-owned (61% of EU).</div>
+        </div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [1] UGS Annual Report 2024&ndash;25 / Petrofin &nbsp;·&nbsp; [2] ITIC &amp; Watson Farley &amp; Williams &nbsp;·&nbsp; [3] Voyager Portal (day rates) &nbsp;·&nbsp; [13] Laytimely (status quo we observe). Full URLs on the sources slide.</div>
+  </section>
+
+  <!-- 2 SOLUTION -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Solution</span><span class="num">02</span></div>
+    <div class="body">
+      <p class="eyebrow">What runs today <span class="tag live" style="margin-left:8px">Live</span></p>
+      <h1 class="t-lg">A four-agent pipeline turns three PDFs into a citation-backed claim packet, and the arithmetic is auditable, not hallucinated.</h1>
+      <div class="pipe" style="margin-top:16px">
+        <div class="step"><div class="n">Agent 1</div><div class="nm">Extractor</div><div class="ds">CP + NOR + SoF to a structured timeline</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 2</div><div class="nm">Calculator</div><div class="ds">LLM classifies events, Python sums the hours</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 3</div><div class="nm">Dispute Analyst</div><div class="ds">Contested events, cited, strength-rated</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 4</div><div class="nm">Claims Drafter</div><div class="ds">BIMCO-style letter, PDF export</div></div>
+      </div>
+      <div class="cols c2" style="margin-top:16px; align-items:center">
+        <div class="lay">
+          <div class="track">
+            <div class="seg allowed" style="width:61.5%">72 h laytime allowed</div>
+            <div class="seg demur" style="width:38.5%">45 h on demurrage</div>
+          </div>
+          <div class="labels"><div class="a">NOR tendered, laytime counting</div><div class="b">crossover &rarr; <span class="mono">EUR 1,875 / h</span></div></div>
+          <ul class="clean" style="margin-top:10px">
+            <li><span class="k">Auditable</span><span>Hours summed in deterministic Python, locked by a test. Not LLM math.</span></li>
+            <li><span class="k">Cited</span><span>Every line references its CP clause number and SoF event id.</span></li>
+            <li><span class="k">Time bar</span><span>The 90-day deadline surfaced on every claim.</span></li>
+          </ul>
+        </div>
+        <div class="result">
+          <div class="lab">Demo voyage · MT Aegean Pioneer · Ras Tanura &rarr; Rotterdam</div>
+          <div class="fig">EUR 84,375.00</div>
+          <div class="sub">Reproducible: feeding the three demo PDFs through the live pipeline returns <span class="mono">stage=done</span> at exactly this figure. <span class="tag fact" style="margin-left:6px">Internal, live<span class="cite">13</span></span></div>
+          <div class="sub" style="margin-top:14px; color:var(--ink-soft)"><b style="color:var(--ink); font-weight:600">The leap:</b> from a tool you upload to, to an autonomous claims co-worker, inbox to outbox.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 COMPETITION -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Competition</span><span class="num">03</span></div>
+    <div class="body">
+      <p class="eyebrow">Why we win</p>
+      <h1 class="t-lg">Incumbents bolted AI onto forms. We are agent-native, with auditable math none of them claim.</h1>
+      <table class="t cmp" style="margin-top:20px">
+        <thead><tr><th style="width:20%">Player</th><th class="r" style="width:16%">Raised / scale</th><th>Position, and the gap we exploit</th></tr></thead>
+        <tbody>
+          <tr><td class="lead">Veson Nautical</td><td class="r"><span class="mono">~$102M rev</span><span class="cite">9</span></td><td>The IMOS gold standard (Francisco Partners + Pamlico), but enterprise-only and its AI is a bolt-on. Leaves the SME owner long tail open.</td></tr>
+          <tr><td class="lead">Burmester &amp; Vogel <span class="tag warn" style="margin-left:6px; background:var(--warning-c); color:oklch(0.42 0.1 60); padding:3px 8px; border-radius:999px; font-size:10px; font-weight:600">Most direct</span></td><td class="r"><span class="mono">private</span><span class="cite">12</span></td><td>A "Demurrage AI Copilot," consolidating the niche (acquired Laysoft, 2025). A copilot that assists, not an autonomous, sub-minute packet.</td></tr>
+          <tr><td class="lead">Voyager Portal</td><td class="r"><span class="mono">~$12.7M</span><span class="cite">11</span></td><td>Charterer-focused. Its AI is an image-recognition SoF parser, not end-to-end reasoning, dispute, and drafting.</td></tr>
+          <tr><td class="lead">Harbor Lab <span class="tag fact" style="margin-left:6px">Sibling</span></td><td class="r"><span class="mono">~$22M</span><span class="cite">10</span></td><td>Athens, Atomico and <b>TMV</b> backed, validates <b>port costs</b>. We resolve <b>demurrage</b>. Adjacent workflow, natural partner, not a rival.</td></tr>
+        </tbody>
+      </table>
+      <div class="cols c3" style="margin-top:16px">
+        <div class="col"><h3>Our moat</h3><p style="font-size:13px; color:var(--ink-soft); line-height:1.4">Agent-native pipeline plus deterministic, auditable arithmetic that an LLM-only tool cannot match on trust.</p></div>
+        <div class="col"><h3>Defensible</h3><p style="font-size:13px; color:var(--ink-soft); line-height:1.4">Citation-backed legal output, time-bar engine, EU-first and EUR-native from day one.</p></div>
+        <div class="col"><h3>Endgame</h3><p style="font-size:13px; color:var(--ink-soft); line-height:1.4">A two-sided settlement network: owners and charterers resolving claims on one platform.</p></div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [9] getLatka / PitchBook / Francisco Partners &nbsp;·&nbsp; [10] TechCrunch / Atomico &nbsp;·&nbsp; [11] GlobeNewswire / PitchBook &nbsp;·&nbsp; [12] Smart Maritime Network. Private-company revenues are third-party estimates.</div>
+  </section>
+
+  <!-- 4 BUSINESS MODEL -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Business Model</span><span class="num">04</span></div>
+    <div class="body">
+      <p class="eyebrow">Unit economics</p>
+      <h1 class="t-lg">Each claim costs us about EUR 0.07 to produce and sells inside a ~90% gross-margin model.</h1>
+      <div class="cols c2b" style="margin-top:26px">
+        <div>
+          <table class="t">
+            <thead><tr><th>Revenue line</th><th class="r">Price</th></tr></thead>
+            <tbody>
+              <tr><td class="lead">SaaS workspace</td><td class="r"><span class="mono">EUR 299/mo</span></td></tr>
+              <tr><td class="lead">Success fee on recovered demurrage</td><td class="r"><span class="mono">5%</span></td></tr>
+              <tr><td class="lead">Claims Radar, live exposure</td><td class="r"><span class="mono">EUR 299/vessel/mo</span></td></tr>
+              <tr><td class="lead">EU ETS / FuelEU compliance</td><td class="r"><span class="mono">EUR 50&ndash;100/voyage</span></td></tr>
+              <tr class="tot"><td>A mid-size owner (15 vessels)</td><td class="r"><span class="mono">EUR 50&ndash;130k ARR</span></td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:14px; line-height:1.4">Land on SaaS plus success fee, expand seat to fleet with Radar, then compliance. Net revenue retention above 120%. <span class="tag proj">Illustrative</span></p>
+        </div>
+        <div>
+          <h3 class="col" style="font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted)">Why it compounds</h3>
+          <ul class="clean">
+            <li><span class="k">EUR 0.07</span><span>Cost to produce one claim: Claude plus prompt caching.<span class="cite">13</span></span></li>
+            <li><span class="k">~90%</span><span>Gross margin. Marginal cost is effectively zero.</span></li>
+            <li><span class="k">Owners</span><span>We sell first, in Greece. Revenue recovery is a money-in pitch.</span></li>
+            <li><span class="k">Then</span><span>Charterers, maritime lawyers, the two-sided network.</span></li>
+          </ul>
+          <p style="font-size:14px; color:var(--ink-soft); margin-top:18px; line-height:1.5">One recovered mid-size claim, tens of thousands of euros, pays for a year of Laytimely. Beyond fixed costs, nearly every new euro is profit.</p>
+        </div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [13] Laytimely live pipeline (internal). Pricing and ACV are an illustrative model for discussion.</div>
+  </section>
+
+  <!-- 5 MARKET SIZE -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Market</span><span class="num">05</span></div>
+    <div class="body">
+      <p class="eyebrow">TAM · SAM · SOM</p>
+      <h1 class="t-lg">A Greece-first wedge in maritime commercial software, with a regulated compliance market opening next door.</h1>
+      <div class="funnel" style="margin-top:20px">
+        <div class="tier tam">
+          <div class="h"><span class="nm">TAM &nbsp;·&nbsp; Maritime commercial software + EU compliance</span><span class="v">$0.3&ndash;4.7B + &euro;10B/yr<span class="cite">5,6,7</span></span></div>
+          <div class="ds">Voyage-management software is ~$0.3&ndash;2.3B today at 7&ndash;14% CAGR (analysts disagree on base size); broader maritime software reaches ~$4.7B by 2033. Next door, EU ETS adds up to <b>&euro;10B/yr</b> of cost to shipping from 2026, and FuelEU penalties &euro;2,400/t<span class="cite">8</span>: a compliance market on the same pipeline.</div>
+        </div>
+        <div class="tier">
+          <div class="h"><span class="nm">SAM &nbsp;·&nbsp; EU owners, charterers &amp; maritime lawyers</span><span class="v">~EUR 100&ndash;150M ARR</span></div>
+          <div class="ds">Voyage-charter operators in the EU-controlled fleet; Greece alone is 61% of it<span class="cite">1</span>. Bottom-up: addressable orgs &times; blended ACV. <span class="tag proj">Illustrative</span></div>
+        </div>
+        <div class="tier som">
+          <div class="h"><span class="nm">SOM &nbsp;·&nbsp; Obtainable in 5 years</span><span class="v">~EUR 30M ARR</span></div>
+          <div class="ds">A few hundred customers across Greece and the EU, before global charterer expansion. <span class="tag proj">Illustrative</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [1] UGS &nbsp;·&nbsp; [5] Fortune Business Insights / market.us &nbsp;·&nbsp; [6] Global Growth Insights &nbsp;·&nbsp; [7] DNV / EU Commission &nbsp;·&nbsp; [8] EU Reg 2023/1805. The voyage-charter demurrage $ pool has no authoritative public figure; we model it bottom-up, never cite a headline number.</div>
+  </section>
+
+  <!-- 6 FINANCIALS -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Financial Projections</span><span class="num">06</span></div>
+    <div class="body">
+      <p class="eyebrow">Five-year model <span class="tag proj" style="margin-left:8px">Illustrative, assumptions stated</span></p>
+      <h1 class="t-lg">From design partners to ~EUR 5M ARR by year 3 and ~EUR 30M by year 5.</h1>
+      <div class="cols c2" style="margin-top:22px; align-items:start">
+        <div>
+          <div class="chart">
+            <div class="bar"><div class="col" style="height:1%"><span class="v">0.2</span></div></div>
+            <div class="bar"><div class="col" style="height:4%"><span class="v">1.1</span></div></div>
+            <div class="bar"><div class="col" style="height:17%"><span class="v">5</span></div></div>
+            <div class="bar proj"><div class="col" style="height:47%"><span class="v">14</span></div></div>
+            <div class="bar proj"><div class="col" style="height:95%"><span class="v">30</span></div></div>
+          </div>
+          <div class="xaxis">
+            <div class="x"><b>Y1</b>2026&ndash;27</div>
+            <div class="x"><b>Y2</b>2027</div>
+            <div class="x"><b>Y3</b>2028</div>
+            <div class="x"><b>Y4</b>2029</div>
+            <div class="x"><b>Y5</b>2030</div>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:12px">ARR in EUR millions.</p>
+        </div>
+        <div>
+          <table class="t">
+            <thead><tr><th>Year</th><th class="r">Customers</th><th class="r">ARR</th><th class="r">EBITDA</th></tr></thead>
+            <tbody>
+              <tr><td class="lead">Y1</td><td class="r"><span class="mono">5</span></td><td class="r"><span class="mono">0.2</span></td><td class="r"><span class="mono">(0.5)</span></td></tr>
+              <tr><td class="lead">Y2</td><td class="r"><span class="mono">25</span></td><td class="r"><span class="mono">1.1</span></td><td class="r"><span class="mono">(1.0)</span></td></tr>
+              <tr><td class="lead">Y3</td><td class="r"><span class="mono">90</span></td><td class="r"><span class="mono">5</span></td><td class="r"><span class="mono">~0</span></td></tr>
+              <tr><td class="lead">Y4</td><td class="r"><span class="mono">200</span></td><td class="r"><span class="mono">14</span></td><td class="r"><span class="mono">2.5</span></td></tr>
+              <tr class="tot"><td>Y5</td><td class="r"><span class="mono">360</span></td><td class="r"><span class="mono">30</span></td><td class="r"><span class="mono">8</span></td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:13px; line-height:1.45">Y1 is paid design partners. Assumptions: ~90% gross margin, NRR above 120% via Radar and compliance upsell, low logo churn because the time bar and recovery are mission-critical. EUR millions.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 RISKS -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Risk</span><span class="num">07</span></div>
+    <div class="body">
+      <p class="eyebrow">What we watch, and what we do about it</p>
+      <h1 class="t-lg">Our three real risks are incumbent reaction, data dependencies, and legal defensibility.</h1>
+      <div class="rows" style="margin-top:24px">
+        <div class="row2"><div class="l">Incumbent catches up<span class="s">Veson or Voyager ships agent-native</span></div><div class="r">A 12 to 18 month window. We lock lighthouse Greek owners and stand up the two-sided network before they move.</div></div>
+        <div class="row2"><div class="l">Data dependencies<span class="s">AIS and port feeds for Claims Radar are paid and rate-limited</span></div><div class="r">Start with free weather (Open-Meteo) plus one paid AIS provider; cap voyages per tier in early plans.</div></div>
+        <div class="row2"><div class="l">Legal defensibility<span class="s">A wrong number erodes trust fast</span></div><div class="r">Deterministic, cited, auditable output, plus a server-side gate that rejects any letter edit that changes a figure or drops a clause reference.</div></div>
+        <div class="row2"><div class="l">Single-workflow concentration<span class="s">Demurrage alone is one line</span></div><div class="r">Compliance and adjacent document workflows reuse the same pipeline: additive schema fields, no second codebase.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 TEAM -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Team</span><span class="num">08</span></div>
+    <div class="body">
+      <p class="eyebrow">Built at the ACG AI Lab, Athens</p>
+      <h1 class="t-lg">Two AI researchers whose conviction, verifiable AI that shows its work, is exactly what legal-grade claims demand.</h1>
+      <div class="crew" style="margin-top:24px">
+        <div class="person">
+          <div class="top">
+            <div class="av"><img src="founders/dimitris.png" alt="Dimitris Kalligaridis" style="object-position:top" /></div>
+            <div><div class="nm">Dimitris Kalligaridis</div><div class="role">Software engineer, Amazon &nbsp;·&nbsp; AI research, ACG AI Lab</div></div>
+          </div>
+          <p class="nt">Distributed systems, optimization, and applied ML. Built backend infrastructure, authorization, and production performance at Amazon; a Google Summer of Code 2026 contributor to the Eclipse Foundation. Researches reinforcement-learning agents that decide under uncertainty. Make the math explicit and let every number trace back to its source: that conviction is Laytimely's engine.</p>
+        </div>
+        <div class="person">
+          <div class="top">
+            <div class="av"><img src="founders/roman.png" alt="Roman Dolgopolyi" /></div>
+            <div><div class="nm">Roman Dolgopolyi</div><div class="role">Explainable AI &amp; cybersecurity, ACG AI Lab &nbsp;·&nbsp; incoming PhD, Northeastern</div></div>
+          </div>
+          <p class="nt">Published work on explaining AI decisions in cancer-cell diagnosis, and benchmarks for AI safety compliance. One conviction carries straight into Laytimely: AI trusted with high-stakes decisions has to be transparent and verifiable, never a black box.</p>
+        </div>
+      </div>
+      <p class="fillnote"><b>Hiring next:</b> a maritime domain anchor (former demurrage analyst or chartering operator). With TMV's ship-owner network, an advisor here is within reach and closes our one real gap.</p>
+    </div>
+  </section>
+
+  <!-- 9 GTM -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Go To Market</span><span class="num">09</span></div>
+    <div class="body">
+      <p class="eyebrow">Distribution</p>
+      <h1 class="t-lg">We acquire owners through Piraeus relationships and prove ROI with a single recovered claim.</h1>
+      <div class="cols c2" style="margin-top:26px">
+        <div class="col">
+          <h3>The motion</h3>
+          <ul class="clean">
+            <li><span class="k">Reach</span><span>Warm intros via investors (TMV, the Hadjipateras owner network), the Union of Greek Shipowners, Posidonia.</span></li>
+            <li><span class="k">Land</span><span>Free pilot on a handful of past disputed voyages; show recovered euros.</span></li>
+            <li><span class="k">Convert</span><span>To SaaS plus 5% success fee.</span></li>
+            <li><span class="k">Expand</span><span>Seat to fleet with Radar, then compliance. NRR above 120%.</span></li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>Why Greece first</h3>
+          <p style="font-size:16px; color:var(--ink-soft); line-height:1.5">The densest concentration of shipowners on earth, ~20% of the world fleet<span class="cite">1</span>, mostly within a few square kilometers of Piraeus. The buyer is physically reachable and relationship-driven, which collapses customer acquisition cost. The long tail of small and mid owners still runs Excel, email, and outside consultants.</p>
+          <p style="font-size:14px; color:var(--muted); line-height:1.5; margin-top:16px">Then the same product, charterer perspective already supported, opens the rest of the EU and global commodity traders.</p>
+        </div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [1] UGS Annual Report 2024&ndash;25 / Petrofin Research.</div>
+  </section>
+
+  <!-- 10 TECHNOLOGY -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Technology</span><span class="num">10</span></div>
+    <div class="body">
+      <p class="eyebrow">Built in-house</p>
+      <h1 class="t-lg">A frozen data contract, deterministic math, and prompt caching let us produce claims at cents each.</h1>
+      <div class="cols c2" style="margin-top:26px">
+        <div class="col">
+          <h3>Stack</h3>
+          <ul class="clean">
+            <li><span class="k">Backend</span><span>FastAPI, async Python 3.12, Pydantic v2 frozen VoyageState contract, pdfplumber.</span></li>
+            <li><span class="k">Model</span><span>Claude Sonnet 4.6 by default, Opus escape per agent. Prompt caching keeps cost at EUR 0.05&ndash;0.10 a voyage.<span class="cite">13</span></span></li>
+            <li><span class="k">Frontend</span><span>Next.js 15, client-side PDF export, no native deps.</span></li>
+            <li><span class="k">Scale</span><span>Stateless agents, Postgres-ready, S3-ready, public API plus webhooks so TMS systems push docs in and pull packets out.</span></li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>The trust architecture</h3>
+          <p style="font-size:16px; color:var(--ink-soft); line-height:1.5">The model classifies each event. A plain Python function walks the timeline, sums the hours, splits the row where the allowance runs out, and multiplies by the rate. The number on screen is reproducible and locked by a test to <span class="mono" style="font-weight:600; color:var(--ink)">EUR 84,375.00</span>.</p>
+          <p style="font-size:16px; color:var(--ink-soft); line-height:1.5; margin-top:14px">That separation, LLM for judgment, Python for money, is why a shipping professional can defend our output in a dispute. No competitor that does the math inside the model can say the same.</p>
+        </div>
+      </div>
+    </div>
+    <div class="src"><b>Cite:</b> [13] Laytimely live pipeline (internal).</div>
+  </section>
+
+  <!-- 11 TRACTION -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Traction</span><span class="num">11</span></div>
+    <div class="body">
+      <p class="eyebrow">What is already done</p>
+      <h1 class="t-lg">In one hackathon we shipped a working, tested, multi-tenant product with a reproducible live claim.</h1>
+      <div class="cols c3" style="margin-top:26px">
+        <div class="col"><h3>Product</h3><ul class="clean">
+          <li><span>Four-agent pipeline, deterministic calculator with a passing test gate.</span></li>
+          <li><span>Excel, Word, and PDF export; claim-letter email send.</span></li>
+          <li><span>Evidence checklist; claim-strength sub-scores; legal-citation subsystem.</span></li>
+        </ul></div>
+        <div class="col"><h3>Platform</h3><ul class="clean">
+          <li><span>Multi-tenant workspaces, roles, invitations, audit log.</span></li>
+          <li><span>Email-in ingestion; Postgres-ready persistence; S3-ready storage.</span></li>
+          <li><span>Owner and charterer perspectives both supported.</span></li>
+        </ul></div>
+        <div class="col"><h3>Proof</h3><ul class="clean">
+          <li><span>Live demo returns <span class="mono" style="font-size:14px">EUR 84,375.00</span> every run.</span></li>
+          <li><span>Built at Florent x Panath&#275;nea, Athens, 28 May 2026.</span></li>
+          <li><span style="color:var(--muted)">Next: incorporation, IP assignment, and first design-partner pilots.</span></li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 THE ASK -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>The Deal</span><span class="num">12</span></div>
+    <div class="body">
+      <p class="eyebrow">The ask · pre-seed</p>
+      <h1 class="t-lg">Raising EUR 750k to incorporate, land our first paying design partners, and complete the demurrage product.</h1>
+      <div class="cols c2" style="margin-top:24px">
+        <div>
+          <h3 class="col" style="font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted)">Use of proceeds</h3>
+          <div class="proc">
+            <div class="prow"><span class="pl">Product &amp; founding hires</span><span class="pbar" style="width:100%"></span><span class="pv">60%</span></div>
+            <div class="prow"><span class="pl">GTM, Piraeus design partners</span><span class="pbar" style="width:33%"></span><span class="pv">20%</span></div>
+            <div class="prow"><span class="pl">Compute, data &amp; infra</span><span class="pbar" style="width:20%"></span><span class="pv">12%</span></div>
+            <div class="prow"><span class="pl">Incorporation, legal &amp; IP</span><span class="pbar" style="width:13%"></span><span class="pv">8%</span></div>
+          </div>
+          <ul class="clean" style="margin-top:22px">
+            <li><span class="k">Instrument</span><span>SAFE, target ~EUR 5&ndash;6M post-money cap.</span></li>
+            <li><span class="k">Runway</span><span>18 months.</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="col" style="font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted)">What this buys (to unlock the seed)</h3>
+          <ul class="clean">
+            <li><span class="k">Company</span><span>Incorporated, IP assigned, first two hires.</span></li>
+            <li><span class="k">Revenue</span><span>5+ paying design partners, first ~EUR 250k ARR.</span></li>
+            <li><span class="k">Product</span><span>Demurrage complete (multi-port, time charters, OCR); Radar in pilot.</span></li>
+            <li><span class="k">Proof</span><span>1 to 2 lighthouse Greek owner references.</span></li>
+          </ul>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:18px"><span class="tag proj">Illustrative</span> Terms and milestones for discussion with the lead.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 WHY NOW (dark) -->
+  <section class="slide dark">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Why Now</span><span class="num">13</span></div>
+    <div class="body">
+      <p class="eyebrow">The call to action</p>
+      <h1 class="t-xl">Now: LLMs can finally read legal documents, the EU just mandated emissions reporting, and incumbents are still shipping forms.</h1>
+      <div class="cols c3" style="margin-top:38px">
+        <div class="col"><h3>Technology</h3><p style="font-size:16px; color:var(--d-paper); line-height:1.5">Legal-grade document reasoning became possible only in the last 18 months. The window for agent-native maritime is open now.</p></div>
+        <div class="col"><h3>Regulation</h3><p style="font-size:16px; color:var(--d-paper); line-height:1.5">EU ETS for shipping (Jan 2024) and FuelEU Maritime (Jan 2025) created an urgent compliance market on the same pipeline.</p></div>
+        <div class="col"><h3>Capital &amp; policy</h3><p style="font-size:16px; color:var(--d-paper); line-height:1.5">Maritime is now a declared strategic priority, the Greek fleet is at record size, and the agent-native category is still unclaimed.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 VISION (dark) -->
+  <section class="slide dark">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Vision</span><span class="num">14</span></div>
+    <div class="body center">
+      <p class="eyebrow">Where this goes</p>
+      <h1 class="t-hero" style="max-width:18ch">From one disputed voyage to the operating layer for maritime claims and compliance.</h1>
+      <p class="lede" style="color:var(--d-muted); max-width:70ch; font-size:21px; margin-top:28px">Start with demurrage recovery for Greek owners. Expand to charterers, lawyers, live exposure prevention, EU emissions compliance, then cargo damage and freight disputes, all on one agent pipeline. End with the two-sided settlement network where both parties resolve on Laytimely. That is the moat, and the venture-scale outcome.</p>
+    </div>
+    <div class="meta" style="color:var(--d-muted)"><span>Laytimely</span><span>laytimely.com &nbsp;·&nbsp; founders@laytimely.com</span></div>
+  </section>
+
+  <!-- 15 SOURCES -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Sources &amp; Figures</span><span class="num">15</span></div>
+    <div class="body" style="justify-content:flex-start">
+      <p class="eyebrow" style="margin-top:6px">Every cited figure, and where it comes from</p>
+      <h1 style="font-size:26px; max-width:none; margin-bottom:6px">What is sourced, and what is our own model.</h1>
+      <div class="legend">
+        <span><span class="tag fact">Internal</span> Laytimely live product, verifiable in the repo</span>
+        <span><span class="tag proj">Illustrative</span> Our model, assumptions on the slide</span>
+        <span>All others are external sources below</span>
+      </div>
+      <div class="src-list">
+        <div class="s"><span class="n">1</span>Greek fleet ~5,500&ndash;5,800 ships, ~20% of world DWT, 61% of EU fleet, ~588 companies. <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">Union of Greek Shipowners Annual Report 2024&ndash;25 · Petrofin Research</span></div>
+        <div class="s"><span class="n">2</span>Demurrage time bar typically 90 days; claim forfeited if missed. <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">itic-insure.com · wfw.com/articles/demurrage-time-bar-clauses</span></div>
+        <div class="s"><span class="n">3</span>Demurrage day rates: Capesize &gt;$30k, VLCC ~$50&ndash;80k / day.<span class="u">voyagerportal.com (secondary, vendor explainer)</span></div>
+        <div class="s"><span class="n">4</span>Global seaborne trade ~12.3bn tonnes (2023). <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">UNCTAD Review of Maritime Transport 2024</span></div>
+        <div class="s"><span class="n">5</span>Voyage-management software ~$0.3&ndash;2.3B, 7&ndash;14% CAGR (range).<span class="u">Fortune Business Insights · market.us · MarketResearchFuture</span></div>
+        <div class="s"><span class="n">6</span>Maritime software ~$1.9B (2024) to ~$4.7B (2033).<span class="u">globalgrowthinsights.com/market-reports/maritime-software-market</span></div>
+        <div class="s"><span class="n">7</span>EU ETS up to ~&euro;10B/yr cost to shipping (2026); ships &ge;5,000 GT; 40/70/100% phase-in. <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">DNV · climate.ec.europa.eu</span></div>
+        <div class="s"><span class="n">8</span>FuelEU Maritime penalty &euro;2,400 / t energy deficit (Jan 2025). <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">EU Regulation 2023/1805</span></div>
+        <div class="s"><span class="n">9</span>Veson ~$102M rev / ~$306M val (est.); Francisco Partners + Pamlico.<span class="u">getlatka.com · pitchbook · franciscopartners.com</span></div>
+        <div class="s"><span class="n">10</span>Harbor Lab $16M Series A led by Atomico (~$22.5M total); TMV investor. <span class="tag fact" style="font-size:9px; padding:2px 6px">Primary</span><span class="u">techcrunch.com/2024/05/15 · atomico.com</span></div>
+        <div class="s"><span class="n">11</span>Voyager Portal $8.4M Series A (2021), ~$12.7M total.<span class="u">globenewswire.com (2021) · pitchbook</span></div>
+        <div class="s"><span class="n">12</span>Burmester &amp; Vogel "Demurrage AI Copilot"; acquired Laysoft (2025).<span class="u">smartmaritimenetwork.com/2025/03/28</span></div>
+        <div class="s"><span class="n">13</span>EUR 0.05&ndash;0.10 / claim; live demo EUR 84,375.00; 2&ndash;4 day status quo. <span class="tag fact" style="font-size:9px; padding:2px 6px">Internal</span><span class="u">Laytimely repo: calculator test, README</span></div>
+      </div>
+      <p style="font-size:11.5px; color:var(--faint); margin-top:14px; line-height:1.45"><b style="color:var(--muted)">Deliberately not cited:</b> the widely-quoted "~$22B demurrage" is container detention &amp; demurrage (liner trade), a different, adjacent market. Demurrage-as-%-of-freight and the voyage-charter demurrage $ pool have no authoritative public source, so we model them bottom-up rather than quote a headline number.</p>
+    </div>
+  </section>
+
+</div>
+
+<div id="hud"><b id="cur">01</b> / 16</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const cur = document.getElementById('cur');
+
+  function fit(){
+    const z = Math.min(1, (window.innerWidth - 40) / 1280);
+    slides.forEach(s => s.style.zoom = z);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  let idx = 0;
+  function go(n){
+    idx = Math.max(0, Math.min(slides.length - 1, n));
+    slides[idx].scrollIntoView({ behavior:'smooth', block:'center' });
+    cur.textContent = String(idx + 1).padStart(2,'0');
+  }
+  window.addEventListener('keydown', e => {
+    if(e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' '){ e.preventDefault(); go(idx + 1); }
+    if(e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ e.preventDefault(); go(idx - 1); }
+  });
+  // keep counter in sync with manual scroll
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if(en.isIntersecting){
+        idx = slides.indexOf(en.target);
+        cur.textContent = String(idx + 1).padStart(2,'0');
+      }
+    });
+  }, { threshold:0.6 });
+  slides.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
