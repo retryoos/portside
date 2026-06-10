@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Laytimely — Tailored AI agentic systems for maritime operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink: oklch(0.15 0 0);
+    --ink-soft: oklch(0.27 0.005 265);
+    --paper: oklch(0.985 0.002 95);
+    --surface: oklch(1 0 0);
+    --surface-muted: oklch(0.965 0.004 265);
+    --muted: oklch(0.46 0.006 265);
+    --faint: oklch(0.62 0.006 265);
+    --border: oklch(0.9 0.004 265);
+    --border-strong: oklch(0.8 0.006 265);
+    --success: oklch(0.5 0.12 155);
+    --success-c: oklch(0.95 0.04 155);
+    --warning: oklch(0.58 0.14 70);
+    --warning-c: oklch(0.95 0.06 78);
+    --accent: oklch(0.5 0.17 268);
+
+    --d-bg: oklch(0.16 0.008 265);
+    --d-paper: oklch(0.97 0.003 265);
+    --d-muted: oklch(0.72 0.01 265);
+    --d-border: oklch(0.32 0.01 265);
+  }
+
+  *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--ink);
+    font-family:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .mono{ font-family:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-feature-settings:"tnum" 1; letter-spacing:-0.01em; }
+
+  #deck{ display:flex; flex-direction:column; align-items:center; gap:26px; padding:34px 20px 80px; }
+
+  .slide{
+    width:1280px; height:720px; flex:none; position:relative; overflow:hidden;
+    background: var(--paper); color: var(--ink);
+    padding:62px 84px 54px;
+    box-shadow: 0 24px 60px -28px oklch(0 0 0 / 0.6);
+    border-radius:6px;
+    display:flex; flex-direction:column;
+  }
+  .slide.dark{ background: var(--d-bg); color: var(--d-paper); }
+
+  .meta{ display:flex; justify-content:space-between; align-items:baseline; font-size:11px; font-weight:600;
+         letter-spacing:0.18em; text-transform:uppercase; color:var(--faint); }
+  .slide.dark .meta{ color:var(--d-muted); }
+  .meta .brand{ color:var(--ink); }
+  .slide.dark .meta .brand{ color:var(--d-paper); }
+  .meta .brand b{ font-weight:700; }
+  .meta .num{ font-family:"JetBrains Mono", monospace; letter-spacing:0; }
+
+  .body{ flex:1; display:flex; flex-direction:column; justify-content:flex-start; min-height:0; padding-top:24px; }
+  .body.center{ justify-content:center; }
+
+  .eyebrow{ font-size:11px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin:0 0 18px; }
+  .slide.dark .eyebrow{ color:var(--d-muted); }
+
+  h1{ font-weight:600; letter-spacing:-0.035em; line-height:1.04; margin:0; }
+  .t-hero{ font-size:62px; line-height:0.98; letter-spacing:-0.04em; }
+  .t-xl{ font-size:46px; max-width:21ch; }
+  .t-lg{ font-size:38px; max-width:24ch; }
+  .lede{ font-size:19px; line-height:1.5; color:var(--muted); max-width:62ch; margin:20px 0 0; font-weight:400; }
+  .slide.dark .lede{ color:var(--d-muted); }
+
+  .cols{ display:grid; gap:40px; margin-top:34px; }
+  .cols.c2{ grid-template-columns: 1.05fr 1fr; }
+  .cols.c2b{ grid-template-columns: 1fr 1.25fr; }
+  .cols.c3{ grid-template-columns: repeat(3,1fr); }
+  .cols.c4{ grid-template-columns: repeat(4,1fr); gap:18px; }
+
+  p{ margin:0; }
+  .col h3{ font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin:0 0 12px; }
+  .slide.dark .col h3{ color:var(--d-muted); }
+
+  ul.clean{ list-style:none; margin:0; padding:0; }
+  ul.clean li{ font-size:16.5px; line-height:1.45; color:var(--ink-soft); padding:11px 0; border-top:1px solid var(--border); display:flex; gap:13px; }
+  ul.clean li:first-child{ border-top:none; }
+  ul.clean li .k{ font-family:"JetBrains Mono", monospace; font-weight:600; color:var(--ink); font-size:14px; flex:none; width:120px; padding-right:8px; }
+  .slide.dark ul.clean li{ color:var(--d-paper); border-color:var(--d-border); }
+  .slide.dark ul.clean li .k{ color:var(--d-paper); }
+
+  .stats{ display:flex; gap:0; margin-top:36px; border-top:1.5px solid var(--ink); }
+  .stat{ flex:1; padding:22px 26px 4px; border-right:1px solid var(--border); }
+  .stat:last-child{ border-right:none; }
+  .stat .fig{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:40px; letter-spacing:-0.03em; line-height:1; }
+  .stat .lab{ font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.35; max-width:26ch; }
+  .stat.warn .fig{ color:var(--warning); }
+  .stat.win .fig{ color:var(--success); }
+
+  .tag{ display:inline-block; font-size:10.5px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase;
+        padding:4px 9px; border-radius:999px; }
+  .tag.fact{ background:var(--surface-muted); color:var(--muted); border:1px solid var(--border); }
+  .tag.proj{ background:var(--warning-c); color:oklch(0.42 0.1 60); }
+  .tag.live{ background:var(--success-c); color:oklch(0.38 0.1 155); }
+
+  /* pipeline */
+  .pipe{ display:flex; align-items:stretch; gap:0; margin-top:8px; }
+  .pipe .step{ flex:1; padding:14px 16px; background:var(--surface); border:1px solid var(--border); }
+  .pipe .step:not(:last-child){ border-right:none; }
+  .pipe .step .n{ font-family:"JetBrains Mono", monospace; font-size:12px; color:var(--faint); }
+  .pipe .step .nm{ font-weight:600; font-size:15.5px; margin-top:5px; }
+  .pipe .step .ds{ font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.35; }
+  .pipe .arrow{ align-self:center; color:var(--border-strong); font-size:18px; padding:0 2px; flex:none; }
+
+  /* big result */
+  .result{ border:1.5px solid var(--ink); border-radius:6px; padding:20px 26px; background:var(--surface); }
+  .result .lab{ font-size:12px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+  .result .fig{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:44px; letter-spacing:-0.035em; margin-top:8px; line-height:1; }
+  .result .sub{ font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.45; }
+  .result .sub b{ color:var(--ink); font-weight:600; }
+
+  /* before/after split */
+  .ba{ display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:24px; }
+  .ba .card{ border:1px solid var(--border); border-radius:6px; padding:20px 22px; background:var(--surface); }
+  .ba .card.now{ background:var(--surface-muted); }
+  .ba .card .h{ font-size:11px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+  .ba .card .t{ font-size:24px; font-weight:600; letter-spacing:-0.02em; margin-top:10px; line-height:1.15; }
+  .ba .card .l{ list-style:none; padding:0; margin:14px 0 0; }
+  .ba .card .l li{ font-size:14.5px; color:var(--ink-soft); padding:7px 0; border-top:1px solid var(--border); line-height:1.4; }
+  .ba .card .l li:first-child{ border-top:none; }
+  .ba .card.now .l li{ border-color:var(--border-strong); }
+
+  /* workflow grid */
+  .grid4{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:24px; }
+  .grid4 .it{ border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:18px 20px; display:flex; flex-direction:column; gap:8px; }
+  .grid4 .it.live{ border-color:var(--ink); }
+  .grid4 .it .top{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .grid4 .it .nm{ font-weight:600; font-size:17px; letter-spacing:-0.01em; }
+  .grid4 .it .ds{ font-size:13.5px; color:var(--muted); line-height:1.45; }
+
+  /* trust rows */
+  .rows{ display:flex; flex-direction:column; gap:0; margin-top:8px; }
+  .row2{ display:grid; grid-template-columns: 0.7fr 1.3fr; gap:30px; padding:15px 0; border-top:1px solid var(--border); }
+  .row2:first-child{ border-top:1.5px solid var(--ink); }
+  .row2 .l{ font-weight:600; font-size:15.5px; }
+  .row2 .l .s{ display:block; font-weight:400; font-size:13px; color:var(--muted); margin-top:3px; }
+  .row2 .r{ font-size:14.5px; color:var(--ink-soft); line-height:1.45; }
+
+  /* screenshot frame */
+  .frame{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:18px; }
+  .frame .sh{ aspect-ratio:16/9; background:var(--surface-muted); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--faint); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; }
+  .frame .cap{ font-size:13px; color:var(--muted); margin-top:8px; line-height:1.4; }
+  .shot{ display:flex; flex-direction:column; }
+
+  /* pilot programme card */
+  .cta{ border:1.5px solid var(--ink); border-radius:6px; background:var(--surface); padding:30px 36px; margin-top:8px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .cta .eyebrow{ margin:0; }
+  .cta h2{ font-size:32px; font-weight:600; letter-spacing:-0.025em; margin:0; max-width:30ch; line-height:1.1; }
+  .cta p{ font-size:15.5px; color:var(--muted); max-width:60ch; line-height:1.5; }
+  .cta .pill{ display:inline-block; background:var(--ink); color:var(--paper); padding:13px 28px; border-radius:999px; font-weight:600; font-size:14px; letter-spacing:0.02em; }
+
+  /* team */
+  .crew{ display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; }
+  .person{ border:1px solid var(--border); border-radius:8px; padding:22px 24px; background:var(--surface); }
+  .person .top{ display:flex; align-items:center; gap:16px; }
+  .person .av{ width:66px; height:66px; border-radius:50%; overflow:hidden; flex:none; background:var(--surface-muted); border:1px solid var(--border); }
+  .person .av img{ width:100%; height:100%; object-fit:cover; }
+  .person .role{ font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .person .nm{ font-weight:600; font-size:19px; margin-top:0; color:var(--ink); letter-spacing:-0.01em; }
+  .person .nt{ font-size:13.5px; color:var(--ink-soft); margin-top:16px; line-height:1.5; }
+  .fillnote{ font-size:13px; color:var(--muted); margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+  .fillnote b{ color:var(--ink); font-weight:600; }
+
+  /* cover */
+  .cover{ justify-content:space-between; }
+  .cover .top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .cover .logo{ font-size:21px; font-weight:700; letter-spacing:-0.02em; }
+  .cover .logo .dot{ color:var(--accent); }
+  .cover h1{ font-size:68px; letter-spacing:-0.045em; line-height:0.98; max-width:19ch; }
+  .cover .sub{ font-size:20px; color:var(--muted); margin-top:24px; max-width:54ch; line-height:1.45; }
+  .cover .ruler{ display:flex; gap:0; margin:30px 0 0; height:30px; align-items:flex-end; }
+  .cover .ruler i{ flex:1; border-left:1px solid var(--border-strong); height:9px; }
+  .cover .ruler i:nth-child(5n+1){ height:22px; border-color:var(--ink); }
+  .cover .foot{ display:flex; justify-content:space-between; align-items:flex-end; font-size:13px; color:var(--muted); }
+  .cover .foot .demo{ text-align:right; }
+  .cover .foot .demo .f{ font-family:"JetBrains Mono", monospace; font-weight:700; font-size:30px; color:var(--ink); letter-spacing:-0.03em; }
+
+  /* nav */
+  #hud{ position:fixed; right:18px; bottom:16px; z-index:50; font-family:"JetBrains Mono", monospace;
+        font-size:12px; color:oklch(0.85 0 0); background:oklch(0.2 0 0 / 0.85); padding:7px 12px;
+        border-radius:999px; letter-spacing:0.04em; }
+  #hud b{ color:#fff; }
+
+  @media print{
+    body{ background:#fff; }
+    #deck{ gap:0; padding:0; }
+    #hud{ display:none; }
+    @page{ size:1280px 720px; margin:0; }
+    .slide{ zoom:1 !important; box-shadow:none !important; border-radius:0 !important;
+            page-break-after:always; break-after:page; margin:0; }
+    .slide:last-child{ page-break-after:auto; }
+  }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- 1 COVER -->
+  <section class="slide cover">
+    <div class="top">
+      <div class="logo">Laytimely<span class="dot">.</span></div>
+      <div class="meta" style="display:block; text-align:right">CUSTOMER OVERVIEW · 2026</div>
+    </div>
+    <div>
+      <h1>Tailored AI agentic systems for maritime operations.</h1>
+      <p class="sub">We build and embed multi-agent AI workflows for the operational bottlenecks your team handles by hand today. The demurrage claim engine is one we already shipped.</p>
+      <div class="ruler" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+    <div class="foot">
+      <div>Demurrage, EU ETS, FuelEU, post-voyage reconciliation,<br/>cargo damage, and more — all on one agent pipeline.</div>
+      <div class="demo">
+        <div style="font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--faint); margin-bottom:6px">Live demo claim, reproducible</div>
+        <div class="f">EUR&nbsp;84,375.00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 THE PROBLEM (their workflow today) -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>The problem</span><span class="num">02</span></div>
+    <div class="body">
+      <p class="eyebrow">Today, in your operations team</p>
+      <h1 class="t-xl">Half of every maritime operational workflow is still done by hand, even though the inputs are structured documents.</h1>
+      <p class="lede">A claims officer spends hours per voyage reconciling a Charter Party, Notice of Readiness, and Statement of Facts to produce one demurrage claim letter. The same pattern repeats for emissions reporting, post-voyage reconciliation, cargo damage, and freight disputes. The work is high-stakes, repetitive, and error-prone, with deadlines that punish a miss.</p>
+      <div class="stats" style="margin-top:26px">
+        <div class="stat">
+          <div class="fig">Hours<span style="font-size:18px; color:var(--muted); margin-left:8px">per claim</span></div>
+          <div class="lab">Time a claims analyst spends on a single disputed voyage, by hand.</div>
+        </div>
+        <div class="stat warn">
+          <div class="fig">90 days</div>
+          <div class="lab">Typical demurrage time bar. Miss it, the claim is forfeited.</div>
+        </div>
+        <div class="stat">
+          <div class="fig">$30&ndash;80k</div>
+          <div class="lab">Demurrage per idle ship per day, Capesize to VLCC.</div>
+        </div>
+        <div class="stat">
+          <div class="fig">&euro;10B/yr</div>
+          <div class="lab">EU ETS cost to shipping from 2026, on the same documents.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 WHAT WE DO -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>What we do</span><span class="num">03</span></div>
+    <div class="body">
+      <p class="eyebrow">Our approach</p>
+      <h1 class="t-lg">We design, build, and integrate multi-agent AI systems tailored to your specific operational bottleneck.</h1>
+      <p class="lede">Not a generic chatbot. Not a form. A pipeline of specialised AI agents that read your documents, do the work, and hand back a finished, auditable output. We start from your workflow, your documents, your terminology, and your handoff points — and we ship a system that drops into them.</p>
+      <div class="cols c3" style="margin-top:36px">
+        <div class="col"><h3>Tailored</h3><p style="font-size:15.5px; color:var(--ink-soft); line-height:1.5">Built around your charter forms, your port relationships, your team's review steps. Not a one-size SaaS.</p></div>
+        <div class="col"><h3>Agentic</h3><p style="font-size:15.5px; color:var(--ink-soft); line-height:1.5">A pipeline of specialised agents that hand work to each other, not one monolithic prompt that hallucinates.</p></div>
+        <div class="col"><h3>Integrated</h3><p style="font-size:15.5px; color:var(--ink-soft); line-height:1.5">Sits behind your inbox, your TMS, your existing review chain. Embedded, not bolted on.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 PROVEN: DEMURRAGE AGENT (before/after) -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Proven workflow #1 &mdash; Demurrage</span><span class="num">04</span></div>
+    <div class="body">
+      <p class="eyebrow">What we shipped first <span class="tag live" style="margin-left:8px">Live</span></p>
+      <h1 class="t-lg">Three voyage PDFs in, one cited, defensible demurrage claim out, in under a minute.</h1>
+      <div class="ba">
+        <div class="card now">
+          <div class="h">Before Laytimely</div>
+          <div class="t">Hours of manual reconciliation per voyage.</div>
+          <ul class="l">
+            <li>Charter Party, Notice of Readiness, Statement of Facts pulled into Excel by hand.</li>
+            <li>Laytime calculated row by row, contested events flagged in a separate column.</li>
+            <li>Claim letter drafted from a template, cited by memory, then reviewed.</li>
+            <li>Time bar tracked in someone's calendar; misses are total losses.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="h">With Laytimely</div>
+          <div class="t">Under one minute, end to end, with citations.</div>
+          <ul class="l">
+            <li>Upload the three PDFs (or forward the email thread). The pipeline runs in the background.</li>
+            <li>Laytime is summed in deterministic Python, not by the model. Every figure is reproducible.</li>
+            <li>Claim letter drafted with every line citing its CP clause and SoF event id.</li>
+            <li>Time bar surfaced on every claim; export to PDF, Word, or Excel; send via email from the app.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="result" style="margin-top:22px; display:flex; align-items:center; gap:30px; padding:18px 26px">
+        <div style="flex:1">
+          <div class="lab">Live reproducible demo</div>
+          <div style="font-size:14px; color:var(--muted); margin-top:4px">MT Aegean Pioneer &middot; Ras Tanura &rarr; Rotterdam</div>
+        </div>
+        <div class="fig" style="margin-top:0">EUR 84,375.00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 HOW IT WORKS (4 agents) -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>How the agents work together</span><span class="num">05</span></div>
+    <div class="body">
+      <p class="eyebrow">The pipeline, end to end</p>
+      <h1 class="t-lg">Four specialised agents. One pipeline. Every figure cited to its source.</h1>
+      <div class="pipe" style="margin-top:26px">
+        <div class="step"><div class="n">Agent 1</div><div class="nm">Read</div><div class="ds">Extracts the Charter Party, the Notice of Readiness, and the hour-by-hour port log into a clean structured timeline.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 2</div><div class="nm">Calculate</div><div class="ds">Works out the laytime. The arithmetic runs in plain Python, not in the model, so the numbers are exact and reproducible.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 3</div><div class="nm">Argue</div><div class="ds">Finds the hours the other side will dispute and builds the legal argument with clause and event citations.</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="n">Agent 4</div><div class="nm">Draft</div><div class="ds">Writes the finished claim letter in the standard industry format, ready to send or to be reviewed by a lawyer.</div></div>
+      </div>
+      <p class="lede" style="margin-top:34px">This is the architecture we replicate for every new workflow. Each agent has one job and one verifiable output. Each handoff is structured data, not free text. That separation, LLM for judgement and Python for money, is why the output holds up in a dispute.</p>
+    </div>
+  </section>
+
+  <!-- 6 WHY YOU CAN TRUST IT -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Why you can trust the output</span><span class="num">06</span></div>
+    <div class="body">
+      <p class="eyebrow">The trust architecture</p>
+      <h1 class="t-lg">Numbers a court can audit. Arguments a counterparty cannot dismiss.</h1>
+      <div class="rows" style="margin-top:24px">
+        <div class="row2">
+          <div class="l">Every figure cited<span class="s">to its CP clause and SoF event id</span></div>
+          <div class="r">Each line in the claim letter references the contract clause and the port-log event it came from. A reviewer or a lawyer can audit any number in seconds, without re-running the calculation.</div>
+        </div>
+        <div class="row2">
+          <div class="l">Deterministic math<span class="s">Python sums hours, not the model</span></div>
+          <div class="r">The hours are summed by a plain Python function that is locked by an automated test. The number on screen is reproducible and identical between runs. No LLM hallucination is possible on the figures themselves.</div>
+        </div>
+        <div class="row2">
+          <div class="l">Time bar tracked<span class="s">on every claim, from day one</span></div>
+          <div class="r">The 90-day demurrage deadline is surfaced on every voyage so a valid case never expires on a forgotten calendar. We refuse to ship a feature that quietly drops a citation or a deadline.</div>
+        </div>
+        <div class="row2">
+          <div class="l">Reviewable, editable<span class="s">your team stays in the loop</span></div>
+          <div class="r">Every claim letter is editable in the browser. Highlight a sentence, refine it with AI, or rewrite by hand. Export to PDF, Word, Excel, or send via email — the audit trail follows.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 WHAT IT LOOKS LIKE -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>What it looks like</span><span class="num">07</span></div>
+    <div class="body">
+      <p class="eyebrow">Live, today, at laytimely.com</p>
+      <h1 class="t-lg">A clean web app your team logs into. No installs, no spreadsheets, no consultant in the loop.</h1>
+      <div class="frame">
+        <div class="shot">
+          <div class="sh">Upload screen</div>
+          <p class="cap">Drag and drop the three voyage documents. A new case lands on your dashboard.</p>
+        </div>
+        <div class="shot">
+          <div class="sh">Pipeline running</div>
+          <p class="cap">Watch the four agents hand work to each other, then the EUR 84,375.00 quantum land.</p>
+        </div>
+        <div class="shot">
+          <div class="sh">Edit and export</div>
+          <p class="cap">Highlight a sentence, refine it with AI, export the cited claim as PDF, Word, or Excel.</p>
+        </div>
+      </div>
+      <p class="lede" style="margin-top:30px">You can try the live demo right now: <b style="color:var(--ink); font-weight:600">laytimely.com</b>, demo credentials available on request. Reproducing the EUR 84,375.00 figure on your own laptop is the fastest way to see what is real and what is marketing.</p>
+    </div>
+  </section>
+
+  <!-- 8 WHERE THIS EXTENDS (other workflows) -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>What we can build for you next</span><span class="num">08</span></div>
+    <div class="body">
+      <p class="eyebrow">The same pipeline, new workflows</p>
+      <h1 class="t-lg">Demurrage is the wedge. The agent pipeline scales to every document-heavy maritime operation.</h1>
+      <div class="grid4">
+        <div class="it live">
+          <div class="top"><span class="nm">Demurrage claims</span><span class="tag live">Live</span></div>
+          <p class="ds">Owner and charterer perspectives, time-charter and voyage-charter support, multi-port voyages.</p>
+        </div>
+        <div class="it">
+          <div class="top"><span class="nm">EU ETS &amp; FuelEU compliance</span><span class="tag proj">Q3 2026</span></div>
+          <p class="ds">From voyage documents to compliant emissions reporting, EUA management, and penalty exposure forecasts.</p>
+        </div>
+        <div class="it">
+          <div class="top"><span class="nm">Claims Radar &mdash; live exposure</span><span class="tag proj">Q3 2026</span></div>
+          <p class="ds">Real-time demurrage exposure across your fleet from AIS, weather, and port-log feeds, before the time bar starts.</p>
+        </div>
+        <div class="it">
+          <div class="top"><span class="nm">Post-voyage reconciliation</span><span class="tag fact">Design partner</span></div>
+          <p class="ds">Bunker discrepancies, port disbursement audits, hire statements, all reconciled from the same document pipeline.</p>
+        </div>
+        <div class="it">
+          <div class="top"><span class="nm">Cargo damage &amp; freight disputes</span><span class="tag fact">Scoping</span></div>
+          <p class="ds">Same pattern: structured extraction, deterministic calculation, cited argument, drafted letter, audited output.</p>
+        </div>
+        <div class="it">
+          <div class="top"><span class="nm">Your workflow</span><span class="tag fact">Talk to us</span></div>
+          <p class="ds">If your team handles a document-heavy, deadline-driven workflow today, we can scope a tailored agent for it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 HOW WE WORK WITH CUSTOMERS -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>How a pilot works</span><span class="num">09</span></div>
+    <div class="body">
+      <p class="eyebrow">Pilot programme</p>
+      <h1 class="t-lg">A short, hands-on engagement that proves the workflow on your own documents before you commit.</h1>
+      <div class="cols c2" style="margin-top:30px">
+        <div>
+          <h3 class="col">The motion</h3>
+          <ul class="clean">
+            <li><span class="k">Week 1</span><span>We map your workflow with one of your senior operators. We agree on the input documents, the handoff points, and the success metric.</span></li>
+            <li><span class="k">Week 2&ndash;3</span><span>We tune the pipeline on a handful of your real past voyages. Output is reviewed by your team line by line.</span></li>
+            <li><span class="k">Week 4</span><span>Live on a workspace owned by your team. Members invited via your domain. We watch the first week alongside you.</span></li>
+            <li><span class="k">From week 5</span><span>Production. Monthly review of accuracy, exceptions, and any net-new workflows we should scope next.</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="col">What stays yours</h3>
+          <ul class="clean">
+            <li><span class="k">Data</span><span>Your documents stay in your tenant. We do not train models on your data; the LLM provider does not retain it past the call.</span></li>
+            <li><span class="k">Audit log</span><span>Every action (upload, edit, export, send) is recorded for your compliance team.</span></li>
+            <li><span class="k">Exit</span><span>You can export every case as PDF and the raw structured timeline as JSON at any time. No lock-in by file format.</span></li>
+            <li><span class="k">Pricing</span><span>Pilot is fixed-price for the first month. Production is per workspace, with success-fee options on recovered demurrage.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 GET STARTED / CTA (dark) -->
+  <section class="slide dark">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Get started</span><span class="num">10</span></div>
+    <div class="body center">
+      <p class="eyebrow">Try it now, or scope a pilot</p>
+      <h1 class="t-hero" style="max-width:21ch">From three documents in, to a finished claim out, in under a minute.</h1>
+      <p class="lede" style="color:var(--d-muted); max-width:70ch; font-size:20px; margin-top:28px">The fastest path is the live demo. We will give you credentials, three demo PDFs, and walk you through reproducing the EUR 84,375.00 figure on your own machine. After that, a 30-minute call to scope a pilot on one of your past disputed voyages.</p>
+      <div style="display:flex; gap:20px; margin-top:36px; flex-wrap:wrap">
+        <div style="border:1px solid var(--d-border); border-radius:6px; padding:18px 22px; min-width:260px">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--d-muted)">Live demo</div>
+          <div style="font-size:18px; font-weight:600; margin-top:8px; color:var(--d-paper)" class="mono">laytimely.com</div>
+          <div style="font-size:13.5px; color:var(--d-muted); margin-top:6px; line-height:1.45">Login credentials and the three demo voyage PDFs available on request.</div>
+        </div>
+        <div style="border:1px solid var(--d-border); border-radius:6px; padding:18px 22px; min-width:260px">
+          <div style="font-size:11px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:var(--d-muted)">Scope a pilot</div>
+          <div style="font-size:18px; font-weight:600; margin-top:8px; color:var(--d-paper)" class="mono">founders@laytimely.com</div>
+          <div style="font-size:13.5px; color:var(--d-muted); margin-top:6px; line-height:1.45">A 30-minute call, on your past disputed voyages, no commitment.</div>
+        </div>
+      </div>
+    </div>
+    <div class="meta" style="color:var(--d-muted)"><span>Laytimely</span><span>laytimely.com &nbsp;·&nbsp; founders@laytimely.com</span></div>
+  </section>
+
+  <!-- 11 BACKGROUND / TEAM -->
+  <section class="slide">
+    <div class="meta"><span class="brand"><b>Laytimely</b></span><span>Background</span><span class="num">11</span></div>
+    <div class="body">
+      <p class="eyebrow">Built at the ACG AI Lab, Athens</p>
+      <h1 class="t-lg">Two AI researchers whose conviction, verifiable AI that shows its work, is exactly what high-stakes claims demand.</h1>
+      <div class="crew" style="margin-top:24px">
+        <div class="person">
+          <div class="top">
+            <div class="av"><img src="founders/dimitris.png" alt="Dimitris Kalligaridis" style="object-position:top" onerror="this.style.display='none'" /></div>
+            <div><div class="nm">Dimitris Kalligaridis</div><div class="role">Software engineer, Amazon &nbsp;·&nbsp; AI research, ACG AI Lab</div></div>
+          </div>
+          <p class="nt">Distributed systems, optimisation, and applied ML. Built backend infrastructure, authorisation, and production performance at Amazon; a Google Summer of Code 2026 contributor to the Eclipse Foundation. Researches reinforcement-learning agents that decide under uncertainty. Make the math explicit and let every number trace back to its source: that conviction is Laytimely's engine.</p>
+        </div>
+        <div class="person">
+          <div class="top">
+            <div class="av"><img src="founders/roman.png" alt="Roman Dolgopolyi" onerror="this.style.display='none'" /></div>
+            <div><div class="nm">Roman Dolgopolyi</div><div class="role">Explainable AI &amp; cybersecurity, ACG AI Lab &nbsp;·&nbsp; incoming PhD, Northeastern</div></div>
+          </div>
+          <p class="nt">Published work on explaining AI decisions in cancer-cell diagnosis, and benchmarks for AI safety compliance. One conviction carries straight into Laytimely: AI trusted with high-stakes decisions has to be transparent and verifiable, never a black box.</p>
+        </div>
+      </div>
+      <p class="fillnote">
+        <b>Why Greece, why now.</b> Greek shipowners control roughly 20% of the world fleet, the densest concentration of maritime operations on earth. Most of that fleet is reachable within a few square kilometres of Piraeus. We build close to the customer, with the customer, and we ship.
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<div id="hud"><b id="cur">01</b> / 11</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const cur = document.getElementById('cur');
+
+  function fit(){
+    const z = Math.min(1, (window.innerWidth - 40) / 1280);
+    slides.forEach(s => s.style.zoom = z);
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  function update(){
+    const y = window.scrollY + window.innerHeight / 2;
+    let n = 1;
+    slides.forEach((s, i) => {
+      const r = s.getBoundingClientRect();
+      const top = r.top + window.scrollY;
+      if (y >= top && y < top + r.height) n = i + 1;
+    });
+    cur.textContent = String(n).padStart(2, '0');
+  }
+  window.addEventListener('scroll', update, { passive:true });
+  update();
+
+  /* Arrow keys jump between slides */
+  window.addEventListener('keydown', e => {
+    if (!['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','PageDown','PageUp',' '].includes(e.key)) return;
+    e.preventDefault();
+    const dir = (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') ? 1 : -1;
+    const y = window.scrollY + window.innerHeight / 2;
+    let idx = 0;
+    slides.forEach((s, i) => {
+      const r = s.getBoundingClientRect();
+      const top = r.top + window.scrollY;
+      if (y >= top) idx = i;
+    });
+    const next = Math.min(slides.length - 1, Math.max(0, idx + dir));
+    slides[next].scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+</script>
+</body>
+</html>
