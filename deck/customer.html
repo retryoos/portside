@@ -150,7 +150,8 @@
 
   /* screenshot frame */
   .frame{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:18px; }
-  .frame .sh{ aspect-ratio:16/9; background:var(--surface-muted); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--faint); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; }
+  .frame .sh{ aspect-ratio:16/9; background:var(--surface-muted); border:1px solid var(--border); border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; color:var(--faint); font-size:11px; letter-spacing:0.12em; text-transform:uppercase; }
+  .frame .sh img{ width:100%; height:100%; object-fit:cover; display:block; }
   .frame .cap{ font-size:13px; color:var(--muted); margin-top:8px; line-height:1.4; }
   .shot{ display:flex; flex-direction:column; }
 
@@ -364,15 +365,15 @@
       <h1 class="t-lg">A clean web app your team logs into. No installs, no spreadsheets, no consultant in the loop.</h1>
       <div class="frame">
         <div class="shot">
-          <div class="sh">Upload screen</div>
+          <div class="sh"><img src="showcase/upload.jpg" alt="Upload screen" /></div>
           <p class="cap">Drag and drop the three voyage documents. A new case lands on your dashboard.</p>
         </div>
         <div class="shot">
-          <div class="sh">Pipeline running</div>
+          <div class="sh"><img src="showcase/process.jpg" alt="Pipeline running" /></div>
           <p class="cap">Watch the four agents hand work to each other, then the EUR 84,375.00 quantum land.</p>
         </div>
         <div class="shot">
-          <div class="sh">Edit and export</div>
+          <div class="sh"><img src="showcase/edit.jpg" alt="Edit and export" /></div>
           <p class="cap">Highlight a sentence, refine it with AI, export the cited claim as PDF, Word, or Excel.</p>
         </div>
       </div>
