@@ -57,3 +57,4 @@ apps/web/example_for_rebarnding/
 
 # Entire session-capture tool (disabled/removed)
 .entire/
+.vercel
